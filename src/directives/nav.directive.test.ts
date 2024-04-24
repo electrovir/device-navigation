@@ -208,13 +208,15 @@ describe(nav.name, () => {
         });
 
         await waitUntil(() =>
-            wrapInTry({
-                callback() {
+            wrapInTry(
+                () => {
                     matchSelectors(child, {click: true, selected: true});
                     return true;
                 },
-                fallbackValue: false,
-            }),
+                {
+                    fallbackValue: false,
+                },
+            ),
         );
 
         await sendMouse({
