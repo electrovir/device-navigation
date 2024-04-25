@@ -1,8 +1,18 @@
 {
     "name": "device-navigation",
-    "version": "0.0.2",
+    "version": "1.0.0",
     "description": "Navigate HTML elements in two dimensions with non-pointer devices.",
-    "keywords": [],
+    "keywords": [
+        "keyboard",
+        "navigation",
+        "mouse",
+        "focus",
+        "accessibility",
+        "gamepad",
+        "frontend",
+        "ui",
+        "elements"
+    ],
     "homepage": "https://github.com/electrovir/device-navigation",
     "bugs": {
         "url": "https://github.com/electrovir/device-navigation/issues"
