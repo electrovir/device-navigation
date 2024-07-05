@@ -2,23 +2,37 @@ import {NavNode, NavNodeParent, NavRootNode} from '../nav-tree/nav-tree';
 import {walkNavTree} from '../nav-tree/walk-nav-tree';
 import {Coords} from '../util/coords';
 
-/** Data associated with the currently focused node or element. Used for navigation purposes. */
+/**
+ * Find the first parent that is not a group.
+ *
+ * @category Internals
+ */
+export function getNonGroupParent(parents: NavNodeParent[]) {
+    return parents.reverse().find((parent) => !parent.isGroup);
+}
+
+/**
+ * Data associated with the currently focused node or element. Used for navigation purposes.
+ *
+ * @category Internals
+ */
 export type CurrentlyFocusedResult = {
     /** The immediate parent `NavNode` of the currently focused `NavNode`. */
     parent: NavNodeParent | NavRootNode;
+    /** All ancestors of the currently focused `NavNode`. */
+    ancestors: NavNodeParent[];
+    /** The closest ancestor that is not a group `NavNode. */
+    nonGroupParent: NavNodeParent | NavRootNode;
     /** The currently focused `NavNode`. */
     node: NavNode;
-    /**
-     * The coordinates of the currently focused `NavNode` within its parent's children. Note that
-     * for 1 dimensional navigation, the y index will always be 0.
-     */
-    coords: Coords;
 };
 
 /**
  * Find the currently focused element / node from within the given nav tree. This does not accept an
  * HTMLElement input because it is used with other navigation actions that already build the nav
  * tree from the root HTMLElement.
+ *
+ * @category Internals
  */
 export function getCurrentlyFocused(
     navTree: NavRootNode | undefined,
@@ -27,12 +41,12 @@ export function getCurrentlyFocused(
         return undefined;
     }
 
-    let parents: NavNodeParent[] | undefined;
+    let ancestors: NavNodeParent[] | undefined;
     let node: NavNode | undefined;
     let coords: Coords | undefined;
-    walkNavTree(navTree, (parentChain, currentNode, currentCoords) => {
+    walkNavTree(navTree, (ancestorChain, currentNode, currentCoords) => {
         if (currentNode.element.matches(':focus')) {
-            parents = parentChain;
+            ancestors = ancestorChain;
             node = currentNode;
             coords = currentCoords;
             return true;
@@ -41,15 +55,17 @@ export function getCurrentlyFocused(
         return false;
     });
 
-    const parent = parents ? parents?.slice(-1)[0] || navTree : undefined;
+    const parent = ancestors ? ancestors.slice(-1)[0] || navTree : undefined;
+    const nonGroupParent = ancestors ? getNonGroupParent(ancestors) || navTree : undefined;
 
-    if (!node || !parent || !coords) {
+    if (!node || !parent || !coords || !nonGroupParent || !ancestors) {
         return undefined;
     }
 
     return {
         node,
         parent,
-        coords,
+        nonGroupParent,
+        ancestors,
     };
 }

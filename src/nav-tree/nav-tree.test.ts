@@ -5,7 +5,13 @@ import {HTMLTemplateResult, html} from 'element-vir';
 import {assertInstanceOf, assertThrows} from 'run-time-assertions';
 import {ParsedNavValue} from '../directives/nav-value';
 import {nav} from '../directives/nav.directive';
-import {BuildingTreeNavNode, buildNavTree, getNavChildren} from './nav-tree';
+import {
+    BuildingTreeNavNode,
+    buildNavTree,
+    calculateChildCoords,
+    convertTree,
+    getNavChildren,
+} from './nav-tree';
 import {NavRootNodeNoElementChildren, omitElementProp} from './nav-tree.mock';
 
 type BuildingTreeNavNodeNoElement = {
@@ -75,11 +81,11 @@ describe(getNavChildren.name, () => {
             expect: [
                 {
                     children: [],
-                    navValue: {type: '1d'},
+                    navValue: {type: '1d', isGroup: false},
                 },
                 {
                     children: [],
-                    navValue: {type: '1d'},
+                    navValue: {type: '1d', isGroup: false},
                 },
             ],
         },
@@ -97,16 +103,16 @@ describe(getNavChildren.name, () => {
             expect: [
                 {
                     children: [],
-                    navValue: {type: '1d'},
+                    navValue: {type: '1d', isGroup: false},
                 },
                 {
                     children: [
                         {
                             children: [],
-                            navValue: {type: '1d'},
+                            navValue: {type: '1d', isGroup: false},
                         },
                     ],
-                    navValue: {type: '1d'},
+                    navValue: {type: '1d', isGroup: false},
                 },
             ],
         },
@@ -128,15 +134,15 @@ describe(getNavChildren.name, () => {
             expect: [
                 {
                     children: [],
-                    navValue: {type: '1d'},
+                    navValue: {type: '1d', isGroup: false},
                 },
                 {
                     children: [],
-                    navValue: {type: '1d'},
+                    navValue: {type: '1d', isGroup: false},
                 },
                 {
                     children: [],
-                    navValue: {type: '1d'},
+                    navValue: {type: '1d', isGroup: false},
                 },
             ],
         },
@@ -168,47 +174,47 @@ describe(getNavChildren.name, () => {
                     children: [
                         {
                             children: [],
-                            navValue: {type: '1d'},
+                            navValue: {type: '1d', isGroup: false},
                         },
                         {
                             children: [],
-                            navValue: {type: '1d'},
+                            navValue: {type: '1d', isGroup: false},
                         },
                     ],
-                    navValue: {type: '1d'},
+                    navValue: {type: '1d', isGroup: false},
                 },
                 {
                     children: [],
-                    navValue: {type: '1d'},
+                    navValue: {type: '1d', isGroup: false},
                 },
                 {
                     children: [],
-                    navValue: {type: '1d'},
+                    navValue: {type: '1d', isGroup: false},
                 },
             ],
         },
     ]);
 });
 
-async function testBuildTree(
-    template: HTMLTemplateResult,
-): Promise<NavRootNodeNoElementChildren | undefined> {
-    const rootElement = await renderFixture(template);
+describe(buildNavTree.name, () => {
+    async function testBuildTree(
+        template: HTMLTemplateResult,
+    ): Promise<NavRootNodeNoElementChildren | undefined> {
+        const rootElement = await renderFixture(template);
 
-    assertInstanceOf(rootElement, HTMLElement);
-    const tree = buildNavTree(rootElement);
+        assertInstanceOf(rootElement, HTMLElement);
+        const tree = buildNavTree(rootElement);
 
-    if (!tree) {
-        return undefined;
+        if (!tree) {
+            return undefined;
+        }
+
+        /** The top level node is always a root node. */
+        const trimmed = omitElementProp(tree) as NavRootNodeNoElementChildren;
+
+        return trimmed;
     }
 
-    /** The top level node is always a root node. */
-    const trimmed = omitElementProp(tree) as NavRootNodeNoElementChildren;
-
-    return trimmed;
-}
-
-describe(buildNavTree.name, () => {
     itCases(testBuildTree, [
         {
             it: 'builds a tree that starts on the root element',
@@ -220,9 +226,15 @@ describe(buildNavTree.name, () => {
             expect: {
                 children: [
                     {
+                        coords: {
+                            x: 0,
+                            y: 0,
+                        },
+                        isGroup: false,
                         type: 'child',
                     },
                 ],
+                isGroup: false,
                 isRoot: true,
                 type: '1d',
             },
@@ -235,7 +247,7 @@ describe(buildNavTree.name, () => {
                     <div ${nav(0, 2)}></div>
                 </div>
             `,
-            throws: 'child nav does not match parent nav type',
+            throws: 'inconsistent nav dimensionality',
         },
         {
             it: 'errors if siblings have identical coords',
@@ -271,19 +283,22 @@ describe(buildNavTree.name, () => {
                 </div>
             `,
             expect: {
+                type: '1d',
                 children: [
                     {
                         children: [
-                            {type: 'child'},
-                            {type: 'child'},
+                            {type: 'child', coords: {x: 0, y: 0}, isGroup: false},
+                            {type: 'child', coords: {x: 1, y: 0}, isGroup: false},
                         ],
                         type: '1d',
+                        isGroup: false,
+                        coords: {x: 0, y: 0},
                     },
-                    {type: 'child'},
-                    {type: 'child'},
+                    {type: 'child', coords: {x: 1, y: 0}, isGroup: false},
+                    {type: 'child', coords: {x: 2, y: 0}, isGroup: false},
                 ],
-                type: '1d',
                 isRoot: true,
+                isGroup: false,
             },
         },
         {
@@ -326,46 +341,144 @@ describe(buildNavTree.name, () => {
                 children: [
                     {
                         children: [
-                            {type: 'child'},
-                            {type: 'child'},
+                            {
+                                coords: {
+                                    x: 0,
+                                    y: 0,
+                                },
+                                isGroup: false,
+                                type: 'child',
+                            },
+                            {
+                                coords: {
+                                    x: 1,
+                                    y: 0,
+                                },
+                                isGroup: false,
+                                type: 'child',
+                            },
                         ],
+                        coords: {
+                            x: 0,
+                            y: 0,
+                        },
+                        isGroup: false,
                         type: '1d',
                     },
                     {
-                        type: '2d',
                         children: [
                             [
                                 {
-                                    type: '1d',
                                     children: [
-                                        {type: 'child'},
-                                        {type: 'child'},
+                                        {
+                                            coords: {
+                                                x: 0,
+                                                y: 0,
+                                            },
+                                            isGroup: false,
+                                            type: 'child',
+                                        },
+                                        {
+                                            coords: {
+                                                x: 1,
+                                                y: 0,
+                                            },
+                                            isGroup: false,
+                                            type: 'child',
+                                        },
                                     ],
+                                    coords: {
+                                        x: 0,
+                                        y: 0,
+                                    },
+                                    isGroup: false,
+                                    type: '1d',
                                 },
                                 {
-                                    type: '2d',
-                                    children: [
-                                        [
-                                            {type: 'child'},
-                                            {type: 'child'},
-                                        ],
-                                        [
-                                            {type: 'child'},
-                                            {type: 'child'},
-                                        ],
-                                    ],
+                                    coords: {
+                                        x: 1,
+                                        y: 0,
+                                    },
+                                    isGroup: false,
+                                    type: 'child',
                                 },
                             ],
                             [
-                                {type: 'child'},
-                                {type: 'child'},
+                                {
+                                    children: [
+                                        [
+                                            {
+                                                coords: {
+                                                    x: 0,
+                                                    y: 0,
+                                                },
+                                                isGroup: false,
+                                                type: 'child',
+                                            },
+                                            {
+                                                coords: {
+                                                    x: 1,
+                                                    y: 0,
+                                                },
+                                                isGroup: false,
+                                                type: 'child',
+                                            },
+                                        ],
+                                        [
+                                            {
+                                                coords: {
+                                                    x: 0,
+                                                    y: 1,
+                                                },
+                                                isGroup: false,
+                                                type: 'child',
+                                            },
+                                            {
+                                                coords: {
+                                                    x: 1,
+                                                    y: 1,
+                                                },
+                                                isGroup: false,
+                                                type: 'child',
+                                            },
+                                        ],
+                                    ],
+                                    coords: {
+                                        x: 0,
+                                        y: 1,
+                                    },
+                                    isGroup: false,
+                                    type: '2d',
+                                },
+                                {
+                                    coords: {
+                                        x: 1,
+                                        y: 1,
+                                    },
+                                    isGroup: false,
+                                    type: 'child',
+                                },
                             ],
                         ],
+                        coords: {
+                            x: 1,
+                            y: 0,
+                        },
+                        isGroup: false,
+                        type: '2d',
                     },
-                    {type: 'child'},
+                    {
+                        coords: {
+                            x: 2,
+                            y: 0,
+                        },
+                        isGroup: false,
+                        type: 'child',
+                    },
                 ],
-                type: '1d',
+                isGroup: false,
                 isRoot: true,
+                type: '1d',
             },
         },
         {
@@ -386,28 +499,99 @@ describe(buildNavTree.name, () => {
                 </div>
             `,
             expect: {
-                type: '1d',
                 children: [
                     {
-                        type: '2d',
                         children: [
                             [
-                                {type: 'child'},
-                                {type: 'child'},
-                                {type: 'child'},
+                                {
+                                    coords: {
+                                        x: 0,
+                                        y: 0,
+                                    },
+                                    isGroup: false,
+                                    type: 'child',
+                                },
+                                {
+                                    coords: {
+                                        x: 1,
+                                        y: 0,
+                                    },
+                                    isGroup: false,
+                                    type: 'child',
+                                },
                             ],
                             [
-                                {type: 'child'},
-                                {type: 'child'},
-                                {type: 'child'},
+                                {
+                                    coords: {
+                                        x: 0,
+                                        y: 1,
+                                    },
+                                    isGroup: false,
+                                    type: 'child',
+                                },
+                                {
+                                    coords: {
+                                        x: 1,
+                                        y: 1,
+                                    },
+                                    isGroup: false,
+                                    type: 'child',
+                                },
+                            ],
+                            [
+                                {
+                                    coords: {
+                                        x: 0,
+                                        y: 2,
+                                    },
+                                    isGroup: false,
+                                    type: 'child',
+                                },
+                                {
+                                    coords: {
+                                        x: 1,
+                                        y: 2,
+                                    },
+                                    isGroup: false,
+                                    type: 'child',
+                                },
                             ],
                         ],
+                        coords: {
+                            x: 0,
+                            y: 0,
+                        },
+                        isGroup: false,
+                        type: '2d',
                     },
-                    {type: 'child'},
-                    {type: 'child'},
-                    {type: 'child'},
+                    {
+                        coords: {
+                            x: 1,
+                            y: 0,
+                        },
+                        isGroup: false,
+                        type: 'child',
+                    },
+                    {
+                        coords: {
+                            x: 2,
+                            y: 0,
+                        },
+                        isGroup: false,
+                        type: 'child',
+                    },
+                    {
+                        coords: {
+                            x: 3,
+                            y: 0,
+                        },
+                        isGroup: false,
+                        type: 'child',
+                    },
                 ],
+                isGroup: false,
                 isRoot: true,
+                type: '1d',
             },
         },
         {
@@ -430,4 +614,65 @@ describe(buildNavTree.name, () => {
             expect: undefined,
         },
     ]);
+});
+
+describe(calculateChildCoords.name, () => {
+    itCases(calculateChildCoords, [
+        {
+            it: 'uses navValue for 2d coords',
+            inputs: [
+                {
+                    navValue: {
+                        xCord: 1,
+                        yCord: 42,
+                        type: '2d',
+                        isGroup: false,
+                    },
+                },
+                [],
+            ],
+            expect: {
+                x: 1,
+                y: 42,
+            },
+        },
+        {
+            it: 'uses current children for 1d coords',
+            inputs: [
+                {
+                    navValue: {
+                        type: '1d',
+                        isGroup: false,
+                    },
+                },
+                [
+                    {},
+                    {},
+                    {},
+                ],
+            ],
+            expect: {
+                x: 3,
+                y: 0,
+            },
+        },
+        {
+            it: 'rejects an invalid nav type',
+            inputs: [
+                {
+                    navValue: {
+                        // @ts-expect-error: should be 1d or 2d
+                        type: 'invalid',
+                        isGroup: false,
+                    },
+                },
+                [],
+            ],
+            throws: 'Unexpected node nav type',
+        },
+    ]);
+});
+
+describe(convertTree.name, () => {
+    itCases(convertTree, []);
 });

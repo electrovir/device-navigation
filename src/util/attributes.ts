@@ -1,8 +1,19 @@
 import {typedObjectFromEntries} from '@augment-vir/common';
 import {isRunTimeType} from 'run-time-assertions';
 
+/**
+ * A collection of attribute keys to values. This is just used to ensure we're not applying invalid
+ * attribute values.
+ *
+ * @category Internals
+ */
 export type AttributesMap = {[attributeName: string]: string | boolean | number | undefined};
 
+/**
+ * Apply all given attribute key/value pairs to the given element.
+ *
+ * @category Internals
+ */
 export function applyAttributes(element: Element, attributes: AttributesMap) {
     Object.entries(attributes).forEach(
         ([
@@ -23,6 +34,11 @@ export function applyAttributes(element: Element, attributes: AttributesMap) {
     );
 }
 
+/**
+ * Extract all current attributes applied to the given element.
+ *
+ * @category Internals
+ */
 export function readAttributes(element: Element): Record<string, string> {
     const attributeNames = element.getAttributeNames();
 

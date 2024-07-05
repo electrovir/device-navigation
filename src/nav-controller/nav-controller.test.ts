@@ -1,11 +1,12 @@
 import {getDirectChildren, getNestedChildren} from '@augment-vir/browser';
-import {awaitedForEach} from '@augment-vir/common';
+import {addPrefix, ArrayElement, awaitedForEach} from '@augment-vir/common';
 import {assert, fixture, waitUntil} from '@open-wc/testing';
-import {HTMLTemplateResult, defineElement, html} from 'element-vir';
-import {assertDefined, assertInstanceOf} from 'run-time-assertions';
+import {defineElement, html, HTMLTemplateResult} from 'element-vir';
+import {assertDefined, assertInstanceOf, assertThrows} from 'run-time-assertions';
+import {group} from '../directives/nav-value';
 import {nav, navAttribute} from '../directives/nav.directive';
 import {waitUntilFocused} from '../test/focus.test-helper';
-import {isFocused} from '../util/focus';
+import {focusElement, isFocused} from '../util/focus';
 import {NavController} from './nav-controller';
 import {NavDirection} from './navigate';
 
@@ -25,45 +26,68 @@ const VirTestNav = defineElement<{template: HTMLTemplateResult}>()({
     },
 });
 
-async function setupNavControllerTest(template: HTMLTemplateResult) {
-    const element = await fixture(html`
+async function setupNavControllerTest<
+    const ElementNames extends ReadonlyArray<string> = typeof defaultElementNames,
+>(template: HTMLTemplateResult, elementNames: ElementNames = defaultElementNames as any) {
+    const rootElement = await fixture(html`
         <${VirTestNav.assign({template})}></${VirTestNav}>
     `);
-    assertInstanceOf(element, VirTestNav);
-    await waitUntil(() => !!element.instanceState.navController);
-    const navController = element.instanceState.navController!;
-    const directChildren = getDirectChildren(element).filter(
+    assertInstanceOf(rootElement, VirTestNav);
+    await waitUntil(() => !!rootElement.instanceState.navController);
+    const navController = rootElement.instanceState.navController!;
+    const directChildren = getDirectChildren(rootElement).filter(
         (element): element is HTMLElement => element instanceof HTMLElement,
     );
-    const allDescendants = getNestedChildren(element).filter(
+    const allDescendants = getNestedChildren(rootElement).filter(
         (element): element is HTMLElement => element instanceof HTMLElement,
+    );
+
+    const namedChildren = elementNames.reduce(
+        (accum, elementName: ArrayElement<ElementNames>) => {
+            const element = rootElement.shadowRoot.querySelector(
+                addPrefix({value: elementName, prefix: '.'}),
+            );
+            assertInstanceOf(element, HTMLElement);
+            accum[elementName] = element;
+            return accum;
+        },
+        {} as Record<ArrayElement<ElementNames>, HTMLElement>,
     );
 
     return {
-        element,
+        rootElement,
         navController,
         directChildren,
         allDescendants,
+        namedChildren,
     };
 }
 
+const defaultElementNames = [
+    'first-nested-child',
+    'next-pibling',
+    'parent-2d',
+    'first-nav',
+    'end-nested-child',
+] as const;
+
 const defaultTestTemplate = html`
     <div></div>
-    <div ${nav()}>second</div>
-    <div ${nav()}>
+    <div class="first-nav" ${nav()}>second</div>
+    <div class="parent-2d" ${nav()}>
         <div ${nav(0, 0)}>a</div>
-        <div ${nav(0, 1)}>b</div>
-        <div ${nav(0, 2)}>c</div>
-        <div ${nav(1, 0)}>d</div>
+        <div ${nav(1, 0)}>b</div>
+        <div ${nav(2, 0)}>c</div>
+        <div ${nav(0, 1)}>d</div>
         <div ${nav(1, 1)}>e</div>
     </div>
     <div ${nav()}>fourth</div>
     <div ${nav()}>
-        <div ${nav()}>nested first</div>
+        <div class="first-nested-child" ${nav()}>nested first</div>
         <div ${nav()}>nested second</div>
-        <div ${nav()}>nested third</div>
+        <div class="end-nested-child" ${nav()}>nested third</div>
     </div>
-    <div ${nav()}>
+    <div class="next-pibling" ${nav()}>
         <div ${nav()}>nested first</div>
         <div ${nav()}>nested second</div>
         <div ${nav()}>nested third</div>
@@ -83,9 +107,10 @@ describe(NavController.name, () => {
     });
 
     it('focuses the first nav child on navigation', async () => {
-        const {navController, element} = await setupNavControllerTest(defaultTestTemplate);
+        const {navController, rootElement: element} =
+            await setupNavControllerTest(defaultTestTemplate);
 
-        const firstNavChild = element.shadowRoot.querySelector(navAttribute.selector(''));
+        const firstNavChild = element.shadowRoot.querySelector(navAttribute.js(''));
 
         assertInstanceOf(firstNavChild, HTMLElement);
 
@@ -108,9 +133,7 @@ describe(NavController.name, () => {
     it('navigates through all top level nav children', async () => {
         const {navController, directChildren} = await setupNavControllerTest(defaultTestTemplate);
 
-        const navChildren = directChildren.filter((child) =>
-            child.matches(navAttribute.selector('')),
-        );
+        const navChildren = directChildren.filter((child) => child.matches(navAttribute.js('')));
 
         await awaitedForEach(navChildren, async (navChild, index) => {
             assert.deepStrictEqual(
@@ -197,9 +220,12 @@ describe(NavController.name, () => {
     });
 
     it('does nothing if there is no nav tree', async () => {
-        const {navController} = await setupNavControllerTest(html`
-            <div></div>
-        `);
+        const {navController} = await setupNavControllerTest(
+            html`
+                <div></div>
+            `,
+            [],
+        );
 
         assert.deepStrictEqual(
             navController.navigate({allowWrapping: false, direction: NavDirection.Down}),
@@ -242,42 +268,146 @@ describe(NavController.name, () => {
     });
 
     it('navigates to a pibling', async () => {
-        const {navController, directChildren} = await setupNavControllerTest(defaultTestTemplate);
+        const {navController, namedChildren} = await setupNavControllerTest(defaultTestTemplate);
 
-        const withNested1dNav = directChildren[directChildren.length - 2];
-        assertDefined(withNested1dNav);
-        const nested1dNav = withNested1dNav.children[0];
-        assertInstanceOf(nested1dNav, HTMLElement);
-        nested1dNav.focus();
-        await waitUntilFocused(nested1dNav);
-
-        const withNested1dNavAgain = directChildren[directChildren.length - 1];
-        assertDefined(withNested1dNavAgain);
-        const nested1dNavAgain = withNested1dNavAgain.children[0];
-        assertInstanceOf(nested1dNavAgain, HTMLElement);
+        namedChildren['first-nested-child'].focus();
+        await waitUntilFocused(namedChildren['first-nested-child']);
 
         assert.deepStrictEqual(
             navController.navigatePibling({direction: NavDirection.Down, allowWrapping: true}),
             {
                 defaulted: false,
-                newElement: nested1dNavAgain,
+                newElement: namedChildren['next-pibling'],
                 success: true,
                 wrapped: false,
             },
         );
-        await waitUntilFocused(nested1dNavAgain);
+        await waitUntilFocused(namedChildren['next-pibling']);
+    });
+
+    it('fails pibling nav when there are none', async () => {
+        const {navController, namedChildren} = await setupNavControllerTest(
+            html`
+                <div ${nav()}>
+                    <div class="child" ${nav()}></div>
+                </div>
+            `,
+            ['child'],
+        );
+
+        namedChildren.child.focus();
+        await waitUntilFocused(namedChildren.child);
+
+        assert.deepStrictEqual(
+            navController.navigatePibling({direction: NavDirection.Down, allowWrapping: true}),
+            {
+                success: false,
+                reason: 'no node to navigate to',
+            },
+        );
+    });
+
+    it('defaults focus on pibling nav with no current focus', async () => {
+        const {navController, namedChildren} = await setupNavControllerTest(defaultTestTemplate);
+
+        assert.deepStrictEqual(
+            navController.navigatePibling({allowWrapping: false, direction: NavDirection.Up}),
+            {
+                defaulted: true,
+                newElement: namedChildren['first-nav'],
+                success: true,
+                wrapped: false,
+            },
+        );
     });
 
     it('fails pibling nav if there is no pibling', async () => {
-        const {navController} = await setupNavControllerTest(defaultTestTemplate);
+        const {navController, namedChildren} = await setupNavControllerTest(
+            html`
+                <div class="first-nav" ${nav()}></div>
+                <div ${nav()}></div>
+            `,
+            ['first-nav'],
+        );
+
+        focusElement(namedChildren['first-nav']);
+        await waitUntilFocused(namedChildren['first-nav']);
 
         assert.deepStrictEqual(
             navController.navigatePibling({allowWrapping: false, direction: NavDirection.Up}),
             {
                 success: false,
-                reason: 'no focused node to exit out of',
+                reason: 'no parent to find a pibling from',
             },
         );
+    });
+
+    it('navigates a nested pibling', async () => {
+        const {navController, namedChildren} = await setupNavControllerTest(
+            html`
+                <div ${nav(group)}>
+                    <div ${nav()}></div>
+                    <div ${nav()}></div>
+                    <div ${nav()}></div>
+                    <div ${nav()}>
+                        <div class="first-focus" ${nav()}></div>
+                        <div ${nav()}></div>
+                    </div>
+                    <div class="pibling" ${nav()}></div>
+                </div>
+            `,
+            [
+                'first-focus',
+                'pibling',
+            ],
+        );
+
+        focusElement(namedChildren['first-focus']);
+        await waitUntilFocused(namedChildren['first-focus']);
+
+        assert.deepStrictEqual(
+            navController.navigatePibling({allowWrapping: false, direction: NavDirection.Down}),
+            {
+                success: true,
+                defaulted: false,
+                newElement: namedChildren['pibling'],
+                wrapped: false,
+            },
+        );
+        await waitUntilFocused(namedChildren['pibling']);
+    });
+
+    it('navigates to pibling within groups', async () => {
+        const {navController, namedChildren} = await setupNavControllerTest(
+            html`
+                <div ${nav(group)}>
+                    <div class="first-focus" ${nav()}></div>
+                    <div ${nav()}></div>
+                </div>
+                <div ${nav(group)}>
+                    <div class="second-focus" ${nav()}></div>
+                    <div ${nav()}></div>
+                </div>
+            `,
+            [
+                'first-focus',
+                'second-focus',
+            ],
+        );
+
+        focusElement(namedChildren['first-focus']);
+        await waitUntilFocused(namedChildren['first-focus']);
+
+        assert.deepStrictEqual(
+            navController.navigatePibling({allowWrapping: false, direction: NavDirection.Right}),
+            {
+                success: true,
+                defaulted: false,
+                newElement: namedChildren['second-focus'],
+                wrapped: false,
+            },
+        );
+        await waitUntilFocused(namedChildren['second-focus']);
     });
 
     it('fails pibling nav if blocked by wrap', async () => {
@@ -294,7 +424,22 @@ describe(NavController.name, () => {
             navController.navigatePibling({allowWrapping: false, direction: NavDirection.Down}),
             {
                 success: false,
-                reason: 'not allowed to wrap',
+                reason: 'wrapping blocked',
+            },
+        );
+    });
+
+    it('fails nav if blocked by wrap', async () => {
+        const {navController, namedChildren} = await setupNavControllerTest(defaultTestTemplate);
+
+        namedChildren['end-nested-child'].focus();
+        await waitUntilFocused(namedChildren['end-nested-child']);
+
+        assert.deepStrictEqual(
+            navController.navigate({allowWrapping: false, direction: NavDirection.Right}),
+            {
+                success: false,
+                reason: 'wrapping blocked',
             },
         );
     });
@@ -392,15 +537,13 @@ describe(NavController.name, () => {
     });
 
     it('handles shorter 2d rows', async () => {
-        const {navController, directChildren} = await setupNavControllerTest(defaultTestTemplate);
+        const {navController, namedChildren} = await setupNavControllerTest(defaultTestTemplate);
 
-        const withNested2dNav = directChildren[2];
-        assertDefined(withNested2dNav);
-        const startingNested2dNav = withNested2dNav.children[2];
+        const startingNested2dNav = namedChildren['parent-2d'].children[2];
         assertInstanceOf(startingNested2dNav, HTMLElement);
-        const nested2dNavVerticalSibling = withNested2dNav.children[4];
+        const nested2dNavVerticalSibling = namedChildren['parent-2d'].children[4];
         assertInstanceOf(nested2dNavVerticalSibling, HTMLElement);
-        const nested2dNavPreviousSibling = withNested2dNav.children[1];
+        const nested2dNavPreviousSibling = namedChildren['parent-2d'].children[1];
         assertInstanceOf(nested2dNavPreviousSibling, HTMLElement);
 
         startingNested2dNav.focus();
@@ -462,9 +605,12 @@ describe(NavController.name, () => {
     });
 
     it('fails to navigate when there is only one node', async () => {
-        const {navController, directChildren} = await setupNavControllerTest(html`
-            <div ${nav()}></div>
-        `);
+        const {navController, directChildren} = await setupNavControllerTest(
+            html`
+                <div ${nav()}></div>
+            `,
+            [],
+        );
 
         const onlyChild = directChildren[0];
         assertInstanceOf(onlyChild, HTMLElement);
@@ -476,16 +622,52 @@ describe(NavController.name, () => {
             navController.navigate({allowWrapping: true, direction: NavDirection.Right}),
             {
                 success: false,
-                reason: 'no other nodes to navigate to',
+                reason: 'failed to find node to focus',
             },
         );
     });
 
+    it('fails on 2d nodes with the same coords', async () => {
+        const {navController} = await setupNavControllerTest(
+            html`
+                <div ${nav(0, 0)}></div>
+                <div ${nav(0, 0)}></div>
+            `,
+            [],
+        );
+
+        assertThrows(
+            () => {
+                navController.navigate({allowWrapping: true, direction: NavDirection.Right});
+            },
+            {matchMessage: 'Parent already has child at'},
+        );
+    });
+
+    it('fails on group node with no children', async () => {
+        const {navController} = await setupNavControllerTest(
+            html`
+                <div ${nav(group)}></div>
+            `,
+            [],
+        );
+
+        assertThrows(
+            () => {
+                navController.navigate({allowWrapping: true, direction: NavDirection.Right});
+            },
+            {matchMessage: 'group nav has no children'},
+        );
+    });
+
     it('defaults to first child in 2d nav root', async () => {
-        const {navController, directChildren} = await setupNavControllerTest(html`
-            <div ${nav(0, 0)}></div>
-            <div ${nav(0, 1)}></div>
-        `);
+        const {navController, directChildren} = await setupNavControllerTest(
+            html`
+                <div ${nav(0, 0)}></div>
+                <div ${nav(0, 1)}></div>
+            `,
+            [],
+        );
 
         const firstChild = directChildren[0];
         assertInstanceOf(firstChild, HTMLElement);

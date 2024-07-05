@@ -7,8 +7,8 @@ module.exports = {
     ],
     words: [
         ...baseConfig.words,
-        'pibling',
-        'darkred',
         'gamepad',
+        'piblings',
+        'keydown',
     ],
 };

@@ -8,64 +8,45 @@ export const walkNavTreeTestResults = {
         [
             [],
             {
-                type: '1d',
                 children: [
-                    {
-                        type: 'child',
-                    },
-                    {
-                        type: 'child',
-                    },
+                    {type: 'child', coords: {x: 0, y: 0}, isGroup: false},
+                    {type: 'child', coords: {x: 1, y: 0}, isGroup: false},
                 ],
+                type: '1d',
+                isGroup: false,
+                coords: {x: 0, y: 0},
             },
-            {
-                x: 0,
-                y: 0,
-            },
+            {x: 0, y: 0},
         ],
         [
             [
                 {
-                    type: '1d',
                     children: [
-                        {
-                            type: 'child',
-                        },
-                        {
-                            type: 'child',
-                        },
+                        {type: 'child', coords: {x: 0, y: 0}, isGroup: false},
+                        {type: 'child', coords: {x: 1, y: 0}, isGroup: false},
                     ],
+                    type: '1d',
+                    isGroup: false,
+                    coords: {x: 0, y: 0},
                 },
             ],
-            {
-                type: 'child',
-            },
-            {
-                x: 0,
-                y: 0,
-            },
+            {type: 'child', coords: {x: 0, y: 0}, isGroup: false},
+            {x: 0, y: 0},
         ],
         [
             [
                 {
-                    type: '1d',
                     children: [
-                        {
-                            type: 'child',
-                        },
-                        {
-                            type: 'child',
-                        },
+                        {type: 'child', coords: {x: 0, y: 0}, isGroup: false},
+                        {type: 'child', coords: {x: 1, y: 0}, isGroup: false},
                     ],
+                    type: '1d',
+                    isGroup: false,
+                    coords: {x: 0, y: 0},
                 },
             ],
-            {
-                type: 'child',
-            },
-            {
-                x: 1,
-                y: 0,
-            },
+            {type: 'child', coords: {x: 1, y: 0}, isGroup: false},
+            {x: 1, y: 0},
         ],
     ]),
     big: ensureType<[NavNodeNoElement[], NavNodeNoElement, Coords][]>([
@@ -73,63 +54,44 @@ export const walkNavTreeTestResults = {
             [],
             {
                 children: [
-                    {
-                        type: 'child',
-                    },
-                    {
-                        type: 'child',
-                    },
+                    {type: 'child', coords: {x: 0, y: 0}, isGroup: false},
+                    {type: 'child', coords: {x: 1, y: 0}, isGroup: false},
                 ],
                 type: '1d',
+                isGroup: false,
+                coords: {x: 0, y: 0},
             },
-            {
-                x: 0,
-                y: 0,
-            },
+            {x: 0, y: 0},
         ],
         [
             [
                 {
                     children: [
-                        {
-                            type: 'child',
-                        },
-                        {
-                            type: 'child',
-                        },
+                        {type: 'child', coords: {x: 0, y: 0}, isGroup: false},
+                        {type: 'child', coords: {x: 1, y: 0}, isGroup: false},
                     ],
                     type: '1d',
+                    isGroup: false,
+                    coords: {x: 0, y: 0},
                 },
             ],
-            {
-                type: 'child',
-            },
-            {
-                x: 0,
-                y: 0,
-            },
+            {type: 'child', coords: {x: 0, y: 0}, isGroup: false},
+            {x: 0, y: 0},
         ],
         [
             [
                 {
                     children: [
-                        {
-                            type: 'child',
-                        },
-                        {
-                            type: 'child',
-                        },
+                        {type: 'child', coords: {x: 0, y: 0}, isGroup: false},
+                        {type: 'child', coords: {x: 1, y: 0}, isGroup: false},
                     ],
                     type: '1d',
+                    isGroup: false,
+                    coords: {x: 0, y: 0},
                 },
             ],
-            {
-                type: 'child',
-            },
-            {
-                x: 1,
-                y: 0,
-            },
+            {type: 'child', coords: {x: 1, y: 0}, isGroup: false},
+            {x: 1, y: 0},
         ],
         [
             [],
@@ -138,52 +100,39 @@ export const walkNavTreeTestResults = {
                     [
                         {
                             children: [
-                                {
-                                    type: 'child',
-                                },
-                                {
-                                    type: 'child',
-                                },
+                                {type: 'child', coords: {x: 0, y: 0}, isGroup: false},
+                                {type: 'child', coords: {x: 1, y: 0}, isGroup: false},
                             ],
                             type: '1d',
+                            isGroup: false,
+                            coords: {x: 0, y: 0},
                         },
+                        {type: 'child', coords: {x: 1, y: 0}, isGroup: false},
+                    ],
+                    [
                         {
                             children: [
                                 [
-                                    {
-                                        type: 'child',
-                                    },
-                                    {
-                                        type: 'child',
-                                    },
+                                    {type: 'child', coords: {x: 0, y: 0}, isGroup: false},
+                                    {type: 'child', coords: {x: 1, y: 0}, isGroup: false},
                                 ],
                                 [
-                                    {
-                                        type: 'child',
-                                    },
-                                    {
-                                        type: 'child',
-                                    },
+                                    {type: 'child', coords: {x: 0, y: 1}, isGroup: false},
+                                    {type: 'child', coords: {x: 1, y: 1}, isGroup: false},
                                 ],
                             ],
                             type: '2d',
+                            isGroup: false,
+                            coords: {x: 0, y: 1},
                         },
-                    ],
-                    [
-                        {
-                            type: 'child',
-                        },
-                        {
-                            type: 'child',
-                        },
+                        {type: 'child', coords: {x: 1, y: 1}, isGroup: false},
                     ],
                 ],
                 type: '2d',
+                isGroup: false,
+                coords: {x: 1, y: 0},
             },
-            {
-                x: 1,
-                y: 0,
-            },
+            {x: 1, y: 0},
         ],
         [
             [
@@ -192,64 +141,49 @@ export const walkNavTreeTestResults = {
                         [
                             {
                                 children: [
-                                    {
-                                        type: 'child',
-                                    },
-                                    {
-                                        type: 'child',
-                                    },
+                                    {type: 'child', coords: {x: 0, y: 0}, isGroup: false},
+                                    {type: 'child', coords: {x: 1, y: 0}, isGroup: false},
                                 ],
                                 type: '1d',
+                                isGroup: false,
+                                coords: {x: 0, y: 0},
                             },
-                            {
-                                children: [
-                                    [
-                                        {
-                                            type: 'child',
-                                        },
-                                        {
-                                            type: 'child',
-                                        },
-                                    ],
-                                    [
-                                        {
-                                            type: 'child',
-                                        },
-                                        {
-                                            type: 'child',
-                                        },
-                                    ],
-                                ],
-                                type: '2d',
-                            },
+                            {type: 'child', coords: {x: 1, y: 0}, isGroup: false},
                         ],
                         [
                             {
-                                type: 'child',
+                                children: [
+                                    [
+                                        {type: 'child', coords: {x: 0, y: 0}, isGroup: false},
+                                        {type: 'child', coords: {x: 1, y: 0}, isGroup: false},
+                                    ],
+                                    [
+                                        {type: 'child', coords: {x: 0, y: 1}, isGroup: false},
+                                        {type: 'child', coords: {x: 1, y: 1}, isGroup: false},
+                                    ],
+                                ],
+                                type: '2d',
+                                isGroup: false,
+                                coords: {x: 0, y: 1},
                             },
-                            {
-                                type: 'child',
-                            },
+                            {type: 'child', coords: {x: 1, y: 1}, isGroup: false},
                         ],
                     ],
                     type: '2d',
+                    isGroup: false,
+                    coords: {x: 1, y: 0},
                 },
             ],
             {
                 children: [
-                    {
-                        type: 'child',
-                    },
-                    {
-                        type: 'child',
-                    },
+                    {type: 'child', coords: {x: 0, y: 0}, isGroup: false},
+                    {type: 'child', coords: {x: 1, y: 0}, isGroup: false},
                 ],
                 type: '1d',
+                isGroup: false,
+                coords: {x: 0, y: 0},
             },
-            {
-                x: 0,
-                y: 0,
-            },
+            {x: 0, y: 0},
         ],
         [
             [
@@ -258,67 +192,50 @@ export const walkNavTreeTestResults = {
                         [
                             {
                                 children: [
-                                    {
-                                        type: 'child',
-                                    },
-                                    {
-                                        type: 'child',
-                                    },
+                                    {type: 'child', coords: {x: 0, y: 0}, isGroup: false},
+                                    {type: 'child', coords: {x: 1, y: 0}, isGroup: false},
                                 ],
                                 type: '1d',
+                                isGroup: false,
+                                coords: {x: 0, y: 0},
                             },
-                            {
-                                children: [
-                                    [
-                                        {
-                                            type: 'child',
-                                        },
-                                        {
-                                            type: 'child',
-                                        },
-                                    ],
-                                    [
-                                        {
-                                            type: 'child',
-                                        },
-                                        {
-                                            type: 'child',
-                                        },
-                                    ],
-                                ],
-                                type: '2d',
-                            },
+                            {type: 'child', coords: {x: 1, y: 0}, isGroup: false},
                         ],
                         [
                             {
-                                type: 'child',
+                                children: [
+                                    [
+                                        {type: 'child', coords: {x: 0, y: 0}, isGroup: false},
+                                        {type: 'child', coords: {x: 1, y: 0}, isGroup: false},
+                                    ],
+                                    [
+                                        {type: 'child', coords: {x: 0, y: 1}, isGroup: false},
+                                        {type: 'child', coords: {x: 1, y: 1}, isGroup: false},
+                                    ],
+                                ],
+                                type: '2d',
+                                isGroup: false,
+                                coords: {x: 0, y: 1},
                             },
-                            {
-                                type: 'child',
-                            },
+                            {type: 'child', coords: {x: 1, y: 1}, isGroup: false},
                         ],
                     ],
                     type: '2d',
+                    isGroup: false,
+                    coords: {x: 1, y: 0},
                 },
                 {
                     children: [
-                        {
-                            type: 'child',
-                        },
-                        {
-                            type: 'child',
-                        },
+                        {type: 'child', coords: {x: 0, y: 0}, isGroup: false},
+                        {type: 'child', coords: {x: 1, y: 0}, isGroup: false},
                     ],
                     type: '1d',
+                    isGroup: false,
+                    coords: {x: 0, y: 0},
                 },
             ],
-            {
-                type: 'child',
-            },
-            {
-                x: 0,
-                y: 0,
-            },
+            {type: 'child', coords: {x: 0, y: 0}, isGroup: false},
+            {x: 0, y: 0},
         ],
         [
             [
@@ -327,67 +244,50 @@ export const walkNavTreeTestResults = {
                         [
                             {
                                 children: [
-                                    {
-                                        type: 'child',
-                                    },
-                                    {
-                                        type: 'child',
-                                    },
+                                    {type: 'child', coords: {x: 0, y: 0}, isGroup: false},
+                                    {type: 'child', coords: {x: 1, y: 0}, isGroup: false},
                                 ],
                                 type: '1d',
+                                isGroup: false,
+                                coords: {x: 0, y: 0},
                             },
-                            {
-                                children: [
-                                    [
-                                        {
-                                            type: 'child',
-                                        },
-                                        {
-                                            type: 'child',
-                                        },
-                                    ],
-                                    [
-                                        {
-                                            type: 'child',
-                                        },
-                                        {
-                                            type: 'child',
-                                        },
-                                    ],
-                                ],
-                                type: '2d',
-                            },
+                            {type: 'child', coords: {x: 1, y: 0}, isGroup: false},
                         ],
                         [
                             {
-                                type: 'child',
+                                children: [
+                                    [
+                                        {type: 'child', coords: {x: 0, y: 0}, isGroup: false},
+                                        {type: 'child', coords: {x: 1, y: 0}, isGroup: false},
+                                    ],
+                                    [
+                                        {type: 'child', coords: {x: 0, y: 1}, isGroup: false},
+                                        {type: 'child', coords: {x: 1, y: 1}, isGroup: false},
+                                    ],
+                                ],
+                                type: '2d',
+                                isGroup: false,
+                                coords: {x: 0, y: 1},
                             },
-                            {
-                                type: 'child',
-                            },
+                            {type: 'child', coords: {x: 1, y: 1}, isGroup: false},
                         ],
                     ],
                     type: '2d',
+                    isGroup: false,
+                    coords: {x: 1, y: 0},
                 },
                 {
                     children: [
-                        {
-                            type: 'child',
-                        },
-                        {
-                            type: 'child',
-                        },
+                        {type: 'child', coords: {x: 0, y: 0}, isGroup: false},
+                        {type: 'child', coords: {x: 1, y: 0}, isGroup: false},
                     ],
                     type: '1d',
+                    isGroup: false,
+                    coords: {x: 0, y: 0},
                 },
             ],
-            {
-                type: 'child',
-            },
-            {
-                x: 1,
-                y: 0,
-            },
+            {type: 'child', coords: {x: 1, y: 0}, isGroup: false},
+            {x: 1, y: 0},
         ],
         [
             [
@@ -396,74 +296,98 @@ export const walkNavTreeTestResults = {
                         [
                             {
                                 children: [
-                                    {
-                                        type: 'child',
-                                    },
-                                    {
-                                        type: 'child',
-                                    },
+                                    {type: 'child', coords: {x: 0, y: 0}, isGroup: false},
+                                    {type: 'child', coords: {x: 1, y: 0}, isGroup: false},
                                 ],
                                 type: '1d',
+                                isGroup: false,
+                                coords: {x: 0, y: 0},
                             },
-                            {
-                                children: [
-                                    [
-                                        {
-                                            type: 'child',
-                                        },
-                                        {
-                                            type: 'child',
-                                        },
-                                    ],
-                                    [
-                                        {
-                                            type: 'child',
-                                        },
-                                        {
-                                            type: 'child',
-                                        },
-                                    ],
-                                ],
-                                type: '2d',
-                            },
+                            {type: 'child', coords: {x: 1, y: 0}, isGroup: false},
                         ],
                         [
                             {
-                                type: 'child',
+                                children: [
+                                    [
+                                        {type: 'child', coords: {x: 0, y: 0}, isGroup: false},
+                                        {type: 'child', coords: {x: 1, y: 0}, isGroup: false},
+                                    ],
+                                    [
+                                        {type: 'child', coords: {x: 0, y: 1}, isGroup: false},
+                                        {type: 'child', coords: {x: 1, y: 1}, isGroup: false},
+                                    ],
+                                ],
+                                type: '2d',
+                                isGroup: false,
+                                coords: {x: 0, y: 1},
                             },
-                            {
-                                type: 'child',
-                            },
+                            {type: 'child', coords: {x: 1, y: 1}, isGroup: false},
                         ],
                     ],
                     type: '2d',
+                    isGroup: false,
+                    coords: {x: 1, y: 0},
+                },
+            ],
+            {type: 'child', coords: {x: 1, y: 0}, isGroup: false},
+            {x: 1, y: 0},
+        ],
+        [
+            [
+                {
+                    children: [
+                        [
+                            {
+                                children: [
+                                    {type: 'child', coords: {x: 0, y: 0}, isGroup: false},
+                                    {type: 'child', coords: {x: 1, y: 0}, isGroup: false},
+                                ],
+                                type: '1d',
+                                isGroup: false,
+                                coords: {x: 0, y: 0},
+                            },
+                            {type: 'child', coords: {x: 1, y: 0}, isGroup: false},
+                        ],
+                        [
+                            {
+                                children: [
+                                    [
+                                        {type: 'child', coords: {x: 0, y: 0}, isGroup: false},
+                                        {type: 'child', coords: {x: 1, y: 0}, isGroup: false},
+                                    ],
+                                    [
+                                        {type: 'child', coords: {x: 0, y: 1}, isGroup: false},
+                                        {type: 'child', coords: {x: 1, y: 1}, isGroup: false},
+                                    ],
+                                ],
+                                type: '2d',
+                                isGroup: false,
+                                coords: {x: 0, y: 1},
+                            },
+                            {type: 'child', coords: {x: 1, y: 1}, isGroup: false},
+                        ],
+                    ],
+                    type: '2d',
+                    isGroup: false,
+                    coords: {x: 1, y: 0},
                 },
             ],
             {
                 children: [
                     [
-                        {
-                            type: 'child',
-                        },
-                        {
-                            type: 'child',
-                        },
+                        {type: 'child', coords: {x: 0, y: 0}, isGroup: false},
+                        {type: 'child', coords: {x: 1, y: 0}, isGroup: false},
                     ],
                     [
-                        {
-                            type: 'child',
-                        },
-                        {
-                            type: 'child',
-                        },
+                        {type: 'child', coords: {x: 0, y: 1}, isGroup: false},
+                        {type: 'child', coords: {x: 1, y: 1}, isGroup: false},
                     ],
                 ],
                 type: '2d',
+                isGroup: false,
+                coords: {x: 0, y: 1},
             },
-            {
-                x: 1,
-                y: 0,
-            },
+            {x: 0, y: 1},
         ],
         [
             [
@@ -472,77 +396,56 @@ export const walkNavTreeTestResults = {
                         [
                             {
                                 children: [
-                                    {
-                                        type: 'child',
-                                    },
-                                    {
-                                        type: 'child',
-                                    },
+                                    {type: 'child', coords: {x: 0, y: 0}, isGroup: false},
+                                    {type: 'child', coords: {x: 1, y: 0}, isGroup: false},
                                 ],
                                 type: '1d',
+                                isGroup: false,
+                                coords: {x: 0, y: 0},
                             },
-                            {
-                                children: [
-                                    [
-                                        {
-                                            type: 'child',
-                                        },
-                                        {
-                                            type: 'child',
-                                        },
-                                    ],
-                                    [
-                                        {
-                                            type: 'child',
-                                        },
-                                        {
-                                            type: 'child',
-                                        },
-                                    ],
-                                ],
-                                type: '2d',
-                            },
+                            {type: 'child', coords: {x: 1, y: 0}, isGroup: false},
                         ],
                         [
                             {
-                                type: 'child',
+                                children: [
+                                    [
+                                        {type: 'child', coords: {x: 0, y: 0}, isGroup: false},
+                                        {type: 'child', coords: {x: 1, y: 0}, isGroup: false},
+                                    ],
+                                    [
+                                        {type: 'child', coords: {x: 0, y: 1}, isGroup: false},
+                                        {type: 'child', coords: {x: 1, y: 1}, isGroup: false},
+                                    ],
+                                ],
+                                type: '2d',
+                                isGroup: false,
+                                coords: {x: 0, y: 1},
                             },
-                            {
-                                type: 'child',
-                            },
+                            {type: 'child', coords: {x: 1, y: 1}, isGroup: false},
                         ],
                     ],
                     type: '2d',
+                    isGroup: false,
+                    coords: {x: 1, y: 0},
                 },
                 {
                     children: [
                         [
-                            {
-                                type: 'child',
-                            },
-                            {
-                                type: 'child',
-                            },
+                            {type: 'child', coords: {x: 0, y: 0}, isGroup: false},
+                            {type: 'child', coords: {x: 1, y: 0}, isGroup: false},
                         ],
                         [
-                            {
-                                type: 'child',
-                            },
-                            {
-                                type: 'child',
-                            },
+                            {type: 'child', coords: {x: 0, y: 1}, isGroup: false},
+                            {type: 'child', coords: {x: 1, y: 1}, isGroup: false},
                         ],
                     ],
                     type: '2d',
+                    isGroup: false,
+                    coords: {x: 0, y: 1},
                 },
             ],
-            {
-                type: 'child',
-            },
-            {
-                x: 0,
-                y: 0,
-            },
+            {type: 'child', coords: {x: 0, y: 0}, isGroup: false},
+            {x: 0, y: 0},
         ],
         [
             [
@@ -551,77 +454,56 @@ export const walkNavTreeTestResults = {
                         [
                             {
                                 children: [
-                                    {
-                                        type: 'child',
-                                    },
-                                    {
-                                        type: 'child',
-                                    },
+                                    {type: 'child', coords: {x: 0, y: 0}, isGroup: false},
+                                    {type: 'child', coords: {x: 1, y: 0}, isGroup: false},
                                 ],
                                 type: '1d',
+                                isGroup: false,
+                                coords: {x: 0, y: 0},
                             },
-                            {
-                                children: [
-                                    [
-                                        {
-                                            type: 'child',
-                                        },
-                                        {
-                                            type: 'child',
-                                        },
-                                    ],
-                                    [
-                                        {
-                                            type: 'child',
-                                        },
-                                        {
-                                            type: 'child',
-                                        },
-                                    ],
-                                ],
-                                type: '2d',
-                            },
+                            {type: 'child', coords: {x: 1, y: 0}, isGroup: false},
                         ],
                         [
                             {
-                                type: 'child',
+                                children: [
+                                    [
+                                        {type: 'child', coords: {x: 0, y: 0}, isGroup: false},
+                                        {type: 'child', coords: {x: 1, y: 0}, isGroup: false},
+                                    ],
+                                    [
+                                        {type: 'child', coords: {x: 0, y: 1}, isGroup: false},
+                                        {type: 'child', coords: {x: 1, y: 1}, isGroup: false},
+                                    ],
+                                ],
+                                type: '2d',
+                                isGroup: false,
+                                coords: {x: 0, y: 1},
                             },
-                            {
-                                type: 'child',
-                            },
+                            {type: 'child', coords: {x: 1, y: 1}, isGroup: false},
                         ],
                     ],
                     type: '2d',
+                    isGroup: false,
+                    coords: {x: 1, y: 0},
                 },
                 {
                     children: [
                         [
-                            {
-                                type: 'child',
-                            },
-                            {
-                                type: 'child',
-                            },
+                            {type: 'child', coords: {x: 0, y: 0}, isGroup: false},
+                            {type: 'child', coords: {x: 1, y: 0}, isGroup: false},
                         ],
                         [
-                            {
-                                type: 'child',
-                            },
-                            {
-                                type: 'child',
-                            },
+                            {type: 'child', coords: {x: 0, y: 1}, isGroup: false},
+                            {type: 'child', coords: {x: 1, y: 1}, isGroup: false},
                         ],
                     ],
                     type: '2d',
+                    isGroup: false,
+                    coords: {x: 0, y: 1},
                 },
             ],
-            {
-                type: 'child',
-            },
-            {
-                x: 1,
-                y: 0,
-            },
+            {type: 'child', coords: {x: 1, y: 0}, isGroup: false},
+            {x: 1, y: 0},
         ],
         [
             [
@@ -630,77 +512,56 @@ export const walkNavTreeTestResults = {
                         [
                             {
                                 children: [
-                                    {
-                                        type: 'child',
-                                    },
-                                    {
-                                        type: 'child',
-                                    },
+                                    {type: 'child', coords: {x: 0, y: 0}, isGroup: false},
+                                    {type: 'child', coords: {x: 1, y: 0}, isGroup: false},
                                 ],
                                 type: '1d',
+                                isGroup: false,
+                                coords: {x: 0, y: 0},
                             },
-                            {
-                                children: [
-                                    [
-                                        {
-                                            type: 'child',
-                                        },
-                                        {
-                                            type: 'child',
-                                        },
-                                    ],
-                                    [
-                                        {
-                                            type: 'child',
-                                        },
-                                        {
-                                            type: 'child',
-                                        },
-                                    ],
-                                ],
-                                type: '2d',
-                            },
+                            {type: 'child', coords: {x: 1, y: 0}, isGroup: false},
                         ],
                         [
                             {
-                                type: 'child',
+                                children: [
+                                    [
+                                        {type: 'child', coords: {x: 0, y: 0}, isGroup: false},
+                                        {type: 'child', coords: {x: 1, y: 0}, isGroup: false},
+                                    ],
+                                    [
+                                        {type: 'child', coords: {x: 0, y: 1}, isGroup: false},
+                                        {type: 'child', coords: {x: 1, y: 1}, isGroup: false},
+                                    ],
+                                ],
+                                type: '2d',
+                                isGroup: false,
+                                coords: {x: 0, y: 1},
                             },
-                            {
-                                type: 'child',
-                            },
+                            {type: 'child', coords: {x: 1, y: 1}, isGroup: false},
                         ],
                     ],
                     type: '2d',
+                    isGroup: false,
+                    coords: {x: 1, y: 0},
                 },
                 {
                     children: [
                         [
-                            {
-                                type: 'child',
-                            },
-                            {
-                                type: 'child',
-                            },
+                            {type: 'child', coords: {x: 0, y: 0}, isGroup: false},
+                            {type: 'child', coords: {x: 1, y: 0}, isGroup: false},
                         ],
                         [
-                            {
-                                type: 'child',
-                            },
-                            {
-                                type: 'child',
-                            },
+                            {type: 'child', coords: {x: 0, y: 1}, isGroup: false},
+                            {type: 'child', coords: {x: 1, y: 1}, isGroup: false},
                         ],
                     ],
                     type: '2d',
+                    isGroup: false,
+                    coords: {x: 0, y: 1},
                 },
             ],
-            {
-                type: 'child',
-            },
-            {
-                x: 0,
-                y: 1,
-            },
+            {type: 'child', coords: {x: 0, y: 1}, isGroup: false},
+            {x: 0, y: 1},
         ],
         [
             [
@@ -709,77 +570,56 @@ export const walkNavTreeTestResults = {
                         [
                             {
                                 children: [
-                                    {
-                                        type: 'child',
-                                    },
-                                    {
-                                        type: 'child',
-                                    },
+                                    {type: 'child', coords: {x: 0, y: 0}, isGroup: false},
+                                    {type: 'child', coords: {x: 1, y: 0}, isGroup: false},
                                 ],
                                 type: '1d',
+                                isGroup: false,
+                                coords: {x: 0, y: 0},
                             },
-                            {
-                                children: [
-                                    [
-                                        {
-                                            type: 'child',
-                                        },
-                                        {
-                                            type: 'child',
-                                        },
-                                    ],
-                                    [
-                                        {
-                                            type: 'child',
-                                        },
-                                        {
-                                            type: 'child',
-                                        },
-                                    ],
-                                ],
-                                type: '2d',
-                            },
+                            {type: 'child', coords: {x: 1, y: 0}, isGroup: false},
                         ],
                         [
                             {
-                                type: 'child',
+                                children: [
+                                    [
+                                        {type: 'child', coords: {x: 0, y: 0}, isGroup: false},
+                                        {type: 'child', coords: {x: 1, y: 0}, isGroup: false},
+                                    ],
+                                    [
+                                        {type: 'child', coords: {x: 0, y: 1}, isGroup: false},
+                                        {type: 'child', coords: {x: 1, y: 1}, isGroup: false},
+                                    ],
+                                ],
+                                type: '2d',
+                                isGroup: false,
+                                coords: {x: 0, y: 1},
                             },
-                            {
-                                type: 'child',
-                            },
+                            {type: 'child', coords: {x: 1, y: 1}, isGroup: false},
                         ],
                     ],
                     type: '2d',
+                    isGroup: false,
+                    coords: {x: 1, y: 0},
                 },
                 {
                     children: [
                         [
-                            {
-                                type: 'child',
-                            },
-                            {
-                                type: 'child',
-                            },
+                            {type: 'child', coords: {x: 0, y: 0}, isGroup: false},
+                            {type: 'child', coords: {x: 1, y: 0}, isGroup: false},
                         ],
                         [
-                            {
-                                type: 'child',
-                            },
-                            {
-                                type: 'child',
-                            },
+                            {type: 'child', coords: {x: 0, y: 1}, isGroup: false},
+                            {type: 'child', coords: {x: 1, y: 1}, isGroup: false},
                         ],
                     ],
                     type: '2d',
+                    isGroup: false,
+                    coords: {x: 0, y: 1},
                 },
             ],
-            {
-                type: 'child',
-            },
-            {
-                x: 1,
-                y: 1,
-            },
+            {type: 'child', coords: {x: 1, y: 1}, isGroup: false},
+            {x: 1, y: 1},
         ],
         [
             [
@@ -788,124 +628,46 @@ export const walkNavTreeTestResults = {
                         [
                             {
                                 children: [
-                                    {
-                                        type: 'child',
-                                    },
-                                    {
-                                        type: 'child',
-                                    },
+                                    {type: 'child', coords: {x: 0, y: 0}, isGroup: false},
+                                    {type: 'child', coords: {x: 1, y: 0}, isGroup: false},
                                 ],
                                 type: '1d',
+                                isGroup: false,
+                                coords: {x: 0, y: 0},
                             },
+                            {type: 'child', coords: {x: 1, y: 0}, isGroup: false},
+                        ],
+                        [
                             {
                                 children: [
                                     [
-                                        {
-                                            type: 'child',
-                                        },
-                                        {
-                                            type: 'child',
-                                        },
+                                        {type: 'child', coords: {x: 0, y: 0}, isGroup: false},
+                                        {type: 'child', coords: {x: 1, y: 0}, isGroup: false},
                                     ],
                                     [
-                                        {
-                                            type: 'child',
-                                        },
-                                        {
-                                            type: 'child',
-                                        },
+                                        {type: 'child', coords: {x: 0, y: 1}, isGroup: false},
+                                        {type: 'child', coords: {x: 1, y: 1}, isGroup: false},
                                     ],
                                 ],
                                 type: '2d',
+                                isGroup: false,
+                                coords: {x: 0, y: 1},
                             },
-                        ],
-                        [
-                            {
-                                type: 'child',
-                            },
-                            {
-                                type: 'child',
-                            },
+                            {type: 'child', coords: {x: 1, y: 1}, isGroup: false},
                         ],
                     ],
                     type: '2d',
+                    isGroup: false,
+                    coords: {x: 1, y: 0},
                 },
             ],
-            {
-                type: 'child',
-            },
-            {
-                x: 0,
-                y: 1,
-            },
-        ],
-        [
-            [
-                {
-                    children: [
-                        [
-                            {
-                                children: [
-                                    {
-                                        type: 'child',
-                                    },
-                                    {
-                                        type: 'child',
-                                    },
-                                ],
-                                type: '1d',
-                            },
-                            {
-                                children: [
-                                    [
-                                        {
-                                            type: 'child',
-                                        },
-                                        {
-                                            type: 'child',
-                                        },
-                                    ],
-                                    [
-                                        {
-                                            type: 'child',
-                                        },
-                                        {
-                                            type: 'child',
-                                        },
-                                    ],
-                                ],
-                                type: '2d',
-                            },
-                        ],
-                        [
-                            {
-                                type: 'child',
-                            },
-                            {
-                                type: 'child',
-                            },
-                        ],
-                    ],
-                    type: '2d',
-                },
-            ],
-            {
-                type: 'child',
-            },
-            {
-                x: 1,
-                y: 1,
-            },
+            {type: 'child', coords: {x: 1, y: 1}, isGroup: false},
+            {x: 1, y: 1},
         ],
         [
             [],
-            {
-                type: 'child',
-            },
-            {
-                x: 2,
-                y: 0,
-            },
+            {type: 'child', coords: {x: 2, y: 0}, isGroup: false},
+            {x: 2, y: 0},
         ],
     ]),
 };

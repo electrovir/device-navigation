@@ -30,6 +30,11 @@ describe(enterInto.name, () => {
         nestedChildArray[1] = {
             type: 'child',
             element: childElement,
+            coords: {
+                x: 1,
+                y: 0,
+            },
+            isGroup: false,
         };
 
         const mockNavTree: NavRootNode = {
@@ -38,10 +43,16 @@ describe(enterInto.name, () => {
                     children: [nestedChildArray],
                     element: rootElement,
                     type: '2d',
+                    coords: {
+                        x: 0,
+                        y: 0,
+                    },
+                    isGroup: false,
                 },
             ],
             isRoot: true,
             type: '1d',
+            isGroup: false,
         };
 
         assert.deepStrictEqual(enterInto(mockNavTree), {

@@ -6,13 +6,14 @@ import {sendKeys, sendMouse} from '@web/test-runner-commands';
 import {HTMLTemplateResult, css, html} from 'element-vir';
 import {assertDefined, assertInstanceOf} from 'run-time-assertions';
 import {waitUntilBlurred, waitUntilFocused} from '../test/focus.test-helper';
+import {group} from './nav-value';
 import {
-    getCurrentNavSettings,
+    getCurrentGlobalNavSettings,
     nav,
     navAttribute,
     navSelector,
-    resetNavSettings,
-    setNavSettings,
+    resetGlobalNavSettings,
+    setGlobalNavSettings,
 } from './nav.directive';
 
 describe('navAttribute', () => {
@@ -28,7 +29,7 @@ describe('navAttribute', () => {
             </div>
         `);
 
-        const matchedElements = baseElement.querySelectorAll(navAttribute.selector(2));
+        const matchedElements = baseElement.querySelectorAll(navAttribute.js(2));
 
         assert.lengthOf(matchedElements, 1);
     });
@@ -59,16 +60,16 @@ describe('navAttribute', () => {
 
 describe('NavSettings', () => {
     it('can be written to', () => {
-        const defaultSettings = getCurrentNavSettings();
+        const defaultSettings = getCurrentGlobalNavSettings();
 
-        setNavSettings({activateKeys: ['nothing']});
-        const newSettings = getCurrentNavSettings();
+        setGlobalNavSettings({activateKeys: ['nothing']});
+        const newSettings = getCurrentGlobalNavSettings();
 
-        assert.deepStrictEqual(getCurrentNavSettings(), {activateKeys: ['nothing']});
+        assert.deepStrictEqual(getCurrentGlobalNavSettings(), {activateKeys: ['nothing']});
         assert.notDeepEqual(defaultSettings, newSettings);
 
-        resetNavSettings();
-        assert.deepStrictEqual(getCurrentNavSettings(), defaultSettings);
+        resetGlobalNavSettings();
+        assert.deepStrictEqual(getCurrentGlobalNavSettings(), defaultSettings);
     });
 });
 
@@ -111,14 +112,11 @@ describe(nav.name, () => {
 
     async function matchSelectors(
         element: HTMLElement,
-        selectorValues: Readonly<Record<keyof typeof navSelector.selector, boolean>>,
+        selectorValues: Readonly<Record<keyof typeof navSelector.js, boolean>>,
     ) {
         getObjectTypedKeys(selectorValues).forEach((selectorKey) => {
             const selectorValue = selectorValues[selectorKey];
-            assert.strictEqual(
-                element.matches(navSelector.selector[selectorKey]('')),
-                selectorValue,
-            );
+            assert.strictEqual(element.matches(navSelector.js[selectorKey]('')), selectorValue);
             assert.strictEqual(
                 element.matches(String(navSelector.css[selectorKey](''))),
                 selectorValue,
@@ -126,13 +124,13 @@ describe(nav.name, () => {
         });
     }
 
-    async function setListenerTest() {
+    async function setupListenerTest() {
         const childStyle = css`
             width: 100px;
             height: 100px;
         `;
         const rootElement = await fixture(html`
-            <div>
+            <div ${nav(group)}>
                 <div style=${childStyle} ${nav()}></div>
                 <div style=${childStyle} ${nav()}></div>
             </div>
@@ -148,7 +146,7 @@ describe(nav.name, () => {
     }
 
     it('activates a nav element with an activate key', async () => {
-        const {navChildren} = await setListenerTest();
+        const {navChildren} = await setupListenerTest();
         const child = navChildren[0];
 
         matchSelectors(child, {click: false, selected: false});
@@ -168,7 +166,7 @@ describe(nav.name, () => {
     });
 
     it('loses activated class when element is blurred', async () => {
-        const {navChildren} = await setListenerTest();
+        const {navChildren} = await setupListenerTest();
         const child = navChildren[0];
 
         matchSelectors(child, {click: false, selected: false});
@@ -185,7 +183,7 @@ describe(nav.name, () => {
     });
 
     it('activates a nav element with mouse clicks', async () => {
-        const {navChildren} = await setListenerTest();
+        const {navChildren} = await setupListenerTest();
         const child = navChildren[0];
 
         matchSelectors(child, {click: false, selected: false});

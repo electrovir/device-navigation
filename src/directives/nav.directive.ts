@@ -4,17 +4,22 @@ import {assertInstanceOf} from 'run-time-assertions';
 import {ReadonlyDeep, WritableDeep} from 'type-fest';
 import {applyAttributes} from '../util/attributes';
 import {modifyElement} from './modify-element.directive';
-import {createNavValueString} from './nav-value';
+import {createNavValueString, group} from './nav-value';
 
-/** The attribute which the `nav` directive applies to elements. */
+/**
+ * The attribute which the `nav` directive applies to elements.
+ *
+ * @category Internals
+ */
 export const navAttribute = {
     /** Name of the attribute. */
     name: 'data-nav',
     /**
-     * Use this to generate a query selector string for the attribute. The selector value uses the
-     * `*=` comparison. Meaning, the nav attribute value can merely contain the given value.
+     * Use this to generate a query selector string for the attribute, to be within with JavaScript
+     * queries. The selector value uses the `*=` comparison. Meaning, the nav attribute value can
+     * merely contain the given value.
      */
-    selector(attributeValue: string | number) {
+    js(attributeValue: string | number) {
         if (attributeValue === '') {
             return `[${navAttribute.name}]`;
         } else {
@@ -27,7 +32,7 @@ export const navAttribute = {
      */
     css(attributeValue: string | number) {
         return css`
-            ${unsafeCSS(navAttribute.selector(attributeValue))}
+            ${unsafeCSS(navAttribute.js(attributeValue))}
         `;
     },
 };
@@ -37,9 +42,17 @@ const navActivatedClassName = 'nav-activated';
 /**
  * Query selector strings or CSS selectors for styling various states of navigation. Mostly
  * necessary only for the click styles (see comment on `.click` for more details).
+ *
+ * @category Main
  */
 export const navSelector = {
-    selector: {
+    /**
+     * CSS selector strings to be used in JavaScript queries.
+     *
+     * @example
+     *     element.querySelector(navSelector.js.click('.nav-element'));
+     */
+    js: {
         /**
          * Styles the element when navigation actives the element, whether by a mouse click or a
          * keyboard key.
@@ -61,6 +74,16 @@ export const navSelector = {
             return `${parentSelector}:focus`;
         },
     },
+    /**
+     * CSS selectors in `CSSResult` type for use within `css` tagged templates.
+     *
+     * @example
+     *     const styles = css`
+     *         ${navSelector.css.click('.nav-element')} {
+     *             border-color: red;
+     *         }
+     *     `;
+     */
     css: {
         /**
          * Styles the element when navigation actives the element, whether by a mouse click or a
@@ -73,7 +96,7 @@ export const navSelector = {
          */
         click(parentSelector: string): CSSResult {
             return css`
-                ${unsafeCSS(navSelector.selector.click(parentSelector))}
+                ${unsafeCSS(navSelector.js.click(parentSelector))}
             `;
         },
         /**
@@ -83,22 +106,33 @@ export const navSelector = {
          */
         selected(parentSelector: string): CSSResult {
             return css`
-                ${unsafeCSS(navSelector.selector.selected(parentSelector))}
+                ${unsafeCSS(navSelector.js.selected(parentSelector))}
             `;
         },
     },
 };
 
-/** Settings that control how some nav features work. */
-export type NavSettings = {
+/**
+ * Settings that control how some nav features work. These settings are _global_ because they are
+ * used whenever the {@link nav} directive is called.
+ *
+ * @category Types
+ */
+export type GlobalNavSettings = {
     /**
      * The keyboard keys that should trigger activate events (like a click). Matches are attempted
-     * against both event.key and event.code. These are case insensitive.
+     * against both event.key and event.code. These are case insensitive. Setting this value will
+     * override the default values of `'Space'`, `'Return'`, and `'Enter'`.
      */
     activateKeys: string[];
 };
 
-const defaultNavSettings: ReadonlyDeep<NavSettings> = {
+/**
+ * The default values for {@link GlobalNavSettings}.
+ *
+ * @category Internals
+ */
+export const defaultGlobalNavSettings: ReadonlyDeep<GlobalNavSettings> = {
     activateKeys: [
         'Space',
         'Return',
@@ -106,34 +140,44 @@ const defaultNavSettings: ReadonlyDeep<NavSettings> = {
     ],
 };
 
-/** Resets all nav settings back to their default values. */
-export function resetNavSettings() {
-    navSettings = copyThroughJson(defaultNavSettings) as WritableDeep<typeof defaultNavSettings>;
+/**
+ * Resets all nav settings back to their default values.
+ *
+ * @category Internals
+ */
+export function resetGlobalNavSettings() {
+    currentGlobalNavSettings = copyThroughJson(defaultGlobalNavSettings) as WritableDeep<
+        typeof defaultGlobalNavSettings
+    >;
 }
 
-let navSettings: NavSettings;
+let currentGlobalNavSettings: GlobalNavSettings;
 
-resetNavSettings();
+resetGlobalNavSettings();
 
 /**
  * Selectively overwrite current nav settings. Changes are global unless you manage to import the
- * device-navigation package multiple times within your code (which is generally not a good idea
+ * `device-navigation` package multiple times within your code (which is generally not a good idea
  * with _any_ package or module).
+ *
+ * @category Utils
  */
-export function setNavSettings(newNavSettings: Partial<NavSettings>) {
-    Object.assign(navSettings, newNavSettings);
+export function setGlobalNavSettings(newNavSettings: Partial<GlobalNavSettings>) {
+    Object.assign(currentGlobalNavSettings, newNavSettings);
 }
 
 /**
  * Retrieves the current nav settings. Modifying the output of this will not modify the internally
  * saved nav settings. Use `setNavSettings` for that.
+ *
+ * @category Utils
  */
-export function getCurrentNavSettings(): ReadonlyDeep<NavSettings> {
-    return copyThroughJson(navSettings);
+export function getCurrentGlobalNavSettings(): ReadonlyDeep<GlobalNavSettings> {
+    return copyThroughJson(currentGlobalNavSettings);
 }
 
 function isActivateKey(event: Pick<KeyboardEvent, 'code' | 'key'>): boolean {
-    return navSettings.activateKeys.some((activateKey) => {
+    return currentGlobalNavSettings.activateKeys.some((activateKey) => {
         const lowerCaseActivateKey = activateKey.toLowerCase();
         return (
             lowerCaseActivateKey === event.key.toLowerCase() ||
@@ -142,20 +186,60 @@ function isActivateKey(event: Pick<KeyboardEvent, 'code' | 'key'>): boolean {
     });
 }
 
-/** Mark an element for 1 dimensional navigation. */
+/**
+ * Mark an element for 1 dimensional navigation.
+ *
+ * @category Main
+ * @example
+ *     html`
+ *         <div ${nav()}></div>
+ *     `;
+ */
 export function nav(): DirectiveResult;
-/** Mark an element for 2 dimensional navigation. */
+/**
+ * Mark an element for 2 dimensional navigation.
+ *
+ * @category Main
+ * @example
+ *     html`
+ *         <div ${nav(0, 1)}></div>
+ *     `;
+ */
 export function nav(xCoord: number, yCoord: number): DirectiveResult;
-/** Mark an element for 1 or 2 dimensional navigation. */
-export function nav(xCoord?: undefined | number, yCoord?: number | undefined): DirectiveResult {
-    const navValue = createNavValueString(xCoord, yCoord);
+/**
+ * Mark an element as a nav group, which can't receive focus but can define a section of navigable
+ * elements.
+ *
+ * @category Main
+ * @example
+ *     import {group} from 'device-navigation';
+ *
+ *     const myTemplate = html`
+ *         <div ${nav(group)}></div>
+ *     `;
+ */
+export function nav(isGroup: typeof group): DirectiveResult;
+/**
+ * Mark an element for navigation.
+ *
+ * This automatically applies the `tabindex` attribute and all keyboard and mouse listeners needed
+ * to enable `NavController` functionality.
+ *
+ * @category Main
+ */
+export function nav(
+    xOrGroup?: undefined | number | typeof group,
+    yCoord?: number | undefined,
+): DirectiveResult {
+    const navValue = createNavValueString(xOrGroup, yCoord);
 
-    return modifyElement(`${xCoord}-${yCoord}`, (element) => {
-        const tabIndexAttribute = element.hasAttribute('tabindex')
-            ? {}
-            : {
-                  tabindex: 0,
-              };
+    return modifyElement(`${xOrGroup}-${yCoord}`, (element) => {
+        const tabIndexAttribute =
+            element.hasAttribute('tabindex') || xOrGroup === group
+                ? {}
+                : {
+                      tabindex: 0,
+                  };
 
         const allAttributes = {
             [navAttribute.name]: navValue,
@@ -163,6 +247,12 @@ export function nav(xCoord?: undefined | number, yCoord?: number | undefined): D
         };
         assertInstanceOf(element, HTMLElement);
         applyAttributes(element, allAttributes);
+
+        if (xOrGroup === group) {
+            /** Skip all listeners if this is a nav parent. */
+            return;
+        }
+
         if (!element.style.getPropertyValue('cursor')) {
             element.style.setProperty('cursor', 'pointer');
         }

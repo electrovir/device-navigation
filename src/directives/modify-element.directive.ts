@@ -1,5 +1,10 @@
 import {Directive, PartInfo, directive, extractElement, noChange} from 'element-vir';
 
+/**
+ * Makes arbitrary modifications to the element that its attached to.
+ *
+ * @category Internals
+ */
 export const modifyElement = directive(
     /** @internal */
     class extends Directive {

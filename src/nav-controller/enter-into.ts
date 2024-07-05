@@ -6,6 +6,8 @@ import {NavigationResult} from './navigate';
 /**
  * Enter into the currently focused node's children. Focuses the first child. Fails if there are no
  * children to focus.
+ *
+ * @category Internals
  */
 export function enterInto(navTree: NavRootNode | undefined): NavigationResult {
     if (!navTree) {

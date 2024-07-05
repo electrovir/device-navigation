@@ -2,7 +2,12 @@ import {itCases} from '@augment-vir/browser-testing';
 import {HTMLTemplateResult, html} from 'element-vir';
 import {nav} from '../directives/nav.directive';
 import {Coords} from '../util/coords';
-import {NavNodeNoElement, createNavTreeFromTemplate, omitElementProp} from './nav-tree.mock';
+import {
+    NavNodeNoElement,
+    NavRootNodeNoElementChildren,
+    createNavTreeFromTemplate,
+    omitElementProp,
+} from './nav-tree.mock';
 import {walkNavTree} from './walk-nav-tree';
 import {walkNavTreeTestResults} from './walk-nav-tree.test-helper';
 
@@ -45,7 +50,11 @@ describe(walkNavTree.name, () => {
     async function testWalkingTree(template: HTMLTemplateResult, callback?: () => boolean) {
         const {tree} = await createNavTreeFromTemplate(template);
 
-        const walkCallbackInputs: [NavNodeNoElement[], NavNodeNoElement, Coords][] = [];
+        const walkCallbackInputs: [
+            (NavNodeNoElement | NavRootNodeNoElementChildren)[],
+            NavNodeNoElement | NavRootNodeNoElementChildren,
+            Coords,
+        ][] = [];
         walkNavTree(tree, (parentChain, currentNode, childCoords) => {
             walkCallbackInputs.push([
                 parentChain.map(omitElementProp),

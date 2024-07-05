@@ -1,4 +1,5 @@
 import {css, defineElementNoInputs, html} from 'element-vir';
+import {group} from '../../directives/nav-value';
 import {nav, navSelector} from '../../directives/nav.directive';
 import {NavController} from '../../nav-controller/nav-controller';
 import {NavDirection} from '../../nav-controller/navigate';
@@ -9,27 +10,22 @@ export const VirTestApp = defineElementNoInputs({
         :host {
             padding: 32px;
             font-family: sans-serif;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
         }
 
         h3 {
             margin: 0;
         }
 
-        :host,
-        div {
+        main {
             display: flex;
-            flex-direction: column;
-            gap: 16px;
+            align-self: stretch;
         }
 
         div {
             background-color: white;
-            padding: 16px;
-            border-radius: 8px;
-            border: 3px solid #ccc;
-            align-items: center;
-            justify-content: center;
-            align-self: stretch;
         }
 
         div:focus {
@@ -43,10 +39,39 @@ export const VirTestApp = defineElementNoInputs({
             background-color: rgba(255, 0, 0, 0.1);
         }
 
-        .grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr 1fr;
-            gap: 16px;
+        .row {
+            display: flex;
+            gap: 8px;
+        }
+
+        .row > * {
+            flex-grow: 1;
+        }
+
+        section {
+            display: flex;
+            gap: 8px;
+            flex-direction: column;
+            flex-grow: 1;
+            padding: 16px 0;
+        }
+
+        section:first-of-type {
+            padding-right: 16px;
+        }
+
+        section + section {
+            padding-left: 16px;
+            border-left: 1px solid #aaa;
+        }
+
+        .cell {
+            border: 2px solid dodgerblue;
+            height: 32px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
         code {
@@ -55,6 +80,18 @@ export const VirTestApp = defineElementNoInputs({
             border-radius: 4px;
             font-size: 1.2em;
         }
+
+        .double {
+            padding: 8px;
+            display: flex;
+            justify-content: space-evenly;
+            border: 2px solid grey;
+            border-radius: 8px;
+        }
+
+        .double .cell {
+            padding: 8px 16px;
+        }
     `,
     stateInitStatic: {
         navController: undefined as undefined | NavController,
@@ -62,7 +99,14 @@ export const VirTestApp = defineElementNoInputs({
         /** For tracking if directives unnecessarily re-render. */
         counter: 0,
     },
-    initCallback({state, updateState}) {
+    initCallback({state, updateState, host}) {
+        if (!state.navController) {
+            const navController = new NavController(host);
+            updateState({navController});
+            console.info(navController);
+            console.info(navController.buildNavTree());
+        }
+
         if (!state.cleanup) {
             function windowListener(event: KeyboardEvent) {
                 if (!state.navController) {
@@ -72,7 +116,7 @@ export const VirTestApp = defineElementNoInputs({
                 const keyCode = event.code;
                 if (keyCode === 'ArrowDown') {
                     event.preventDefault();
-                    console.log(
+                    console.info(
                         state.navController.navigate({
                             direction: NavDirection.Down,
                             allowWrapping: false,
@@ -80,7 +124,7 @@ export const VirTestApp = defineElementNoInputs({
                     );
                 } else if (keyCode === 'ArrowUp') {
                     event.preventDefault();
-                    console.log(
+                    console.info(
                         state.navController.navigate({
                             direction: NavDirection.Up,
                             allowWrapping: false,
@@ -88,7 +132,7 @@ export const VirTestApp = defineElementNoInputs({
                     );
                 } else if (keyCode === 'ArrowLeft') {
                     event.preventDefault();
-                    console.log(
+                    console.info(
                         state.navController.navigate({
                             direction: NavDirection.Left,
                             allowWrapping: false,
@@ -96,18 +140,32 @@ export const VirTestApp = defineElementNoInputs({
                     );
                 } else if (keyCode === 'ArrowRight') {
                     event.preventDefault();
-                    console.log(
+                    console.info(
                         state.navController.navigate({
                             direction: NavDirection.Right,
                             allowWrapping: false,
                         }),
                     );
+                } else if (keyCode === 'BracketRight') {
+                    console.info(
+                        state.navController.navigatePibling({
+                            direction: NavDirection.Right,
+                            allowWrapping: true,
+                        }),
+                    );
+                } else if (keyCode === 'BracketLeft') {
+                    console.info(
+                        state.navController.navigatePibling({
+                            direction: NavDirection.Left,
+                            allowWrapping: true,
+                        }),
+                    );
                 } else if (keyCode === 'Enter' || keyCode === 'Return') {
                     event.preventDefault();
-                    console.log(state.navController.enterInto());
+                    console.info(state.navController.enterInto());
                 } else if (keyCode === 'Backspace' || keyCode === 'Escape') {
                     event.preventDefault();
-                    console.log(state.navController.exitOutOf());
+                    console.info(state.navController.exitOutOf());
                 }
             }
             window.addEventListener('keydown', windowListener);
@@ -124,15 +182,10 @@ export const VirTestApp = defineElementNoInputs({
         updateState({cleanup: undefined});
     },
     renderCallback({host, state, updateState}) {
-        console.log('rendering root');
+        console.info('rendering root');
         setTimeout(() => {
             updateState({counter: state.counter + 1});
         }, 1000);
-        if (!state.navController) {
-            const navController = new NavController(host);
-            updateState({navController});
-            console.log(navController);
-        }
 
         return html`
             <header>
@@ -146,6 +199,13 @@ export const VirTestApp = defineElementNoInputs({
             <h3>Instructions</h3>
             <ul>
                 <li>Use arrow keys or mouse movement to navigate.</li>
+                <li>
+                    Use square brackets (
+                    <code>[</code>
+                    or
+                    <code>]</code>
+                    ) to switch sections.
+                </li>
                 <li>Use the enter key to enter into a nested navigation.</li>
                 <li>Use escape to exit out of a nested navigation.</li>
                 <li>Use enter, space, or return keys or mouse click to activate an element.</li>
@@ -153,23 +213,49 @@ export const VirTestApp = defineElementNoInputs({
                     The tab key can still be used to navigate the elements in its traditional way.
                 </li>
             </ul>
-            <div class="grid" ${nav()}>
-                <div ${nav(0, 0)}>a</div>
-                <div ${nav(0, 1)}>b</div>
-                <div ${nav(0, 2)}>c</div>
-                <div ${nav(1, 0)}>d</div>
-                <div ${nav(1, 1)}>e</div>
-                <div ${nav(1, 2)}>f</div>
-            </div>
-            <div ${nav()}>second</div>
-            <div ${nav()}>third</div>
-            <div ${nav()}>fourth</div>
+            <main>
+                <section ${nav(group)}>
+                    <div class="cell" ${nav()}>Cell</div>
+                    <div class="cell" ${nav()}>Cell</div>
+                    <div class="cell" ${nav()}>Cell</div>
+                    <div class="double" ${nav()}>
+                        <div class="cell" ${nav()}>Cell</div>
+                        <div class="cell" ${nav()}>Cell</div>
+                    </div>
+                </section>
+                <section ${nav(group)}>
+                    <div class="row">
+                        <div class="cell" ${nav(0, 0)}>Cell</div>
+                        <div class="cell" ${nav(1, 0)}>Cell</div>
+                        <div class="cell" ${nav(2, 0)}>Cell</div>
+                    </div>
+                    <div class="row">
+                        <div class="cell" ${nav(0, 1)}>Cell</div>
+                        <div class="cell" ${nav(1, 1)}>Cell</div>
+                        <div class="cell" ${nav(2, 1)}>Cell</div>
+                    </div>
+                    <div class="row">
+                        <div class="cell" ${nav(0, 2)}>Cell</div>
+                        <div class="cell" ${nav(1, 2)}>Cell</div>
+                        <div class="cell" ${nav(2, 2)}>Cell</div>
+                    </div>
+                    <div class="row">
+                        <div class="cell" ${nav(0, 3)}>Cell</div>
+                        <div class="cell" ${nav(1, 3)}>Cell</div>
+                    </div>
+                </section>
+            </main>
             <h3>How it works</h3>
             <ol>
                 <li>
                     The
                     <code>nav()</code>
-                    directive marks elements for navigation.
+                    directive marks each element for navigation.
+                </li>
+                <li>
+                    Using
+                    <code>nav(group)</code>
+                    marks each non-navigable section group.
                 </li>
                 <li>
                     <code>NavController</code>
@@ -179,7 +265,7 @@ export const VirTestApp = defineElementNoInputs({
                     Styles are applied via
                     <code>:focus</code>
                     and
-                    <code>createNavSelector('div').click</code>
+                    <code>navSelector.css.click('div')</code>
                     (
                     <code>:active</code>
                     cannot be triggered on non-natively-interactive elements but
@@ -191,22 +277,21 @@ export const VirTestApp = defineElementNoInputs({
                     <code>NavController</code>
                     .
                 </li>
-                <li>
-                    The HTML template itself is extremely simple:
-                    <pre>${navString}</pre>
-                </li>
             </ol>
             <ul>
+                <li>
+                    <a href="https://electrovir.github.io/device-navigation">demo</a>
+                </li>
                 <li>
                     <a href="https://electrovir.github.io/device-navigation/docs">docs</a>
                 </li>
                 <li>
                     <a href="https://github.com/electrovir/device-navigation">code</a>
                 </li>
+                <li>
+                    <a href="https://www.npmjs.com/package/device-navigation">npm</a>
+                </li>
             </ul>
         `;
     },
 });
-
-const navString =
-    '<div class="grid" ${nav()}>\n    <div ${nav(0, 0)}>a</div>\n    <div ${nav(0, 1)}>b</div>\n    <div ${nav(0, 2)}>c</div>\n    <div ${nav(1, 0)}>d</div>\n    <div ${nav(1, 1)}>e</div>\n    <div ${nav(1, 2)}>f</div>\n</div>\n<div ${nav()}>second</div>\n<div ${nav()}>third</div>\n<div ${nav()}>fourth</div>';

@@ -2,25 +2,40 @@ import {buildNavTree, NavRootNode} from '../nav-tree/nav-tree';
 import {CurrentlyFocusedResult, getCurrentlyFocused} from './currently-focused';
 import {enterInto} from './enter-into';
 import {exitOutOf} from './exit-out-of';
-import {NavDirection, navigate, NavigationResult} from './navigate';
-
-/** Inputs for controlling navigation. */
-export type NavigationInputs = {
-    /**
-     * The direction to navigate within the tree. Note that 1 dimensional navigation treads up and
-     * left as the same, down and right as the same.
-     */
-    direction: NavDirection;
-    /** Set to true to allow navigation to wrap. */
-    allowWrapping: boolean;
-};
+import {navigate, navigatePibling, NavigationInputs, NavigationResult} from './navigate';
 
 /**
  * Allows navigation around the nav tree contained within the given `rootElement`. If there is no
- * nav tree, all operations simply do nothing.
+ * nav tree, all operations simply do nothing. For a full example, see
+ * {@link https://github.com/electrovir/device-navigation/blob/dev/src/test/elements/vir-test-app.element.ts | vir-test-app.element.ts}.
+ *
+ * @category Main
+ * @example
+ *     const navController = new NavController(host);
+ *
+ *     window.addEventListener('keydown', (event) => {
+ *         if (event.code === 'ArrowDown') {
+ *             navController.navigate({
+ *                 direction: NavDirection.Down,
+ *                 allowWrapper: false,
+ *             });
+ *         } else if (event.code === 'ArrowUp') {
+ *             navController.navigate({
+ *                 direction: NavDirection.Up,
+ *                 allowWrapper: false,
+ *             });
+ *         }
+ *         // etc. all other navigation directions
+ *     });
  */
 export class NavController {
-    constructor(public readonly rootElement: HTMLElement) {}
+    constructor(
+        /**
+         * The parent of all navigable elements. If this element also has `nav()` applied to it, it
+         * will be ignored.
+         */
+        public readonly rootElement: HTMLElement,
+    ) {}
 
     /** Gets the currently focused node (is any) from within the `rootElement`'s nav tree. */
     public getCurrentlyFocused(): CurrentlyFocusedResult | undefined {
@@ -50,26 +65,15 @@ export class NavController {
         return exitOutOf(this.buildNavTree());
     }
     /** Navigate to siblings of the parent of the currently focused element, if they exist. */
-    public navigatePibling(navigationInputs: NavigationInputs): NavigationResult {
-        const exitResult = this.exitOutOf();
-        if (!exitResult.success) {
-            return exitResult;
+    public navigatePibling({allowWrapping, direction}: NavigationInputs): NavigationResult {
+        const navTree = this.buildNavTree();
+
+        const currentlyFocused = getCurrentlyFocused(navTree);
+
+        if (!currentlyFocused || !navTree) {
+            return navigate(navTree, direction, allowWrapping);
         }
 
-        const navigateResult = this.navigate(navigationInputs);
-        if (!navigateResult.success) {
-            return navigateResult;
-        }
-
-        const enterIntoResult = this.enterInto();
-        if (enterIntoResult.success) {
-            return enterIntoResult;
-        } else {
-            /**
-             * If `enterInto` failed, consider the navigation a success still because `navigate`
-             * worked.
-             */
-            return navigateResult;
-        }
+        return navigatePibling(navTree, currentlyFocused, direction, allowWrapping);
     }
 }

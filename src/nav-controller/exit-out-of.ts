@@ -1,4 +1,3 @@
-import {typedHasProperty} from '@augment-vir/common';
 import {NavRootNode} from '../nav-tree/nav-tree';
 import {focusElement} from '../util/focus';
 import {getCurrentlyFocused} from './currently-focused';
@@ -6,7 +5,9 @@ import {NavigationResult} from './navigate';
 
 /**
  * Shift focus from the currently focused node to its parent. If there is no parent, or rather if
- * the parent is the tree root, this fails.
+ * the parent is the tree root, this returns a failure result.
+ *
+ * @category Internals
  */
 export function exitOutOf(navTree: NavRootNode | undefined): NavigationResult {
     if (!navTree) {
@@ -25,14 +26,14 @@ export function exitOutOf(navTree: NavRootNode | undefined): NavigationResult {
         };
     }
 
-    if (typedHasProperty(currentlyFocused.parent, 'isRoot')) {
+    const newNode = currentlyFocused.nonGroupParent;
+
+    if (newNode.isRoot) {
         return {
             success: false,
             reason: 'at top level nav already, nothing to exit to',
         };
     }
-
-    const newNode = currentlyFocused.parent;
 
     focusElement(newNode.element);
 
@@ -43,5 +44,3 @@ export function exitOutOf(navTree: NavRootNode | undefined): NavigationResult {
         newElement: newNode.element,
     };
 }
-
-(({}) as any as NavigationResult).success;

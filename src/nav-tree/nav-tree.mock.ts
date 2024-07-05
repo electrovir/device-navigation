@@ -2,6 +2,7 @@ import {omitObjectKeys} from '@augment-vir/common';
 import {fixture as renderFixture} from '@open-wc/testing';
 import {HTMLTemplateResult} from 'element-vir';
 import {assertInstanceOf} from 'run-time-assertions';
+import {Coords} from '../util/coords';
 import {NavNode, NavNode1d, NavNode2d, NavRootNode, buildNavTree} from './nav-tree';
 
 export async function createNavTreeFromTemplate(template: HTMLTemplateResult) {
@@ -20,21 +21,47 @@ export function omitElementProp(
     } else if (navNode.type === '1d') {
         return {
             ...omitObjectKeys(navNode as NavNode1d, ['element']),
-            children: navNode.children.map(omitElementProp),
+            children: navNode.children.map(omitElementProp) as NavNodeNoElement[],
         };
     } else if (navNode.type === '2d') {
         return {
             ...omitObjectKeys(navNode as NavNode2d, ['element']),
-            children: navNode.children.map((row) => row.map(omitElementProp)),
+            children: navNode.children.map((row) =>
+                row.map(omitElementProp),
+            ) as NavNodeNoElement[][],
         };
     }
     throw new Error(`Invalid node type: ${(navNode as any).type}`);
 }
 
-export type NavNode1dNoElement = {children: NavNodeNoElement[]; type: '1d'};
-export type NavNode2dNoElement = {children: NavNodeNoElement[][]; type: '2d'};
-export type NavNodeChildNoElement = {type: 'child'};
+export type NavNode1dNoElement = {
+    children: NavNodeNoElement[];
+    coords: Coords;
+    type: '1d';
+    isGroup: boolean;
+};
+export type NavNode2dNoElement = {
+    children: NavNodeNoElement[][];
+    coords: Coords;
+    type: '2d';
+    isGroup: boolean;
+};
+export type NavNodeChildNoElement = {
+    coords: Coords;
+    type: 'child';
+    isGroup: boolean;
+};
 export type NavNodeNoElement = NavNode1dNoElement | NavNode2dNoElement | NavNodeChildNoElement;
 export type NavRootNodeNoElementChildren =
-    | {children: NavNodeNoElement[]; type: '1d'; isRoot: true}
-    | {children: NavNodeNoElement[][]; type: '2d'; isRoot: true};
+    | {
+          children: NavNodeNoElement[];
+          type: '1d';
+          isRoot: true;
+          isGroup: false;
+      }
+    | {
+          children: NavNodeNoElement[][];
+          type: '2d';
+          isRoot: true;
+          isGroup: false;
+      };

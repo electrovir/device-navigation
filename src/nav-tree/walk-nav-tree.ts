@@ -2,9 +2,13 @@ import {typedHasProperty} from '@augment-vir/common';
 import {Coords} from '../util/coords';
 import {NavNode, NavNodeParent, NavRootNode} from './nav-tree';
 
-/** Callback type for `walkNavTree`. */
+/**
+ * Callback type for `walkNavTree`.
+ *
+ * @category Internals
+ */
 export type WalkNavTreeCallback = (
-    currentParentChain: NavNodeParent[],
+    ancestorChain: NavNodeParent[],
     currentNode: NavNode,
     childCoords: Coords,
 ) => boolean;
@@ -12,6 +16,8 @@ export type WalkNavTreeCallback = (
 /**
  * Walk each node in the tree with a depth-first traversal. Walking stops if the callback returns
  * true.
+ *
+ * @category Internals
  */
 export function walkNavTree(
     /** The tree to walk. */
@@ -23,17 +29,17 @@ export function walkNavTree(
 }
 
 function walkRecursively(
-    currentParentChain: NavNodeParent[],
+    ancestorChain: NavNodeParent[],
     currentNode: NavRootNode | NavNode | undefined,
     callback: WalkNavTreeCallback,
 ): boolean {
     if (!currentNode || currentNode.type === 'child') {
         return false;
     } else if (currentNode.type === '1d') {
-        return walk1d(currentNode.children, currentNode, 0, currentParentChain, callback);
+        return walk1d(currentNode.children, currentNode, 0, ancestorChain, callback);
     } else {
         return currentNode.children.some((row, yIndex) =>
-            walk1d(row, currentNode, yIndex, currentParentChain, callback),
+            walk1d(row, currentNode, yIndex, ancestorChain, callback),
         );
     }
 }
@@ -42,13 +48,13 @@ function walk1d(
     childArray: NavNode[],
     parent: NavRootNode | NavNodeParent,
     yIndex: number,
-    currentParentChain: NavNodeParent[],
+    ancestorChain: NavNodeParent[],
     callback: WalkNavTreeCallback,
 ): boolean {
     return childArray.some((child, xIndex): boolean => {
         const nextParentChain: NavNodeParent[] = typedHasProperty(parent, 'isRoot')
-            ? currentParentChain
-            : currentParentChain.concat(parent);
+            ? ancestorChain
+            : ancestorChain.concat(parent);
 
         const childCoords: Coords = {x: xIndex, y: yIndex};
 
