@@ -217,8 +217,6 @@ function calculateNextNode(
                 ? wrapComparison(nextCoords.x, currentNode.coords.x)
                 : wrapComparison(nextCoords.y, currentNode.coords.y);
 
-        console.log({requiresWrapping, nextCoords, currentCoords: currentNode.coords});
-
         return {
             nextNode: nextNode?.element === currentNode.element ? undefined : nextNode,
             requiresWrapping,
