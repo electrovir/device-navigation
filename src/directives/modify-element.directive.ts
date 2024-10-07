@@ -3,7 +3,7 @@ import {Directive, PartInfo, directive, extractElement, noChange} from 'element-
 /**
  * Makes arbitrary modifications to the element that its attached to.
  *
- * @category Internals
+ * @category Internal
  */
 export const modifyElement = directive(
     /** @internal */

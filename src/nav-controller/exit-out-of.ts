@@ -1,13 +1,13 @@
-import {NavRootNode} from '../nav-tree/nav-tree';
-import {focusElement} from '../util/focus';
-import {getCurrentlyFocused} from './currently-focused';
-import {NavigationResult} from './navigate';
+import {NavRootNode} from '../nav-tree/nav-tree.js';
+import {focusElement} from '../util/focus.js';
+import {getCurrentlyFocused} from './currently-focused.js';
+import {NavigationResult} from './navigate.js';
 
 /**
  * Shift focus from the currently focused node to its parent. If there is no parent, or rather if
  * the parent is the tree root, this returns a failure result.
  *
- * @category Internals
+ * @category Internal
  */
 export function exitOutOf(navTree: NavRootNode | undefined): NavigationResult {
     if (!navTree) {

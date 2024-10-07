@@ -1,13 +1,13 @@
-import {getDirectChildren} from '@augment-vir/browser';
-import {isLengthAtLeast} from '@augment-vir/common';
-import {ParsedNavValue, parseNavValueString} from '../directives/nav-value';
-import {navAttribute} from '../directives/nav.directive';
-import {Coords} from '../util/coords';
+import {assert, check} from '@augment-vir/assert';
+import {getDirectChildren, isElementFocused} from '@augment-vir/web';
+import {ParsedNavValue, parseNavValueString} from '../directives/nav-value.js';
+import {navAttribute} from '../directives/nav.directive.js';
+import {Coords} from '../util/coords.js';
 
 /**
  * Shared properties for each NavNode.
  *
- * @category Internals
+ * @category Internal
  */
 export type SharedNavProperties = {
     element: HTMLElement;
@@ -18,7 +18,7 @@ export type SharedNavProperties = {
 /**
  * Nav node for 1 dimensional navigation.
  *
- * @category Internals
+ * @category Internal
  */
 export type NavNode1d = SharedNavProperties & {
     children: NavNode[];
@@ -28,7 +28,7 @@ export type NavNode1d = SharedNavProperties & {
 /**
  * Nav node for 2 dimensional navigation.
  *
- * @category Internals
+ * @category Internal
  */
 export type NavNode2d = SharedNavProperties & {
     children: NavNode[][];
@@ -38,7 +38,7 @@ export type NavNode2d = SharedNavProperties & {
 /**
  * Leaf nav node with no children.
  *
- * @category Internals
+ * @category Internal
  */
 export type NavNodeChild = SharedNavProperties & {
     isGroup: false;
@@ -48,19 +48,19 @@ export type NavNodeChild = SharedNavProperties & {
 /**
  * Any non-root nav node that has children.
  *
- * @category Internals
+ * @category Internal
  */
 export type NavNodeParent = NavNode1d | NavNode2d;
 /**
  * Any non-root nav node.
  *
- * @category Internals
+ * @category Internal
  */
 export type NavNode = NavNodeParent | NavNodeChild;
 /**
  * Nav nodes at the root of the tree. Their only difference is that they have no associated element.
  *
- * @category Internals
+ * @category Internal
  */
 export type NavRootNode =
     | {children: NavNode[]; type: '1d'; isRoot: true; isGroup: false}
@@ -69,7 +69,7 @@ export type NavRootNode =
 /**
  * Intermediate node used for building the nav tree.
  *
- * @category Internals
+ * @category Internal
  */
 export type BuildingTreeNavNode = {
     element: HTMLElement;
@@ -77,12 +77,71 @@ export type BuildingTreeNavNode = {
     navValue: ParsedNavValue;
 };
 
+// The following is for debugging and cannot really be adequately tested.
+/* node:coverage disable */
+
+/**
+ * Log a whole nav tree for debugging purposes
+ *
+ * @category Util
+ */
+export function logNavTree(node: Readonly<NavRootNode | NavNode>, indent = 0): void {
+    if (!indent) {
+        // eslint-disable-next-line no-console
+        console.log('vvv NAV TREE vvv');
+    }
+    function log(...args: unknown[]) {
+        // eslint-disable-next-line no-console
+        console.log('    '.repeat(indent) + String(args[0]), ...args.slice(1));
+    }
+
+    if (node.type === 'child') {
+        log('type    : ', node.type);
+        log('focused : ', isElementFocused(node.element));
+        log('coords  : ', node.coords);
+        log('element : ', node.element);
+    } else if (node.isRoot) {
+        log('type    : ', node.type);
+        log('isRoot  : ', node.isRoot);
+        log('isGroup : ', node.isGroup);
+    } else {
+        log('type    : ', node.type);
+        log('focused : ', isElementFocused(node.element));
+        log('isGroup : ', node.isGroup);
+        log('coords  : ', node.coords);
+        log('element : ', node.element);
+    }
+
+    if ('children' in node) {
+        log('children');
+        node.children.forEach((child, yCoord) => {
+            if (check.isArray(child)) {
+                // 2d children
+                child.forEach((innerChild, xCoord) => {
+                    log(
+                        [
+                            xCoord,
+                            yCoord,
+                        ].join(', '),
+                    );
+                    logNavTree(innerChild, indent + 1);
+                });
+            } else {
+                // 1d children
+                log(yCoord);
+                logNavTree(child, indent + 1);
+            }
+        });
+    }
+}
+/* node:coverage enable */
+
 /**
  * Generates intermediate `BuildingTreeNavNode` nodes that finds all children of the given
  * `rootElement` which are marked for navigation. The output of this is later used to build the full
  * nav tree.
  *
- * @category Internals
+ * @category Internal
  */
 export function getNavChildren(
     /** The HTML element from which to search for nav children. */
@@ -92,23 +151,23 @@ export function getNavChildren(
 
     getDirectChildren(rootElement).forEach((childElement) => {
         /** Idk how to create children that are not HTMLElements. */
-        /* c8 ignore next 3 */
+        /* node:coverage ignore next 3 */
         if (!(childElement instanceof HTMLElement)) {
             return;
         }
 
-        const ancestors = getNavChildren(childElement);
+        const descendants = getNavChildren(childElement);
         const navValue = childElement.hasAttribute(navAttribute.name)
             ? parseNavValueString(childElement.getAttribute(navAttribute.name) || '')
             : undefined;
 
         if (!navValue) {
-            childNodes.push(...ancestors);
+            childNodes.push(...descendants);
             return;
         }
 
         childNodes.push({
-            children: ancestors,
+            children: descendants,
             element: childElement,
             navValue,
         });
@@ -121,7 +180,7 @@ export function getNavChildren(
  * Builds a full nav tree from the given HTML element, or nothing if there are no nav elements
  * within the given element.
  *
- * @category Internals
+ * @category Internal
  */
 export function buildNavTree(rootElement: HTMLElement): NavRootNode | undefined {
     const nodes = getNavChildren(rootElement);
@@ -132,10 +191,10 @@ export function buildNavTree(rootElement: HTMLElement): NavRootNode | undefined 
 /**
  * Converts an array of {@link BuildingTreeNavNode} to a tree.
  *
- * @category Internals
+ * @category Internal
  */
 export function convertTree(nodes: BuildingTreeNavNode[]): NavRootNode | undefined {
-    if (!isLengthAtLeast(nodes, 1)) {
+    if (!check.isLengthAtLeast(nodes, 1)) {
         return undefined;
     }
 
@@ -177,7 +236,8 @@ export function convertTree(nodes: BuildingTreeNavNode[]): NavRootNode | undefin
             if (!navRoot.children[coords.y]) {
                 navRoot.children[coords.y] = [];
             }
-            const yArray = navRoot.children[coords.y]!;
+            const yArray = navRoot.children[coords.y];
+            assert.isDefined(yArray);
 
             if (yArray[coords.x]) {
                 throw new Error(`Parent already has child at ${coords.x},${coords.y}`);
@@ -186,7 +246,7 @@ export function convertTree(nodes: BuildingTreeNavNode[]): NavRootNode | undefin
             yArray[coords.x] = childTreeNode;
         } else if (node.navValue.type === '1d' && navRoot.type === '1d') {
             // edge case
-            /* c8 ignore next 3 */
+            /* node:coverage ignore next 3 */
             if (navRoot.children[coords.x]) {
                 throw new Error(`Parent already has child at ${coords.x},${coords.y}`);
             }
@@ -205,7 +265,7 @@ export function convertTree(nodes: BuildingTreeNavNode[]): NavRootNode | undefin
  * Calculate a node's coords. The 1d coords are determined by looking at how many children have
  * already been handled. The 2d coords are simply taken from the 2d `nav(x,y)` directive's inputs.
  *
- * @category Internals
+ * @category Internal
  */
 export function calculateChildCoords(
     child: Pick<BuildingTreeNavNode, 'navValue'>,
@@ -216,7 +276,9 @@ export function calculateChildCoords(
             x: child.navValue.xCord,
             y: child.navValue.yCord,
         };
-    } else if (child.navValue.type === '1d') {
+    } else if (
+        (child.navValue as Pick<BuildingTreeNavNode, 'navValue'>['navValue']).type === '1d'
+    ) {
         return {
             x: currentChildren.length,
             y: 0,

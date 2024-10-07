@@ -1,5 +1,6 @@
+import {assert} from '@augment-vir/assert';
 import {html} from 'element-vir';
-import {nav, NavController} from '..';
+import {nav, NavController} from '../index.js';
 
 const myTemplate = html`
     <main>
@@ -10,5 +11,7 @@ const myTemplate = html`
 `;
 
 function setNavController() {
-    return new NavController(document.querySelector('main')!);
+    const main = document.querySelector('main');
+    assert.isDefined(main);
+    return new NavController(main);
 }

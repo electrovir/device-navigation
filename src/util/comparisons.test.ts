@@ -1,5 +1,5 @@
-import {itCases} from '@augment-vir/browser-testing';
-import {greaterThan, lessThan} from './comparisons';
+import {describe, itCases} from '@augment-vir/test';
+import {greaterThan, lessThan} from './comparisons.js';
 
 describe(greaterThan.name, () => {
     itCases(greaterThan, [

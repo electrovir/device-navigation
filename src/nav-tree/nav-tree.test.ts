@@ -1,18 +1,16 @@
-import {itCases} from '@augment-vir/browser-testing';
-import {typedHasProperty} from '@augment-vir/common';
-import {fixture as renderFixture} from '@open-wc/testing';
+import {assert, check} from '@augment-vir/assert';
+import {describe, it, itCases, testWeb} from '@augment-vir/test';
 import {HTMLTemplateResult, html} from 'element-vir';
-import {assertInstanceOf, assertThrows} from 'run-time-assertions';
-import {ParsedNavValue} from '../directives/nav-value';
-import {nav} from '../directives/nav.directive';
+import {ParsedNavValue} from '../directives/nav-value.js';
+import {nav} from '../directives/nav.directive.js';
 import {
     BuildingTreeNavNode,
     buildNavTree,
     calculateChildCoords,
     convertTree,
     getNavChildren,
-} from './nav-tree';
-import {NavRootNodeNoElementChildren, omitElementProp} from './nav-tree.mock';
+} from './nav-tree.js';
+import {NavRootNodeNoElementChildren, omitElementProp} from './nav-tree.mock.js';
 
 type BuildingTreeNavNodeNoElement = {
     children: BuildingTreeNavNodeNoElement[];
@@ -23,13 +21,13 @@ function pickChildrenOnly(navNode: BuildingTreeNavNode): BuildingTreeNavNodeNoEl
     return {
         children: navNode.children.map(pickChildrenOnly),
         navValue: navNode.navValue,
-        ...(typedHasProperty(navNode, 'isRoot') ? {isRoot: navNode.isRoot} : {}),
+        ...(check.hasKey(navNode, 'isRoot') ? {isRoot: navNode.isRoot} : {}),
     };
 }
 
 async function testGetNavChildren(template: HTMLTemplateResult) {
-    const rootElement = await renderFixture(template);
-    assertInstanceOf(rootElement, HTMLElement);
+    const rootElement = await testWeb.render(template);
+    assert.instanceOf(rootElement, HTMLElement);
     const children = getNavChildren(rootElement);
 
     return children.map(pickChildrenOnly);
@@ -37,12 +35,11 @@ async function testGetNavChildren(template: HTMLTemplateResult) {
 
 describe(omitElementProp.name, () => {
     it('errors if the node is an invalid type', () => {
-        assertThrows(() => {
+        assert.throws(() => {
             omitElementProp({
                 children: [],
                 element: {} as any,
-                /** Intentionally incorrect type for testing purposes. */
-                // @ts-expect-error
+                // @ts-expect-error: Intentionally incorrect type for testing purposes.
                 type: 'invalid type',
             });
         });
@@ -200,9 +197,9 @@ describe(buildNavTree.name, () => {
     async function testBuildTree(
         template: HTMLTemplateResult,
     ): Promise<NavRootNodeNoElementChildren | undefined> {
-        const rootElement = await renderFixture(template);
+        const rootElement = await testWeb.render(template);
 
-        assertInstanceOf(rootElement, HTMLElement);
+        assert.instanceOf(rootElement, HTMLElement);
         const tree = buildNavTree(rootElement);
 
         if (!tree) {
@@ -247,7 +244,9 @@ describe(buildNavTree.name, () => {
                     <div ${nav(0, 2)}></div>
                 </div>
             `,
-            throws: 'inconsistent nav dimensionality',
+            throws: {
+                matchMessage: 'inconsistent nav dimensionality',
+            },
         },
         {
             it: 'errors if siblings have identical coords',
@@ -257,7 +256,9 @@ describe(buildNavTree.name, () => {
                     <div ${nav(0, 2)}></div>
                 </div>
             `,
-            throws: 'Parent already has child at 0,2',
+            throws: {
+                matchMessage: 'Parent already has child at 0,2',
+            },
         },
         {
             it: 'builds a 1d 2 deep tree',
@@ -668,7 +669,9 @@ describe(calculateChildCoords.name, () => {
                 },
                 [],
             ],
-            throws: 'Unexpected node nav type',
+            throws: {
+                matchMessage: 'Unexpected node nav type',
+            },
         },
     ]);
 });

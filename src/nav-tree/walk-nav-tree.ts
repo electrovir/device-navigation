@@ -1,11 +1,11 @@
-import {typedHasProperty} from '@augment-vir/common';
-import {Coords} from '../util/coords';
-import {NavNode, NavNodeParent, NavRootNode} from './nav-tree';
+import {check} from '@augment-vir/assert';
+import {Coords} from '../util/coords.js';
+import {NavNode, NavNodeParent, NavRootNode} from './nav-tree.js';
 
 /**
  * Callback type for `walkNavTree`.
  *
- * @category Internals
+ * @category Internal
  */
 export type WalkNavTreeCallback = (
     ancestorChain: NavNodeParent[],
@@ -17,7 +17,7 @@ export type WalkNavTreeCallback = (
  * Walk each node in the tree with a depth-first traversal. Walking stops if the callback returns
  * true.
  *
- * @category Internals
+ * @category Internal
  */
 export function walkNavTree(
     /** The tree to walk. */
@@ -52,9 +52,13 @@ function walk1d(
     callback: WalkNavTreeCallback,
 ): boolean {
     return childArray.some((child, xIndex): boolean => {
-        const nextParentChain: NavNodeParent[] = typedHasProperty(parent, 'isRoot')
-            ? ancestorChain
-            : ancestorChain.concat(parent);
+        const nextParentChain: NavNodeParent[] =
+            check.hasKey(parent, 'isRoot') && parent.isRoot
+                ? ancestorChain
+                : [
+                      parent,
+                      ...ancestorChain,
+                  ];
 
         const childCoords: Coords = {x: xIndex, y: yIndex};
 

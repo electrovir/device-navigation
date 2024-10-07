@@ -1,20 +1,21 @@
-import {NavNode, NavNodeParent, NavRootNode} from '../nav-tree/nav-tree';
-import {walkNavTree} from '../nav-tree/walk-nav-tree';
-import {Coords} from '../util/coords';
+import {isElementFocused} from '@augment-vir/web';
+import {NavNode, NavNodeParent, NavRootNode} from '../nav-tree/nav-tree.js';
+import {walkNavTree} from '../nav-tree/walk-nav-tree.js';
+import {Coords} from '../util/coords.js';
 
 /**
  * Find the first parent that is not a group.
  *
- * @category Internals
+ * @category Internal
  */
 export function getNonGroupParent(parents: NavNodeParent[]) {
-    return parents.reverse().find((parent) => !parent.isGroup);
+    return parents.toReversed().find((parent) => !parent.isGroup);
 }
 
 /**
  * Data associated with the currently focused node or element. Used for navigation purposes.
  *
- * @category Internals
+ * @category Internal
  */
 export type CurrentlyFocusedResult = {
     /** The immediate parent `NavNode` of the currently focused `NavNode`. */
@@ -32,7 +33,7 @@ export type CurrentlyFocusedResult = {
  * HTMLElement input because it is used with other navigation actions that already build the nav
  * tree from the root HTMLElement.
  *
- * @category Internals
+ * @category Internal
  */
 export function getCurrentlyFocused(
     navTree: NavRootNode | undefined,
@@ -45,7 +46,7 @@ export function getCurrentlyFocused(
     let node: NavNode | undefined;
     let coords: Coords | undefined;
     walkNavTree(navTree, (ancestorChain, currentNode, currentCoords) => {
-        if (currentNode.element.matches(':focus')) {
+        if (isElementFocused(currentNode.element)) {
             ancestors = ancestorChain;
             node = currentNode;
             coords = currentCoords;

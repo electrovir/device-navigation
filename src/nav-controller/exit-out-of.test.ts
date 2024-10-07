@@ -1,43 +1,43 @@
-import {assert, fixture} from '@open-wc/testing';
+import {assert} from '@augment-vir/assert';
+import {describe, it, testWeb} from '@augment-vir/test';
 import {html} from 'element-vir';
-import {assertInstanceOf} from 'run-time-assertions';
-import {nav} from '../directives/nav.directive';
-import {buildNavTree} from '../nav-tree/nav-tree';
-import {waitUntilFocused} from '../test/focus.test-helper';
-import {exitOutOf} from './exit-out-of';
+import {nav} from '../directives/nav.directive.js';
+import {buildNavTree} from '../nav-tree/nav-tree.js';
+import {waitUntilFocused} from '../util/focus.js';
+import {exitOutOf} from './exit-out-of.js';
 
 describe(exitOutOf.name, () => {
     it('fails if there is no currently focused node', async () => {
-        const rootElement = await fixture(html`
+        const rootElement = await testWeb.render(html`
             <div ${nav()}>
                 <div ${nav(0, 1)}></div>
             </div>
         `);
-        assertInstanceOf(rootElement, HTMLDivElement);
+        assert.instanceOf(rootElement, HTMLDivElement);
 
         const childElement = rootElement.querySelector('div');
-        assertInstanceOf(childElement, HTMLDivElement);
+        assert.instanceOf(childElement, HTMLDivElement);
 
         const navTree = buildNavTree(rootElement);
 
-        assert.deepStrictEqual(exitOutOf(navTree), {
+        assert.deepEquals(exitOutOf(navTree), {
             success: false,
             reason: 'no focused node to exit out of',
         });
     });
 
     it('focuses a parent element', async () => {
-        const rootElement = await fixture(html`
+        const rootElement = await testWeb.render(html`
             <main>
                 <div ${nav()}>
                     <div class="nested-child" ${nav()}></div>
                 </div>
             </main>
         `);
-        assertInstanceOf(rootElement, HTMLElement);
+        assert.instanceOf(rootElement, HTMLElement);
 
         const childElement = rootElement.querySelector('.nested-child');
-        assertInstanceOf(childElement, HTMLDivElement);
+        assert.instanceOf(childElement, HTMLDivElement);
 
         childElement.focus();
         await waitUntilFocused(childElement);

@@ -1,7 +1,7 @@
 /**
  * Just a wrapper for `>`.
  *
- * @category Internals
+ * @category Internal
  */
 export function greaterThan(a: any, b: any) {
     return a > b;
@@ -10,7 +10,7 @@ export function greaterThan(a: any, b: any) {
 /**
  * Just a wrapper for `>`.
  *
- * @category Internals
+ * @category Internal
  */
 export function lessThan(a: any, b: any) {
     return a < b;

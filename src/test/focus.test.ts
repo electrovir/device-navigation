@@ -1,11 +1,11 @@
-import {fixture} from '@open-wc/testing';
+import {assert} from '@augment-vir/assert';
+import {describe, it, testWeb} from '@augment-vir/test';
 import {html} from 'element-vir';
-import {assertInstanceOf} from 'run-time-assertions';
-import {waitUntilFocused} from './focus.test-helper';
+import {waitUntilFocused} from '../util/focus.js';
 
 describe(waitUntilFocused.name, () => {
     it('can detect focused elements', async () => {
-        const rootElement = await fixture(html`
+        const rootElement = await testWeb.render(html`
             <div>
                 <div></div>
                 <div></div>
@@ -17,7 +17,7 @@ describe(waitUntilFocused.name, () => {
         `);
 
         const elementToFocus = rootElement.querySelector('.focus-me');
-        assertInstanceOf(elementToFocus, HTMLElement);
+        assert.instanceOf(elementToFocus, HTMLElement);
         elementToFocus.focus();
 
         await waitUntilFocused(elementToFocus);

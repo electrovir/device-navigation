@@ -5,11 +5,14 @@ import {toEnsuredNumber} from '@augment-vir/common';
  *
  * @category Main
  * @example
- *     import {group} from 'device-navigation';
  *
- *     const myTemplate = html`
- *         <div ${nav(group)}></div>
- *     `;
+ * ```ts
+ * import {group} from 'device-navigation';
+ *
+ * const myTemplate = html`
+ *     <div ${nav(group)}></div>
+ * `;
+ * ```
  */
 export const group = 'group';
 
@@ -22,7 +25,7 @@ export const group = 'group';
  * - `group`: for 1 dimensional nav groups
  * - `` (empty string): for 1 dimensional nav
  *
- * @category Internals
+ * @category Internal
  */
 export function createNavValueString(
     xOrGroup?: number | undefined | typeof group,
@@ -43,7 +46,7 @@ export function createNavValueString(
 /**
  * Data parsed from the nav attributes.
  *
- * @category Internals
+ * @category Internal
  */
 export type ParsedNavValue =
     | {type: '2d'; xCord: number; yCord: number; isGroup: boolean}
@@ -53,7 +56,7 @@ export type ParsedNavValue =
  * Parsed nav data from attribute values assigned from the `nav` directive. Expected inputs come
  * from `createNavValueString`.
  *
- * @category Internals
+ * @category Internal
  */
 export function parseNavValueString(value: string): ParsedNavValue | undefined {
     const [

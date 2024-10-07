@@ -1,5 +1,5 @@
 import {html} from 'element-vir';
-import {nav, NavController, NavDirection} from '..';
+import {nav, NavController, NavDirection} from '../index.js';
 
 const myTemplate = html`
     <main>

@@ -1,15 +1,15 @@
+import {assert} from '@augment-vir/assert';
 import {copyThroughJson} from '@augment-vir/common';
 import {CSSResult, DirectiveResult, css, unsafeCSS} from 'element-vir';
-import {assertInstanceOf} from 'run-time-assertions';
 import {ReadonlyDeep, WritableDeep} from 'type-fest';
-import {applyAttributes} from '../util/attributes';
-import {modifyElement} from './modify-element.directive';
-import {createNavValueString, group} from './nav-value';
+import {applyAttributes} from '../util/attributes.js';
+import {modifyElement} from './modify-element.directive.js';
+import {createNavValueString, group} from './nav-value.js';
 
 /**
  * The attribute which the `nav` directive applies to elements.
  *
- * @category Internals
+ * @category Internal
  */
 export const navAttribute = {
     /** Name of the attribute. */
@@ -50,7 +50,12 @@ export const navSelector = {
      * CSS selector strings to be used in JavaScript queries.
      *
      * @example
-     *     element.querySelector(navSelector.js.click('.nav-element'));
+     *
+     * ```ts
+     * import {navSelector} from 'device-navigation';
+     *
+     * element.querySelector(navSelector.js.click('.nav-element'));
+     * ```
      */
     js: {
         /**
@@ -77,12 +82,9 @@ export const navSelector = {
     /**
      * CSS selectors in `CSSResult` type for use within `css` tagged templates.
      *
-     * @example
-     *     const styles = css`
-     *         ${navSelector.css.click('.nav-element')} {
-     *             border-color: red;
-     *         }
-     *     `;
+     * @example ``ts import {navSelector} from 'device-navigation';
+     *
+     * Const styles = css`${navSelector.css.click('.nav-element')} { border-color: red; }`;
      */
     css: {
         /**
@@ -116,7 +118,7 @@ export const navSelector = {
  * Settings that control how some nav features work. These settings are _global_ because they are
  * used whenever the {@link nav} directive is called.
  *
- * @category Types
+ * @category Type
  */
 export type GlobalNavSettings = {
     /**
@@ -130,7 +132,7 @@ export type GlobalNavSettings = {
 /**
  * The default values for {@link GlobalNavSettings}.
  *
- * @category Internals
+ * @category Internal
  */
 export const defaultGlobalNavSettings: ReadonlyDeep<GlobalNavSettings> = {
     activateKeys: [
@@ -143,7 +145,7 @@ export const defaultGlobalNavSettings: ReadonlyDeep<GlobalNavSettings> = {
 /**
  * Resets all nav settings back to their default values.
  *
- * @category Internals
+ * @category Internal
  */
 export function resetGlobalNavSettings() {
     currentGlobalNavSettings = copyThroughJson(defaultGlobalNavSettings) as WritableDeep<
@@ -160,7 +162,7 @@ resetGlobalNavSettings();
  * `device-navigation` package multiple times within your code (which is generally not a good idea
  * with _any_ package or module).
  *
- * @category Utils
+ * @category Util
  */
 export function setGlobalNavSettings(newNavSettings: Partial<GlobalNavSettings>) {
     Object.assign(currentGlobalNavSettings, newNavSettings);
@@ -170,7 +172,7 @@ export function setGlobalNavSettings(newNavSettings: Partial<GlobalNavSettings>)
  * Retrieves the current nav settings. Modifying the output of this will not modify the internally
  * saved nav settings. Use `setNavSettings` for that.
  *
- * @category Utils
+ * @category Util
  */
 export function getCurrentGlobalNavSettings(): ReadonlyDeep<GlobalNavSettings> {
     return copyThroughJson(currentGlobalNavSettings);
@@ -191,9 +193,14 @@ function isActivateKey(event: Pick<KeyboardEvent, 'code' | 'key'>): boolean {
  *
  * @category Main
  * @example
- *     html`
- *         <div ${nav()}></div>
- *     `;
+ *
+ * ```ts
+ * import {nav} from 'device-navigation';
+ *
+ * html`
+ *     <div ${nav()}></div>
+ * `;
+ * ```
  */
 export function nav(): DirectiveResult;
 /**
@@ -201,9 +208,14 @@ export function nav(): DirectiveResult;
  *
  * @category Main
  * @example
- *     html`
- *         <div ${nav(0, 1)}></div>
- *     `;
+ *
+ * ```ts
+ * import {nav} from 'device-navigation';
+ *
+ * html`
+ *     <div ${nav(0, 1)}></div>
+ * `;
+ * ```
  */
 export function nav(xCoord: number, yCoord: number): DirectiveResult;
 /**
@@ -212,11 +224,14 @@ export function nav(xCoord: number, yCoord: number): DirectiveResult;
  *
  * @category Main
  * @example
- *     import {group} from 'device-navigation';
  *
- *     const myTemplate = html`
- *         <div ${nav(group)}></div>
- *     `;
+ * ```ts
+ * import {group, nav} from 'device-navigation';
+ *
+ * const myTemplate = html`
+ *     <div ${nav(group)}></div>
+ * `;
+ * ```
  */
 export function nav(isGroup: typeof group): DirectiveResult;
 /**
@@ -245,7 +260,7 @@ export function nav(
             [navAttribute.name]: navValue,
             ...tabIndexAttribute,
         };
-        assertInstanceOf(element, HTMLElement);
+        assert.instanceOf(element, HTMLElement);
         applyAttributes(element, allAttributes);
 
         if (xOrGroup === group) {

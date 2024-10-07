@@ -1,15 +1,15 @@
-import {isLengthAtLeast, wrapNumber} from '@augment-vir/common';
-import {assertDefined} from 'run-time-assertions';
-import {NavNode, NavNodeParent, NavRootNode} from '../nav-tree/nav-tree';
-import {greaterThan, lessThan} from '../util/comparisons';
-import {Coords} from '../util/coords';
-import {focusElement} from '../util/focus';
-import {CurrentlyFocusedResult, getCurrentlyFocused} from './currently-focused';
+import {assert, check} from '@augment-vir/assert';
+import {wrapNumber} from '@augment-vir/common';
+import {NavNode, NavNodeParent, NavRootNode} from '../nav-tree/nav-tree.js';
+import {greaterThan, lessThan} from '../util/comparisons.js';
+import {Coords} from '../util/coords.js';
+import {focusElement} from '../util/focus.js';
+import {CurrentlyFocusedResult, getCurrentlyFocused} from './currently-focused.js';
 
 /**
  * Inputs for controlling navigation.
  *
- * @category Types
+ * @category Type
  */
 export type NavigationInputs = {
     /**
@@ -24,7 +24,7 @@ export type NavigationInputs = {
 /**
  * All the possible nav directions.
  *
- * @category Types
+ * @category Type
  */
 export enum NavDirection {
     Up = 'up',
@@ -36,7 +36,7 @@ export enum NavDirection {
 /**
  * Data which describes the result of an attempted navigation action.
  *
- * @category Types
+ * @category Type
  */
 export type NavigationResult =
     | {
@@ -63,7 +63,7 @@ export type NavigationResult =
 /**
  * Finds the default node to select within the given node.
  *
- * @category Internals
+ * @category Internal
  */
 export function findDefaultChild(node: Readonly<NavNodeParent | NavRootNode>) {
     const firstNode = node.type === '1d' ? node.children[0] : node.children[0]?.[0];
@@ -82,7 +82,7 @@ export function findDefaultChild(node: Readonly<NavNodeParent | NavRootNode>) {
 /**
  * Navigate around the nav tree.
  *
- * @category Internals
+ * @category Internal
  */
 export function navigate(
     navTree: NavRootNode | undefined,
@@ -118,7 +118,7 @@ export function navigate(
              * The below else if is an edge that technically cannot be triggered, given current
              * logic. However, it is an edge case nonetheless and thus is handled here.
              */
-            /* c8 ignore next 7 */
+            /* node:coverage ignore next 7 */
         } else {
             /** Nothing we can do, we found no nav nodes to focus. */
             return {
@@ -149,7 +149,13 @@ export function navigate(
             success: false,
             reason: 'failed to find node to focus',
         };
-    } else if (!isWrappingValid) {
+        /* node:coverage ignore next 5 */
+    } else if (isWrappingValid) {
+        return {
+            success: false,
+            reason: 'no conditions matched',
+        };
+    } else {
         return {
             success: false,
             reason: 'wrapping blocked',
@@ -158,12 +164,6 @@ export function navigate(
          * The below else is an edge cause that cannot be triggered, given the above logic. However,
          * it must exist for type guarding purposes.
          */
-        /* c8 ignore next 6 */
-    } else {
-        return {
-            success: false,
-            reason: 'no conditions matched',
-        };
     }
 }
 
@@ -182,8 +182,7 @@ function calculateNextNode(
         const nextY =
             parentNode.type === '1d'
                 ? 0
-                : wrapNumber({
-                      value: currentNode.coords.y + increment,
+                : wrapNumber(currentNode.coords.y + increment, {
                       min: 0,
                       max: parentNode.children.length - 1,
                   });
@@ -192,8 +191,7 @@ function calculateNextNode(
         const nextCoords: Coords = {
             x:
                 parentNode.type === '1d'
-                    ? wrapNumber({
-                          value: currentNode.coords.x + increment,
+                    ? wrapNumber(currentNode.coords.x + increment, {
                           min: 0,
                           max: parentNode.children.length - 1,
                       })
@@ -231,11 +229,10 @@ function calculateNextNode(
                 ? parentNode.children
                 : parentNode.children[currentNode.coords.y];
 
-        assertDefined(currentRow, `No current row found at y index: '${currentNode.coords.y}'`);
+        assert.isDefined(currentRow, `No current row found at y index: '${currentNode.coords.y}'`);
 
         const nextCoords: Coords = {
-            x: wrapNumber({
-                value: currentNode.coords.x + increment,
+            x: wrapNumber(currentNode.coords.x + increment, {
                 min: 0,
                 max: currentRow.length - 1,
             }),
@@ -259,7 +256,7 @@ function calculateNextNode(
 /**
  * Navigate only to piblings (siblings of parent).
  *
- * @category Internals
+ * @category Internal
  */
 export function navigatePibling(
     navTree: NavRootNode,
@@ -267,7 +264,7 @@ export function navigatePibling(
     direction: NavDirection,
     allowWrapping: boolean,
 ): NavigationResult {
-    const grandparent = isLengthAtLeast(currentlyFocused.ancestors, 2)
+    const grandparent = check.isLengthAtLeast(currentlyFocused.ancestors, 2)
         ? currentlyFocused.ancestors[1]
         : navTree;
     const parent = currentlyFocused.ancestors[0];
@@ -284,23 +281,24 @@ export function navigatePibling(
     const nodeToFocus = nextNode?.isGroup ? findDefaultChild(nextNode) : nextNode;
 
     const isWrappingValid = allowWrapping ? true : !requiresWrapping;
+
     if (!nodeToFocus) {
         return {
             success: false,
             reason: 'no node to navigate to',
         };
-    } else if (!isWrappingValid) {
-        return {
-            success: false,
-            reason: 'wrapping blocked',
-        };
-    } else {
+    } else if (isWrappingValid) {
         focusElement(nodeToFocus.element);
         return {
             success: true,
             defaulted: false,
             newElement: nodeToFocus.element,
             wrapped: requiresWrapping,
+        };
+    } else {
+        return {
+            success: false,
+            reason: 'wrapping blocked',
         };
     }
 }

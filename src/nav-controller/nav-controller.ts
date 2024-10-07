@@ -1,8 +1,8 @@
-import {buildNavTree, NavRootNode} from '../nav-tree/nav-tree';
-import {CurrentlyFocusedResult, getCurrentlyFocused} from './currently-focused';
-import {enterInto} from './enter-into';
-import {exitOutOf} from './exit-out-of';
-import {navigate, navigatePibling, NavigationInputs, NavigationResult} from './navigate';
+import {buildNavTree, NavRootNode} from '../nav-tree/nav-tree.js';
+import {CurrentlyFocusedResult, getCurrentlyFocused} from './currently-focused.js';
+import {enterInto} from './enter-into.js';
+import {exitOutOf} from './exit-out-of.js';
+import {navigate, navigatePibling, NavigationInputs, NavigationResult} from './navigate.js';
 
 /**
  * Allows navigation around the nav tree contained within the given `rootElement`. If there is no
@@ -11,22 +11,27 @@ import {navigate, navigatePibling, NavigationInputs, NavigationResult} from './n
  *
  * @category Main
  * @example
- *     const navController = new NavController(host);
  *
- *     window.addEventListener('keydown', (event) => {
- *         if (event.code === 'ArrowDown') {
- *             navController.navigate({
- *                 direction: NavDirection.Down,
- *                 allowWrapper: false,
- *             });
- *         } else if (event.code === 'ArrowUp') {
- *             navController.navigate({
- *                 direction: NavDirection.Up,
- *                 allowWrapper: false,
- *             });
- *         }
- *         // etc. all other navigation directions
- *     });
+ * ```ts
+ * import {NavController, NavDirection} from 'device-navigation';
+ *
+ * const navController = new NavController(host);
+ *
+ * window.addEventListener('keydown', (event) => {
+ *     if (event.code === 'ArrowDown') {
+ *         navController.navigate({
+ *             direction: NavDirection.Down,
+ *             allowWrapper: false,
+ *         });
+ *     } else if (event.code === 'ArrowUp') {
+ *         navController.navigate({
+ *             direction: NavDirection.Up,
+ *             allowWrapper: false,
+ *         });
+ *     }
+ *     // etc. all other navigation directions
+ * });
+ * ```
  */
 export class NavController {
     constructor(

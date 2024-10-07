@@ -1,6 +1,6 @@
 /**
  * Simple 2 dimensional coordinates.
  *
- * @category Internals
+ * @category Internal
  */
 export type Coords = {x: number; y: number};

@@ -1,13 +1,13 @@
+import {assert} from '@augment-vir/assert';
 import {omitObjectKeys} from '@augment-vir/common';
-import {fixture as renderFixture} from '@open-wc/testing';
+import {testWeb} from '@augment-vir/test';
 import {HTMLTemplateResult} from 'element-vir';
-import {assertInstanceOf} from 'run-time-assertions';
-import {Coords} from '../util/coords';
-import {NavNode, NavNode1d, NavNode2d, NavRootNode, buildNavTree} from './nav-tree';
+import {Coords} from '../util/coords.js';
+import {NavNode, NavNode1d, NavNode2d, NavRootNode, buildNavTree} from './nav-tree.js';
 
 export async function createNavTreeFromTemplate(template: HTMLTemplateResult) {
-    const rootElement = await renderFixture(template);
-    assertInstanceOf(rootElement, HTMLElement);
+    const rootElement = await testWeb.render(template);
+    assert.instanceOf(rootElement, HTMLElement);
     const tree = buildNavTree(rootElement);
 
     return {rootElement, tree};
@@ -23,7 +23,7 @@ export function omitElementProp(
             ...omitObjectKeys(navNode as NavNode1d, ['element']),
             children: navNode.children.map(omitElementProp) as NavNodeNoElement[],
         };
-    } else if (navNode.type === '2d') {
+    } else if ((navNode as NavNode | NavRootNode).type === '2d') {
         return {
             ...omitObjectKeys(navNode as NavNode2d, ['element']),
             children: navNode.children.map((row) =>
@@ -31,6 +31,7 @@ export function omitElementProp(
             ) as NavNodeNoElement[][],
         };
     }
+
     throw new Error(`Invalid node type: ${(navNode as any).type}`);
 }
 

@@ -1,11 +1,10 @@
-import {itCases} from '@augment-vir/browser-testing';
-import {fixture as renderFixture} from '@open-wc/testing';
+import {describe, itCases, testWeb} from '@augment-vir/test';
 import {HTMLTemplateResult, html} from 'element-vir';
-import {AttributesMap, applyAttributes, readAttributes} from './attributes';
+import {AttributesMap, applyAttributes, readAttributes} from './attributes.js';
 
 describe(applyAttributes.name, () => {
     async function testApplyAttributes(template: HTMLTemplateResult, attributes: AttributesMap) {
-        const baseElement = await renderFixture(template);
+        const baseElement = await testWeb.render(template);
 
         applyAttributes(baseElement, attributes);
 
@@ -77,7 +76,7 @@ describe(applyAttributes.name, () => {
 
 describe(readAttributes.name, () => {
     async function testReadAttributes(template: HTMLTemplateResult) {
-        const baseElement = await renderFixture(template);
+        const baseElement = await testWeb.render(template);
 
         return readAttributes(baseElement);
     }

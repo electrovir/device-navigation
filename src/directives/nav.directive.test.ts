@@ -1,12 +1,11 @@
-import {getCenterOfElement, getDirectChildren} from '@augment-vir/browser';
-import {itCases} from '@augment-vir/browser-testing';
-import {assertLengthAtLeast, getObjectTypedKeys, typedMap, wrapInTry} from '@augment-vir/common';
-import {assert, fixture, fixture as renderFixture, waitUntil} from '@open-wc/testing';
+import {assert, waitUntil} from '@augment-vir/assert';
+import {getObjectTypedKeys, typedMap, wrapInTry} from '@augment-vir/common';
+import {describe, it, itCases, testWeb} from '@augment-vir/test';
+import {getCenterOfElement, getDirectChildren} from '@augment-vir/web';
 import {sendKeys, sendMouse} from '@web/test-runner-commands';
 import {HTMLTemplateResult, css, html} from 'element-vir';
-import {assertDefined, assertInstanceOf} from 'run-time-assertions';
-import {waitUntilBlurred, waitUntilFocused} from '../test/focus.test-helper';
-import {group} from './nav-value';
+import {waitUntilBlurred, waitUntilFocused} from '../util/focus.js';
+import {group} from './nav-value.js';
 import {
     getCurrentGlobalNavSettings,
     nav,
@@ -14,11 +13,11 @@ import {
     navSelector,
     resetGlobalNavSettings,
     setGlobalNavSettings,
-} from './nav.directive';
+} from './nav.directive.js';
 
 describe('navAttribute', () => {
     it('query selects elements with the directive', async () => {
-        const baseElement = await renderFixture(html`
+        const baseElement = await testWeb.render(html`
             <div>
                 <div data-nav="0,2"></div>
                 <div></div>
@@ -31,7 +30,7 @@ describe('navAttribute', () => {
 
         const matchedElements = baseElement.querySelectorAll(navAttribute.js(2));
 
-        assert.lengthOf(matchedElements, 1);
+        assert.isLengthExactly(matchedElements, 1);
     });
 
     it('applies CSS', async () => {
@@ -41,7 +40,7 @@ describe('navAttribute', () => {
             }
         `;
 
-        const baseElement = await renderFixture(html`
+        const baseElement = await testWeb.render(html`
             <div>
                 <style>
                     ${styles}>
@@ -51,10 +50,10 @@ describe('navAttribute', () => {
         `);
 
         const matchedElement = baseElement.querySelector('#get-me');
-        assertDefined(matchedElement);
+        assert.isDefined(matchedElement);
         const computedStyles = window.getComputedStyle(matchedElement);
 
-        assert.strictEqual(computedStyles.border, '5px solid rgb(255, 0, 0)');
+        assert.strictEquals(computedStyles.border, '5px solid rgb(255, 0, 0)');
     });
 });
 
@@ -65,17 +64,17 @@ describe('NavSettings', () => {
         setGlobalNavSettings({activateKeys: ['nothing']});
         const newSettings = getCurrentGlobalNavSettings();
 
-        assert.deepStrictEqual(getCurrentGlobalNavSettings(), {activateKeys: ['nothing']});
-        assert.notDeepEqual(defaultSettings, newSettings);
+        assert.deepEquals(getCurrentGlobalNavSettings(), {activateKeys: ['nothing']});
+        assert.notDeepEquals(defaultSettings, newSettings);
 
         resetGlobalNavSettings();
-        assert.deepStrictEqual(getCurrentGlobalNavSettings(), defaultSettings);
+        assert.deepEquals(getCurrentGlobalNavSettings(), defaultSettings);
     });
 });
 
 describe(nav.name, () => {
     async function testNavAttributes(template: HTMLTemplateResult) {
-        const baseElement = await fixture(template);
+        const baseElement = await testWeb.render(template);
 
         return baseElement.outerHTML;
     }
@@ -110,14 +109,14 @@ describe(nav.name, () => {
         },
     ]);
 
-    async function matchSelectors(
+    function matchSelectors(
         element: HTMLElement,
         selectorValues: Readonly<Record<keyof typeof navSelector.js, boolean>>,
     ) {
         getObjectTypedKeys(selectorValues).forEach((selectorKey) => {
             const selectorValue = selectorValues[selectorKey];
-            assert.strictEqual(element.matches(navSelector.js[selectorKey]('')), selectorValue);
-            assert.strictEqual(
+            assert.strictEquals(element.matches(navSelector.js[selectorKey]('')), selectorValue);
+            assert.strictEquals(
                 element.matches(String(navSelector.css[selectorKey](''))),
                 selectorValue,
             );
@@ -129,18 +128,18 @@ describe(nav.name, () => {
             width: 100px;
             height: 100px;
         `;
-        const rootElement = await fixture(html`
+        const rootElement = await testWeb.render(html`
             <div ${nav(group)}>
                 <div style=${childStyle} ${nav()}></div>
                 <div style=${childStyle} ${nav()}></div>
             </div>
         `);
-        assertInstanceOf(rootElement, HTMLElement);
+        assert.instanceOf(rootElement, HTMLElement);
 
         const navChildren = getDirectChildren(rootElement).filter(
             (child): child is HTMLElement => child instanceof HTMLElement,
         );
-        assertLengthAtLeast(navChildren, 2);
+        assert.isLengthAtLeast(navChildren, 2);
 
         return {navChildren};
     }
@@ -205,7 +204,7 @@ describe(nav.name, () => {
             type: 'down',
         });
 
-        await waitUntil(() =>
+        await waitUntil.isTrue(() =>
             wrapInTry(
                 () => {
                     matchSelectors(child, {click: true, selected: true});

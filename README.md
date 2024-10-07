@@ -35,6 +35,7 @@ npm i device-navigation
     <!-- example-link: src/readme-examples/nav-controller.example.ts -->
 
     ```TypeScript
+    import {assert} from '@augment-vir/assert';
     import {html} from 'element-vir';
     import {nav, NavController} from 'device-navigation';
 
@@ -47,7 +48,9 @@ npm i device-navigation
     `;
 
     function setNavController() {
-        return new NavController(document.querySelector('main')!);
+        const main = document.querySelector('main');
+        assert.isDefined(main);
+        return new NavController(main);
     }
     ```
 

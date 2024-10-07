@@ -1,13 +1,13 @@
-import {NavRootNode} from '../nav-tree/nav-tree';
-import {focusElement} from '../util/focus';
-import {getCurrentlyFocused} from './currently-focused';
-import {NavigationResult} from './navigate';
+import {NavRootNode} from '../nav-tree/nav-tree.js';
+import {focusElement} from '../util/focus.js';
+import {getCurrentlyFocused} from './currently-focused.js';
+import {NavigationResult} from './navigate.js';
 
 /**
  * Enter into the currently focused node's children. Focuses the first child. Fails if there are no
  * children to focus.
  *
- * @category Internals
+ * @category Internal
  */
 export function enterInto(navTree: NavRootNode | undefined): NavigationResult {
     if (!navTree) {

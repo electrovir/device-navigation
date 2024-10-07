@@ -1,23 +1,23 @@
-import {assert, fixture} from '@open-wc/testing';
+import {assert} from '@augment-vir/assert';
+import {describe, it, testWeb} from '@augment-vir/test';
 import {html} from 'element-vir';
-import {assertInstanceOf} from 'run-time-assertions';
-import {nav} from '../directives/nav.directive';
-import {NavNode, NavRootNode} from '../nav-tree/nav-tree';
-import {waitUntilFocused} from '../test/focus.test-helper';
-import {enterInto} from './enter-into';
+import {nav} from '../directives/nav.directive.js';
+import {NavNode, NavRootNode} from '../nav-tree/nav-tree.js';
+import {waitUntilFocused} from '../util/focus.js';
+import {enterInto} from './enter-into.js';
 
 /** Note that most of enterInto's functionality is tested in the NavController tests. */
 describe(enterInto.name, () => {
     it('fails if it cannot find a new child to focus', async () => {
-        const rootElement = await fixture(html`
+        const rootElement = await testWeb.render(html`
             <div ${nav()}>
                 <div ${nav(0, 1)}></div>
             </div>
         `);
-        assertInstanceOf(rootElement, HTMLDivElement);
+        assert.instanceOf(rootElement, HTMLDivElement);
 
         const childElement = rootElement.querySelector('div');
-        assertInstanceOf(childElement, HTMLDivElement);
+        assert.instanceOf(childElement, HTMLDivElement);
 
         rootElement.focus();
         await waitUntilFocused(rootElement);
@@ -55,7 +55,7 @@ describe(enterInto.name, () => {
             isGroup: false,
         };
 
-        assert.deepStrictEqual(enterInto(mockNavTree), {
+        assert.deepEquals(enterInto(mockNavTree), {
             success: false,
             reason: 'failed to find first child to enter into',
         });

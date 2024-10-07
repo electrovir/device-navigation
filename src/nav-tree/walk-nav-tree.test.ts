@@ -1,15 +1,15 @@
-import {itCases} from '@augment-vir/browser-testing';
+import {describe, itCases} from '@augment-vir/test';
 import {HTMLTemplateResult, html} from 'element-vir';
-import {nav} from '../directives/nav.directive';
-import {Coords} from '../util/coords';
+import {nav} from '../directives/nav.directive.js';
+import {Coords} from '../util/coords.js';
 import {
     NavNodeNoElement,
     NavRootNodeNoElementChildren,
     createNavTreeFromTemplate,
     omitElementProp,
-} from './nav-tree.mock';
-import {walkNavTree} from './walk-nav-tree';
-import {walkNavTreeTestResults} from './walk-nav-tree.test-helper';
+} from './nav-tree.mock.js';
+import {walkNavTree} from './walk-nav-tree.js';
+import {walkNavTreeTestResults} from './walk-nav-tree.mock.js';
 
 const bigTestTemplate = html`
     <div>

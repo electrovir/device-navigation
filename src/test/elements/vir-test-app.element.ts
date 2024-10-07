@@ -1,8 +1,8 @@
 import {css, defineElementNoInputs, html} from 'element-vir';
-import {group} from '../../directives/nav-value';
-import {nav, navSelector} from '../../directives/nav.directive';
-import {NavController} from '../../nav-controller/nav-controller';
-import {NavDirection} from '../../nav-controller/navigate';
+import {group} from '../../directives/nav-value.js';
+import {nav, navSelector} from '../../directives/nav.directive.js';
+import {NavController} from '../../nav-controller/nav-controller.js';
+import {NavDirection} from '../../nav-controller/navigate.js';
 
 export const VirTestApp = defineElementNoInputs({
     tagName: 'vir-test-app',
@@ -181,7 +181,7 @@ export const VirTestApp = defineElementNoInputs({
         state.cleanup?.();
         updateState({cleanup: undefined});
     },
-    renderCallback({host, state, updateState}) {
+    renderCallback({state, updateState}) {
         console.info('rendering root');
         setTimeout(() => {
             updateState({counter: state.counter + 1});

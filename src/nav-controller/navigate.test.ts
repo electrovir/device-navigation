@@ -1,6 +1,6 @@
-import {itCases} from '@augment-vir/browser-testing';
-import {NavNodeParent} from '../nav-tree/nav-tree';
-import {findDefaultChild} from './navigate';
+import {describe, itCases} from '@augment-vir/test';
+import {NavNodeParent} from '../nav-tree/nav-tree.js';
+import {findDefaultChild} from './navigate.js';
 
 /**
  * This is all that {@link findDefaultChild} actually cares about for its inputs, but the types make
