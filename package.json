@@ -31,7 +31,7 @@
     "module": "src/index.ts",
     "types": "src/index.ts",
     "scripts": {
-        "build": "virmator frontend build",
+        "build": "virmator frontend build && npm run docs && cp -r dist-docs dist-frontend/docs",
         "compile": "virmator compile",
         "docs": "virmator docs",
         "format": "virmator format",
