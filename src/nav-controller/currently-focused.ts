@@ -56,7 +56,7 @@ export function getCurrentlyFocused(
         return false;
     });
 
-    const parent = ancestors ? ancestors.slice(-1)[0] || navTree : undefined;
+    const parent = ancestors ? ancestors[0] || navTree : undefined;
     const nonGroupParent = ancestors ? getNonGroupParent(ancestors) || navTree : undefined;
 
     if (!node || !parent || !coords || !nonGroupParent || !ancestors) {

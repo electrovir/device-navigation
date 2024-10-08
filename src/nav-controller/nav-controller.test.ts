@@ -344,6 +344,39 @@ describe(NavController.name, () => {
         );
     });
 
+    it('navigates within nested nav', async () => {
+        const {navController, namedChildren} = await setupNavControllerTest(
+            html`
+                <div ${nav(group)}>
+                    <div ${nav()}></div>
+                    <div ${nav()}></div>
+                    <div ${nav()}></div>
+                    <div class="parent" ${nav()}>
+                        <div class="child-1" ${nav()}>Cell</div>
+                        <div class="child-2" ${nav()}>Cell</div>
+                    </div>
+                    <div ${nav()}></div>
+                </div>
+            `,
+            [
+                'parent',
+                'child-1',
+                'child-2',
+            ],
+        );
+
+        await waitUntil.isTrue(() => {
+            navController.navigate({direction: NavDirection.Right, allowWrapping: false});
+            return isElementFocused(namedChildren.parent);
+        });
+
+        navController.enterInto();
+        await waitUntilFocused(namedChildren['child-1']);
+
+        navController.navigate({direction: NavDirection.Right, allowWrapping: false});
+        await waitUntilFocused(namedChildren['child-2']);
+    });
+
     it('navigates a nested pibling', async () => {
         const {navController, namedChildren} = await setupNavControllerTest(
             html`
