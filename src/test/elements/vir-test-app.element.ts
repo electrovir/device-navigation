@@ -99,7 +99,7 @@ export const VirTestApp = defineElementNoInputs({
         /** For tracking if directives unnecessarily re-render. */
         counter: 0,
     },
-    initCallback({state, updateState, host}) {
+    init({state, updateState, host}) {
         if (!state.navController) {
             const navController = new NavController(host);
             updateState({navController});
@@ -177,11 +177,11 @@ export const VirTestApp = defineElementNoInputs({
             });
         }
     },
-    cleanupCallback({state, updateState}) {
+    cleanup({state, updateState}) {
         state.cleanup?.();
         updateState({cleanup: undefined});
     },
-    renderCallback({state, updateState}) {
+    render({state, updateState}) {
         console.info('rendering root');
         setTimeout(() => {
             updateState({counter: state.counter + 1});

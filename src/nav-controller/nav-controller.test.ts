@@ -14,13 +14,13 @@ const VirTestNav = defineElement<{template: HTMLTemplateResult}>()({
     stateInitStatic: {
         navController: undefined as undefined | NavController,
     },
-    initCallback({state, updateState, host}) {
+    init({state, updateState, host}) {
         if (!state.navController) {
             const navController = new NavController(host);
             updateState({navController});
         }
     },
-    renderCallback({inputs}) {
+    render({inputs}) {
         return inputs.template;
     },
 });
