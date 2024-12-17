@@ -16,6 +16,7 @@
 /www-static/
 bash-scripts/
 dist-docs/
+dist-frontend/
 eslint.config.mjs
 generated-config-*
 index.html
