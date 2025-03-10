@@ -5,6 +5,7 @@ import {nav} from '../directives/nav.directive.js';
 import {buildNavTree} from '../nav-tree/nav-tree.js';
 import {waitUntilFocused} from '../util/focus.js';
 import {exitOutOf} from './exit-out-of.js';
+import {NavAction} from './navigate.js';
 
 describe(exitOutOf.name, () => {
     it('fails if there is no currently focused node', async () => {
@@ -23,6 +24,8 @@ describe(exitOutOf.name, () => {
         assert.deepEquals(exitOutOf(navTree), {
             success: false,
             reason: 'no focused node to exit out of',
+            direction: undefined,
+            navAction: NavAction.Exit,
         });
     });
 

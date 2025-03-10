@@ -7,7 +7,7 @@ import {group} from '../directives/nav-value.js';
 import {nav, navAttribute} from '../directives/nav.directive.js';
 import {focusElement, waitUntilFocused} from '../util/focus.js';
 import {NavController} from './nav-controller.js';
-import {NavDirection} from './navigate.js';
+import {NavAction, NavDirection} from './navigate.js';
 
 const VirTestNav = defineElement<{template: HTMLTemplateResult}>()({
     tagName: 'vir-test-nav',
@@ -124,6 +124,8 @@ describe(NavController.name, () => {
                 success: true,
                 newElement: firstNavChild,
                 wrapped: false,
+                direction: NavDirection.Down,
+                navAction: NavAction.Navigate,
             },
         );
 
@@ -146,6 +148,8 @@ describe(NavController.name, () => {
                     success: true,
                     newElement: navChild,
                     wrapped: false,
+                    direction: NavDirection.Down,
+                    navAction: NavAction.Navigate,
                 },
             );
 
@@ -164,6 +168,8 @@ describe(NavController.name, () => {
                 success: true,
                 newElement: navChildren[0],
                 wrapped: true,
+                direction: NavDirection.Down,
+                navAction: NavAction.Navigate,
             },
         );
     });
@@ -218,6 +224,8 @@ describe(NavController.name, () => {
         assert.deepEquals(navController.exitOutOf(), {
             success: false,
             reason: 'at top level nav already, nothing to exit to',
+            direction: undefined,
+            navAction: NavAction.Exit,
         });
     });
 
@@ -234,21 +242,29 @@ describe(NavController.name, () => {
             {
                 success: false,
                 reason: 'no nav tree',
+                direction: NavDirection.Down,
+                navAction: NavAction.Navigate,
             },
         );
         assert.deepEquals(navController.enterInto(), {
             success: false,
             reason: 'no nav tree',
+            direction: undefined,
+            navAction: NavAction.Enter,
         });
         assert.deepEquals(navController.exitOutOf(), {
             success: false,
             reason: 'no nav tree',
+            direction: undefined,
+            navAction: NavAction.Exit,
         });
         assert.deepEquals(
             navController.navigatePibling({allowWrapping: false, direction: NavDirection.Down}),
             {
                 success: false,
                 reason: 'no nav tree',
+                direction: NavDirection.Down,
+                navAction: NavAction.Pibling,
             },
         );
         assert.isUndefined(navController.getCurrentlyFocused());
@@ -282,6 +298,8 @@ describe(NavController.name, () => {
                 newElement: namedChildren['next-pibling'],
                 success: true,
                 wrapped: false,
+                direction: NavDirection.Down,
+                navAction: NavAction.Pibling,
             },
         );
         await waitUntilFocused(namedChildren['next-pibling']);
@@ -305,6 +323,8 @@ describe(NavController.name, () => {
             {
                 success: false,
                 reason: 'no node to navigate to',
+                direction: NavDirection.Down,
+                navAction: NavAction.Pibling,
             },
         );
     });
@@ -319,6 +339,8 @@ describe(NavController.name, () => {
                 newElement: namedChildren['first-nav'],
                 success: true,
                 wrapped: false,
+                direction: NavDirection.Up,
+                navAction: NavAction.Pibling,
             },
         );
     });
@@ -340,6 +362,8 @@ describe(NavController.name, () => {
             {
                 success: false,
                 reason: 'no parent to find a pibling from',
+                direction: NavDirection.Up,
+                navAction: NavAction.Pibling,
             },
         );
     });
@@ -410,6 +434,8 @@ describe(NavController.name, () => {
                 defaulted: false,
                 newElement: namedChildren['pibling'],
                 wrapped: false,
+                direction: NavDirection.Down,
+                navAction: NavAction.Pibling,
             },
         );
         await waitUntilFocused(namedChildren['pibling']);
@@ -443,6 +469,8 @@ describe(NavController.name, () => {
                 defaulted: false,
                 newElement: namedChildren['second-focus'],
                 wrapped: false,
+                direction: NavDirection.Right,
+                navAction: NavAction.Pibling,
             },
         );
         await waitUntilFocused(namedChildren['second-focus']);
@@ -463,6 +491,8 @@ describe(NavController.name, () => {
             {
                 success: false,
                 reason: 'wrapping blocked',
+                direction: NavDirection.Down,
+                navAction: NavAction.Pibling,
             },
         );
     });
@@ -478,6 +508,8 @@ describe(NavController.name, () => {
             {
                 success: false,
                 reason: 'wrapping blocked',
+                direction: NavDirection.Right,
+                navAction: NavAction.Navigate,
             },
         );
     });
@@ -502,6 +534,8 @@ describe(NavController.name, () => {
                 defaulted: false,
                 newElement: nextNavPibling,
                 wrapped: false,
+                direction: NavDirection.Down,
+                navAction: NavAction.Pibling,
             },
         );
     });
@@ -526,6 +560,8 @@ describe(NavController.name, () => {
                 defaulted: false,
                 newElement: nested2dNavSibling,
                 wrapped: false,
+                direction: NavDirection.Right,
+                navAction: NavAction.Navigate,
             },
         );
 
@@ -536,6 +572,8 @@ describe(NavController.name, () => {
                 defaulted: false,
                 newElement: nested2dNav,
                 wrapped: false,
+                direction: NavDirection.Left,
+                navAction: NavAction.Navigate,
             },
         );
     });
@@ -560,6 +598,8 @@ describe(NavController.name, () => {
                 defaulted: false,
                 newElement: nested2dNavVerticalSibling,
                 wrapped: false,
+                direction: NavDirection.Down,
+                navAction: NavAction.Navigate,
             },
         );
 
@@ -570,6 +610,8 @@ describe(NavController.name, () => {
                 defaulted: false,
                 newElement: nested2dNav,
                 wrapped: false,
+                direction: NavDirection.Up,
+                navAction: NavAction.Navigate,
             },
         );
     });
@@ -594,6 +636,8 @@ describe(NavController.name, () => {
                 defaulted: false,
                 newElement: nested2dNavVerticalSibling,
                 wrapped: false,
+                direction: NavDirection.Down,
+                navAction: NavAction.Navigate,
             },
         );
 
@@ -604,6 +648,8 @@ describe(NavController.name, () => {
                 defaulted: false,
                 newElement: nested2dNavPreviousSibling,
                 wrapped: false,
+                direction: NavDirection.Up,
+                navAction: NavAction.Navigate,
             },
         );
     });
@@ -628,6 +674,8 @@ describe(NavController.name, () => {
                 defaulted: false,
                 newElement: nested1dNavSibling,
                 wrapped: false,
+                direction: NavDirection.Right,
+                navAction: NavAction.Navigate,
             },
         );
 
@@ -638,6 +686,8 @@ describe(NavController.name, () => {
                 defaulted: false,
                 newElement: nested1dNav,
                 wrapped: false,
+                direction: NavDirection.Left,
+                navAction: NavAction.Navigate,
             },
         );
     });
@@ -661,6 +711,8 @@ describe(NavController.name, () => {
             {
                 success: false,
                 reason: 'failed to find node to focus',
+                direction: NavDirection.Right,
+                navAction: NavAction.Navigate,
             },
         );
     });
@@ -717,6 +769,8 @@ describe(NavController.name, () => {
                 defaulted: true,
                 newElement: firstChild,
                 wrapped: false,
+                direction: NavDirection.Right,
+                navAction: NavAction.Navigate,
             },
         );
     });
@@ -727,6 +781,8 @@ describe(NavController.name, () => {
         assert.deepEquals(navController.enterInto(), {
             success: false,
             reason: 'no focused node to enter into',
+            direction: undefined,
+            navAction: NavAction.Enter,
         });
     });
 });

@@ -1,7 +1,7 @@
 import {NavRootNode} from '../nav-tree/nav-tree.js';
 import {focusElement} from '../util/focus.js';
 import {getCurrentlyFocused} from './currently-focused.js';
-import {NavigationResult} from './navigate.js';
+import {NavAction, NavigationResult} from './navigate.js';
 
 /**
  * Enter into the currently focused node's children. Focuses the first child. Fails if there are no
@@ -9,11 +9,13 @@ import {NavigationResult} from './navigate.js';
  *
  * @category Internal
  */
-export function enterInto(navTree: NavRootNode | undefined): NavigationResult {
+export function enterInto(navTree: NavRootNode | undefined): NavigationResult<NavAction.Enter> {
     if (!navTree) {
         return {
             success: false,
             reason: 'no nav tree',
+            direction: undefined,
+            navAction: NavAction.Enter,
         };
     }
 
@@ -23,6 +25,8 @@ export function enterInto(navTree: NavRootNode | undefined): NavigationResult {
         return {
             success: false,
             reason: 'no focused node to enter into',
+            direction: undefined,
+            navAction: NavAction.Enter,
         };
     }
 
@@ -30,6 +34,8 @@ export function enterInto(navTree: NavRootNode | undefined): NavigationResult {
         return {
             success: false,
             reason: 'no children to enter into',
+            direction: undefined,
+            navAction: NavAction.Enter,
         };
     }
 
@@ -42,6 +48,8 @@ export function enterInto(navTree: NavRootNode | undefined): NavigationResult {
         return {
             success: false,
             reason: 'failed to find first child to enter into',
+            direction: undefined,
+            navAction: NavAction.Enter,
         };
     }
 
@@ -52,5 +60,7 @@ export function enterInto(navTree: NavRootNode | undefined): NavigationResult {
         defaulted: false,
         wrapped: false,
         newElement: newNode.element,
+        direction: undefined,
+        navAction: NavAction.Enter,
     };
 }

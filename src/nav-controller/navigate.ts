@@ -9,7 +9,7 @@ import {CurrentlyFocusedResult, getCurrentlyFocused} from './currently-focused.j
 /**
  * Inputs for controlling navigation.
  *
- * @category Type
+ * @category Internal
  */
 export type NavigationInputs = {
     /**
@@ -24,7 +24,7 @@ export type NavigationInputs = {
 /**
  * All the possible nav directions.
  *
- * @category Type
+ * @category Internal
  */
 export enum NavDirection {
     Up = 'up',
@@ -34,11 +34,38 @@ export enum NavDirection {
 }
 
 /**
+ * All possible nav actions.
+ *
+ * @category Internal
+ */
+export enum NavAction {
+    Enter = 'enter',
+    Exit = 'exit',
+
+    Navigate = 'navigate',
+    Pibling = 'pibling',
+}
+
+/**
+ * Maps NavAction to the relevant {@link NavDirection} type for the `direction` property in
+ * {@link NavigationResult}.
+ *
+ * @category Internal
+ */
+export type NavActionToDirectionType = {
+    [NavAction.Enter]: undefined;
+    [NavAction.Exit]: undefined;
+
+    [NavAction.Navigate]: NavDirection;
+    [NavAction.Pibling]: NavDirection;
+};
+
+/**
  * Data which describes the result of an attempted navigation action.
  *
- * @category Type
+ * @category Internal
  */
-export type NavigationResult =
+export type NavigationResult<Action extends NavAction = NavAction> = (
     | {
           /** Indicates that the intended navigation succeeded or failed. */
           success: true;
@@ -58,7 +85,11 @@ export type NavigationResult =
           success: false;
           /** The reason why the intended navigation did not succeed. */
           reason: string;
-      };
+      }
+) & {
+    navAction: Action;
+    direction: NavActionToDirectionType[Action];
+};
 
 /**
  * Finds the default node to select within the given node.
@@ -93,12 +124,9 @@ export function navigate(
     direction: NavDirection,
     /** Set to true to allow navigation to wrap. */
     allowWrapping: boolean,
-): NavigationResult {
+): NavigationResult<NavAction.Navigate> {
     if (!navTree) {
-        return {
-            success: false,
-            reason: 'no nav tree',
-        };
+        return {success: false, reason: 'no nav tree', direction, navAction: NavAction.Navigate};
     }
 
     const currentlyFocused = getCurrentlyFocused(navTree);
@@ -113,17 +141,21 @@ export function navigate(
                 wrapped: false,
                 defaulted: true,
                 newElement: newNode.element,
+                direction,
+                navAction: NavAction.Navigate,
             };
             /**
              * The below else if is an edge that technically cannot be triggered, given current
              * logic. However, it is an edge case nonetheless and thus is handled here.
              */
-            /* node:coverage ignore next 7 */
+            /* node:coverage ignore next 9 */
         } else {
             /** Nothing we can do, we found no nav nodes to focus. */
             return {
                 success: false,
                 reason: 'no default element to focus',
+                direction,
+                navAction: NavAction.Navigate,
             };
         }
     }
@@ -143,22 +175,30 @@ export function navigate(
             defaulted: false,
             newElement: nextNode.element,
             wrapped: requiresWrapping,
+            direction,
+            navAction: NavAction.Navigate,
         };
     } else if (!nextNode) {
         return {
             success: false,
             reason: 'failed to find node to focus',
+            direction,
+            navAction: NavAction.Navigate,
         };
-        /* node:coverage ignore next 5 */
+        /* node:coverage ignore next 7 */
     } else if (isWrappingValid) {
         return {
             success: false,
             reason: 'no conditions matched',
+            direction,
+            navAction: NavAction.Navigate,
         };
     } else {
         return {
             success: false,
             reason: 'wrapping blocked',
+            direction,
+            navAction: NavAction.Navigate,
         };
         /**
          * The below else is an edge cause that cannot be triggered, given the above logic. However,
@@ -232,10 +272,7 @@ function calculateNextNode(
         assert.isDefined(currentRow, `No current row found at y index: '${currentNode.coords.y}'`);
 
         const nextCoords: Coords = {
-            x: wrapNumber(currentNode.coords.x + increment, {
-                min: 0,
-                max: currentRow.length - 1,
-            }),
+            x: wrapNumber(currentNode.coords.x + increment, {min: 0, max: currentRow.length - 1}),
             y: currentNode.coords.y,
         };
 
@@ -263,7 +300,7 @@ export function navigatePibling(
     currentlyFocused: CurrentlyFocusedResult,
     direction: NavDirection,
     allowWrapping: boolean,
-): NavigationResult {
+): NavigationResult<NavAction.Pibling> {
     const grandparent = check.isLengthAtLeast(currentlyFocused.ancestors, 2)
         ? currentlyFocused.ancestors[1]
         : navTree;
@@ -273,6 +310,8 @@ export function navigatePibling(
         return {
             success: false,
             reason: 'no parent to find a pibling from',
+            direction,
+            navAction: NavAction.Pibling,
         };
     }
 
@@ -286,6 +325,8 @@ export function navigatePibling(
         return {
             success: false,
             reason: 'no node to navigate to',
+            direction,
+            navAction: NavAction.Pibling,
         };
     } else if (isWrappingValid) {
         focusElement(nodeToFocus.element);
@@ -294,11 +335,15 @@ export function navigatePibling(
             defaulted: false,
             newElement: nodeToFocus.element,
             wrapped: requiresWrapping,
+            direction,
+            navAction: NavAction.Pibling,
         };
     } else {
         return {
             success: false,
             reason: 'wrapping blocked',
+            direction,
+            navAction: NavAction.Pibling,
         };
     }
 }

@@ -5,6 +5,7 @@ import {nav} from '../directives/nav.directive.js';
 import {NavNode, NavRootNode} from '../nav-tree/nav-tree.js';
 import {waitUntilFocused} from '../util/focus.js';
 import {enterInto} from './enter-into.js';
+import {NavAction} from './navigate.js';
 
 /** Note that most of enterInto's functionality is tested in the NavController tests. */
 describe(enterInto.name, () => {
@@ -58,6 +59,8 @@ describe(enterInto.name, () => {
         assert.deepEquals(enterInto(mockNavTree), {
             success: false,
             reason: 'failed to find first child to enter into',
+            direction: undefined,
+            navAction: NavAction.Enter,
         });
     });
 });

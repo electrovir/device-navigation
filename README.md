@@ -4,10 +4,10 @@ Allows navigation between HTML elements in one or two dimensions with non-mouse 
 
 Note that this is specifically built for usage within [`lit`](https://www.npmjs.com/package/lit) or [`element-vir`](https://www.npmjs.com/package/lit) HTML templates.
 
-- [demo](https://electrovir.github.io/device-navigation)
-- [docs](https://electrovir.github.io/device-navigation/docs)
-- [code](https://github.com/electrovir/device-navigation)
-- [npm](https://www.npmjs.com/package/device-navigation)
+-   [demo](https://electrovir.github.io/device-navigation)
+-   [docs](https://electrovir.github.io/device-navigation/docs)
+-   [code](https://github.com/electrovir/device-navigation)
+-   [npm](https://www.npmjs.com/package/device-navigation)
 
 ## Install
 

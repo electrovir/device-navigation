@@ -1,8 +1,22 @@
+import {ListenTarget} from 'typed-event-target';
 import {buildNavTree, NavRootNode} from '../nav-tree/nav-tree.js';
 import {CurrentlyFocusedResult, getCurrentlyFocused} from './currently-focused.js';
 import {enterInto} from './enter-into.js';
 import {exitOutOf} from './exit-out-of.js';
-import {navigate, navigatePibling, NavigationInputs, NavigationResult} from './navigate.js';
+import {
+    AllNavControllerEvents,
+    NavEnterEvent,
+    NavExitEvent,
+    NavigateEvent,
+    NavPiblingEvent,
+} from './nav-controller-events.js';
+import {
+    NavAction,
+    navigate,
+    navigatePibling,
+    NavigationInputs,
+    NavigationResult,
+} from './navigate.js';
 
 /**
  * Allows navigation around the nav tree contained within the given `rootElement`. If there is no
@@ -19,28 +33,24 @@ import {navigate, navigatePibling, NavigationInputs, NavigationResult} from './n
  *
  * window.addEventListener('keydown', (event) => {
  *     if (event.code === 'ArrowDown') {
- *         navController.navigate({
- *             direction: NavDirection.Down,
- *             allowWrapper: false,
- *         });
+ *         navController.navigate({direction: NavDirection.Down, allowWrapper: false});
  *     } else if (event.code === 'ArrowUp') {
- *         navController.navigate({
- *             direction: NavDirection.Up,
- *             allowWrapper: false,
- *         });
+ *         navController.navigate({direction: NavDirection.Up, allowWrapper: false});
  *     }
  *     // etc. all other navigation directions
  * });
  * ```
  */
-export class NavController {
+export class NavController extends ListenTarget<AllNavControllerEvents> {
     constructor(
         /**
          * The parent of all navigable elements. If this element also has `nav()` applied to it, it
          * will be ignored.
          */
         public readonly rootElement: HTMLElement,
-    ) {}
+    ) {
+        super();
+    }
 
     /** Gets the currently focused node (is any) from within the `rootElement`'s nav tree. */
     public getCurrentlyFocused(): CurrentlyFocusedResult | undefined {
@@ -52,33 +62,53 @@ export class NavController {
     }
 
     /** Navigate around the nav tree. */
-    public navigate({direction, allowWrapping}: NavigationInputs): NavigationResult {
-        return navigate(this.buildNavTree(), direction, allowWrapping);
+    public navigate({
+        direction,
+        allowWrapping,
+    }: NavigationInputs): NavigationResult<NavAction.Navigate> {
+        const result = navigate(this.buildNavTree(), direction, allowWrapping);
+        this.dispatch(new NavigateEvent({detail: result}));
+        return result;
     }
     /**
      * Enter into the currently focused node's children. Focuses the first child. Fails if there are
      * no children to focus.
      */
-    public enterInto(): NavigationResult {
-        return enterInto(this.buildNavTree());
+    public enterInto(): NavigationResult<NavAction.Enter> {
+        const result = enterInto(this.buildNavTree());
+        this.dispatch(new NavEnterEvent({detail: result}));
+        return result;
     }
     /**
      * Shift focus from the currently focused node to its parent. If there is no parent, or rather
      * if the parent is the tree root, this fails.
      */
-    public exitOutOf(): NavigationResult {
-        return exitOutOf(this.buildNavTree());
+    public exitOutOf(): NavigationResult<NavAction.Exit> {
+        const result = exitOutOf(this.buildNavTree());
+        this.dispatch(new NavExitEvent({detail: result}));
+        return result;
     }
     /** Navigate to siblings of the parent of the currently focused element, if they exist. */
-    public navigatePibling({allowWrapping, direction}: NavigationInputs): NavigationResult {
+    public navigatePibling({
+        allowWrapping,
+        direction,
+    }: NavigationInputs): NavigationResult<NavAction.Pibling> {
         const navTree = this.buildNavTree();
 
         const currentlyFocused = getCurrentlyFocused(navTree);
 
-        if (!currentlyFocused || !navTree) {
-            return navigate(navTree, direction, allowWrapping);
-        }
+        const rawResult =
+            !currentlyFocused || !navTree
+                ? navigate(navTree, direction, allowWrapping)
+                : navigatePibling(navTree, currentlyFocused, direction, allowWrapping);
 
-        return navigatePibling(navTree, currentlyFocused, direction, allowWrapping);
+        const result: NavigationResult<NavAction.Pibling> = {
+            ...rawResult,
+            navAction: NavAction.Pibling,
+        };
+
+        this.dispatch(new NavPiblingEvent({detail: result}));
+
+        return result;
     }
 }

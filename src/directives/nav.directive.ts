@@ -118,7 +118,7 @@ export const navSelector = {
  * Settings that control how some nav features work. These settings are _global_ because they are
  * used whenever the {@link nav} directive is called.
  *
- * @category Type
+ * @category Internal
  */
 export type GlobalNavSettings = {
     /**

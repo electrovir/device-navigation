@@ -3,6 +3,7 @@ export * from './directives/nav.directive.js';
 export * from './nav-controller/currently-focused.js';
 export * from './nav-controller/enter-into.js';
 export * from './nav-controller/exit-out-of.js';
+export * from './nav-controller/nav-controller-events.js';
 export * from './nav-controller/nav-controller.js';
 export * from './nav-controller/navigate.js';
 export * from './nav-tree/nav-tree.js';
