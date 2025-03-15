@@ -11,8 +11,10 @@ import {NavAction, NavDirection} from './navigate.js';
 
 const VirTestNav = defineElement<{template: HTMLTemplateResult}>()({
     tagName: 'vir-test-nav',
-    stateInitStatic: {
-        navController: undefined as undefined | NavController,
+    state() {
+        return {
+            navController: undefined as undefined | NavController,
+        };
     },
     init({state, updateState, host}) {
         if (!state.navController) {

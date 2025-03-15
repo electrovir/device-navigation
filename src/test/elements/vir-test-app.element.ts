@@ -93,11 +93,13 @@ export const VirTestApp = defineElementNoInputs({
             padding: 8px 16px;
         }
     `,
-    stateInitStatic: {
-        navController: undefined as undefined | NavController,
-        cleanup: undefined as undefined | (() => void),
-        /** For tracking if directives unnecessarily re-render. */
-        counter: 0,
+    state() {
+        return {
+            navController: undefined as undefined | NavController,
+            cleanup: undefined as undefined | (() => void),
+            /** For tracking if directives unnecessarily re-render. */
+            counter: 0,
+        };
     },
     init({state, updateState, host}) {
         if (!state.navController) {
