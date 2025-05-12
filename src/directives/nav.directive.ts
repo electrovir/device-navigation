@@ -53,12 +53,6 @@ export function nav(
         };
         applyAttributes(element, allAttributes);
 
-        if (!isNavigable) {
-            delete (element as AnyObject)[navEntryPropertyKey];
-            /** Skip all listeners if entry is not navigable. */
-            return;
-        }
-
         const navEntry = extractNavEntry(element) || new NavEntry(element, navController, params);
 
         if (hasNavEntry(element)) {
@@ -68,8 +62,10 @@ export function nav(
             (element as AnyObject)[navEntryPropertyKey] = navEntry;
         }
 
-        if (!element.style.getPropertyValue('cursor')) {
+        if (isNavigable) {
             element.style.setProperty('cursor', 'pointer');
+        } else {
+            element.style.removeProperty('cursor');
         }
     });
 }

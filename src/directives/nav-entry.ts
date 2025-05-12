@@ -1,7 +1,6 @@
 import {assert, assertWrap} from '@augment-vir/assert';
-import {type PartialWithUndefined} from '@augment-vir/common';
+import {makeWritable, type PartialWithUndefined} from '@augment-vir/common';
 import {css, unsafeCSS} from 'element-vir';
-import {type EmptyObject} from 'type-fest';
 import {type NavController} from '../nav-controller/nav-controller.js';
 import {type NavTreeNode} from '../nav-controller/nav-tree.js';
 
@@ -73,28 +72,21 @@ export function hasNavEntry(element: Element): element is WithNavEntry<typeof el
  *
  * @category Internal
  */
-export type NavParams =
-    | {
-          /**
-           * Mark an element as a nav group, which can't receive focus but can define a section of
-           * navigable elements.
-           */
-          group: true;
-      }
-    | ((
-          | {
-                /** Mark this element's x coordinate. */
-                x: number;
+export type NavParams = PartialWithUndefined<{
+    /**
+     * Mark an element as a nav group, which can't receive focus but can define a section of
+     * navigable elements.
+     */
+    group: boolean;
 
-                /** Mark this element's 2 dimensional y coordinate. */
-                y?: number | undefined;
-            }
-          | EmptyObject
-      ) &
-          PartialWithUndefined<{
-              /** Disables this element from navigation. */
-              disabled: boolean;
-          }>);
+    /** Mark this element's x coordinate, either in 1D or 2D. */
+    x: number;
+    /** Mark this element's 2 dimensional y coordinate. */
+    y: number;
+
+    /** Disable this element's navigation. */
+    disabled: boolean;
+}>;
 
 export function extractNavEntry(element: Element): NavEntry | undefined {
     if (hasNavEntry(element)) {
@@ -105,6 +97,36 @@ export function extractNavEntry(element: Element): NavEntry | undefined {
     }
 }
 
+function createEventListener(navEntry: NavEntry) {
+    return (event: Event) => {
+        if (navEntry.navParams.group) {
+            return;
+        }
+
+        if (event.type === 'mousemove') {
+            if (event.target === navEntry.element) {
+                navEntry.focus(true);
+            }
+        } else if (event.type === 'mouseleave') {
+            if (event.target === navEntry.element) {
+                navEntry.focus(false);
+            }
+        } else if (event.type === 'mousedown') {
+            if (event.target === navEntry.element) {
+                navEntry.activate(true);
+            }
+        } else if (event.type === 'mouseup') {
+            if (event.target === navEntry.element) {
+                navEntry.activate(false);
+            }
+        } else if (event.type === 'focus') {
+            navEntry.focus(true);
+        } else if (event.type === 'blur') {
+            navEntry.focus(false);
+        }
+    };
+}
+
 /**
  * A class that is attached to all navigable elements. It is attached to the
  * {@link navEntryPropertyKey} property.
@@ -113,9 +135,21 @@ export function extractNavEntry(element: Element): NavEntry | undefined {
  */
 export class NavEntry {
     public navTreeNode: NavTreeNode | undefined;
-    public navValue: NavValue | undefined;
+    public readonly navValue: NavValue | undefined;
 
+    /** Use a singular event listener for all events so it can be removed. */
+    protected readonly eventListener = createEventListener(this);
     protected declare _navController: NavController | undefined;
+
+    constructor(
+        public readonly element: HTMLElement,
+        navController: NavController,
+        public navParams: Readonly<NavParams>,
+    ) {
+        this.attachListeners();
+        this.navController = navController;
+    }
+
     public set navController(navController: NavController) {
         if (this._navController !== navController) {
             this._navController?.navEntries.delete(this);
@@ -126,31 +160,10 @@ export class NavEntry {
     public get navController() {
         assert.isDefined(
             this._navController,
-            'NavController has not been set in NavEntry constructor yet',
+            'this.navController has not been set in NavEntry constructor yet.',
         );
 
         return this._navController;
-    }
-
-    constructor(
-        private readonly element: HTMLElement,
-        navController: NavController,
-        public navParams: Readonly<NavParams>,
-    ) {
-        this.attachListeners();
-        this.navController = navController;
-    }
-
-    public setNavValue(navValue: NavValue) {
-        this.navValue = navValue;
-        this.element.setAttribute(navAttribute.name, navValue);
-    }
-
-    public removeNavValue(navValue: NavValue) {
-        if (this.navValue === navValue) {
-            this.navValue = undefined;
-            this.element.setAttribute(navAttribute.name, '');
-        }
     }
 
     public focus(
@@ -160,6 +173,9 @@ export class NavEntry {
          */
         enabled: boolean,
     ) {
+        if (this.navParams.group) {
+            return;
+        }
         if (enabled) {
             this.element.focus();
             this.setNavValue(NavValue.Focused);
@@ -174,6 +190,9 @@ export class NavEntry {
      * - `false` to deactivate
      */
     public activate(enabled: boolean) {
+        if (this.navParams.group) {
+            return;
+        }
         this.focus(enabled);
         if (enabled) {
             this.setNavValue(NavValue.Active);
@@ -182,57 +201,25 @@ export class NavEntry {
         }
     }
 
+    protected setNavValue(navValue: NavValue) {
+        makeWritable(this).navValue = navValue;
+        this.element.setAttribute(navAttribute.name, navValue);
+    }
+
+    protected removeNavValue(navValue: NavValue) {
+        if (this.navValue === navValue) {
+            makeWritable(this).navValue = undefined;
+            this.element.setAttribute(navAttribute.name, '');
+        }
+    }
+
     /** Attach default mouse and focus listeners. */
     protected attachListeners() {
-        this.element.addEventListener(
-            'mousemove',
-            (event) => {
-                if (event.target === this.element) {
-                    this.focus(true);
-                }
-            },
-            true,
-        );
-        this.element.addEventListener(
-            'mouseleave',
-            (event) => {
-                if (event.target === this.element) {
-                    this.focus(false);
-                }
-            },
-            true,
-        );
-        this.element.addEventListener(
-            'mousedown',
-            (event) => {
-                if (event.target === this.element) {
-                    this.activate(true);
-                }
-            },
-            true,
-        );
-        this.element.addEventListener(
-            'mouseup',
-            (event) => {
-                if (event.target === this.element) {
-                    this.activate(false);
-                }
-            },
-            true,
-        );
-        this.element.addEventListener(
-            'focus',
-            () => {
-                this.focus(true);
-            },
-            true,
-        );
-        this.element.addEventListener(
-            'blur',
-            () => {
-                this.focus(false);
-            },
-            true,
-        );
+        this.element.addEventListener('mousemove', this.eventListener, true);
+        this.element.addEventListener('mouseleave', this.eventListener, true);
+        this.element.addEventListener('mousedown', this.eventListener, true);
+        this.element.addEventListener('mouseup', this.eventListener, true);
+        this.element.addEventListener('focus', this.eventListener, true);
+        this.element.addEventListener('blur', this.eventListener, true);
     }
 }

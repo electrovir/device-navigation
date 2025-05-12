@@ -1,11 +1,11 @@
+import {getOrSet} from '@augment-vir/common';
 import {type ElementTree} from '@augment-vir/web';
 import {type NavEntry, extractNavEntry, navAttribute, NavValue} from '../directives/nav-entry.js';
 
 export type NavTreeNode = {
     element: HTMLElement;
     navEntry: NavEntry | undefined;
-    isGroup: boolean;
-    children: NavTreeNode[];
+    children: NavTreeNode[][];
     parent: NavTreeNode | undefined;
 };
 
@@ -27,19 +27,17 @@ export function mapTree(
     const navEntry = extractNavEntry(element);
 
     const hasNestedNav = false as boolean;
-    const isGroup = navAttributeValue === NavValue.Group;
 
     const currentNode: NavTreeNode = {
         element,
         navEntry,
-        isGroup,
         children: [],
         parent,
     };
 
     currentNode.children = expandChildren(elementTree, currentNode);
 
-    const isValidGroup: boolean = isGroup ? !!currentNode.children.length : false;
+    const isValidGroup: boolean = navEntry?.navParams.group ? !!currentNode.children.length : false;
     const hasNav: boolean =
         hasNestedNav || isValidGroup || !!currentNode.children.length || !!navEntry;
 
@@ -50,19 +48,31 @@ export function mapTree(
     }
 }
 
-function expandChildren(elementTreeNode: ElementTree, parentNode: NavTreeNode): NavTreeNode[] {
-    const children: NavTreeNode[] = [];
+function expandChildren(elementTreeNode: ElementTree, parentNode: NavTreeNode): NavTreeNode[][] {
+    const children: NavTreeNode[][] = [];
+
+    function pushNode(node: NavTreeNode) {
+        if (node.navEntry?.navParams.group && !node.children.length) {
+            return;
+        } else if (!node.navEntry) {
+            node.children.forEach((row) => row.forEach((child) => pushNode(child)));
+            return;
+        }
+
+        const x = node.navEntry.navParams.x;
+        const y = node.navEntry.navParams.y || 0;
+        const row = getOrSet(children, y, () => []);
+        if (x == undefined) {
+            row.push(node);
+        } else {
+            row[x] = node;
+        }
+    }
 
     elementTreeNode.children.forEach((child) => {
         const newNode = mapTree(child, parentNode);
         if (newNode) {
-            if (newNode.navEntry || newNode.isGroup) {
-                children.push(newNode);
-            }
-            if (!newNode.isGroup) {
-                children.push(...newNode.children);
-                newNode.children = [];
-            }
+            pushNode(newNode);
         }
     });
 
