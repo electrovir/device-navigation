@@ -1,8 +1,21 @@
 import {assert, assertWrap} from '@augment-vir/assert';
 import {makeWritable, type PartialWithUndefined} from '@augment-vir/common';
+import {isElementFocused} from '@augment-vir/web';
 import {css, unsafeCSS} from 'element-vir';
 import {type NavController} from '../nav-controller/nav-controller.js';
-import {type NavTreeNode} from '../nav-controller/nav-tree.js';
+import {type NavTreeNode} from '../nav-tree/nav-tree.js';
+import {type WalkResult} from '../nav-tree/walk-nav-tree.js';
+
+export enum NavEntryOperation {
+    Activate = 'activate',
+    Focus = 'focus',
+}
+
+export type CurrentNavEntry = {
+    entry: Readonly<NavEntry>;
+    operation: NavEntryOperation;
+    position: Readonly<WalkResult>;
+};
 
 /**
  * Values for the nav attribute that `nav` applies to elements.
@@ -43,6 +56,7 @@ export const navAttribute = {
     },
     /** Use this to generate a selector for the attribute in CSS. */
     css(
+        baseSelector: string,
         /**
          * Omit this or set to `undefined` or `''` to generate a selector for all elements with the
          * nav attribute.
@@ -50,7 +64,7 @@ export const navAttribute = {
         value?: NavValue | undefined | '',
     ) {
         return css`
-            ${unsafeCSS(navAttribute.js(value))}
+            ${unsafeCSS(baseSelector)}${unsafeCSS(navAttribute.js(value))}
         `;
     },
 };
@@ -124,9 +138,14 @@ function createEventListener(navEntry: NavEntry) {
                 navEntry.activate(false);
             }
         } else if (event.type === 'focus') {
-            navEntry.focus(true);
+            if (event.target === navEntry.element) {
+                navEntry.focus(true);
+            }
         } else if (event.type === 'blur') {
-            navEntry.focus(false);
+            // eslint-disable-next-line unicorn/no-lonely-if
+            if (event.target === navEntry.element) {
+                navEntry.focus(false);
+            }
         }
     };
 }
@@ -170,6 +189,11 @@ export class NavEntry {
         return this._navController;
     }
 
+    public clearNavValue() {
+        makeWritable(this).navValue = undefined;
+        this.element.setAttribute(navAttribute.name, '');
+    }
+
     public focus(
         /**
          * - `true` to focus
@@ -180,11 +204,16 @@ export class NavEntry {
         if (this.navParams.group) {
             return;
         }
+        this.navController.triggerNavEntry(this, enabled, NavEntryOperation.Focus);
         if (enabled) {
-            this.element.focus();
+            if (!isElementFocused(this.element)) {
+                this.element.focus();
+            }
             this.setNavValue(NavValue.Focused);
         } else {
-            this.element.blur();
+            if (isElementFocused(this.element)) {
+                this.element.blur();
+            }
             this.removeNavValue(NavValue.Focused);
         }
     }
@@ -198,6 +227,7 @@ export class NavEntry {
             return;
         }
         this.focus(enabled);
+        this.navController.triggerNavEntry(this, enabled, NavEntryOperation.Activate);
         if (enabled) {
             this.setNavValue(NavValue.Active);
         } else {

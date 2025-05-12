@@ -1,10 +1,10 @@
-import {assert, check} from '@augment-vir/assert';
+import {assert, assertWrap} from '@augment-vir/assert';
 import {wrapNumber} from '@augment-vir/common';
-import {type NavNode, type NavNodeParent, type NavRootNode} from '../nav-tree/nav-tree.js';
+import {type CurrentNavEntry} from '../directives/nav-entry.js';
+import {type NavTree, type NavTreeNode} from '../nav-tree/nav-tree.js';
+import {type WalkResult} from '../nav-tree/walk-nav-tree.js';
 import {greaterThan, lessThan} from '../util/comparisons.js';
-import {type Coords} from '../util/coords.js';
 import {focusElement} from '../util/focus.js';
-import {type CurrentlyFocusedResult, getCurrentlyFocused} from './currently-focused.js';
 
 /**
  * Inputs for controlling navigation.
@@ -96,15 +96,13 @@ export type NavigationResult<Action extends NavAction = NavAction> = (
  *
  * @category Internal
  */
-export function findDefaultChild(node: Readonly<NavNodeParent | NavRootNode>) {
-    const firstNode = node.type === '1d' ? node.children[0] : node.children[0]?.[0];
+export function findDefaultChild(children: ReadonlyArray<ReadonlyArray<NavTreeNode>>) {
+    const firstNode = children[0]?.[0];
 
     if (!firstNode) {
         return undefined;
-    } else if (firstNode.type === 'child') {
-        return firstNode;
-    } else if (firstNode.isGroup) {
-        return findDefaultChild(firstNode);
+    } else if (firstNode.navEntry.navParams.group) {
+        return findDefaultChild(firstNode.children);
     } else {
         return firstNode;
     }
@@ -116,7 +114,8 @@ export function findDefaultChild(node: Readonly<NavNodeParent | NavRootNode>) {
  * @category Internal
  */
 export function navigate(
-    navTree: NavRootNode | undefined,
+    navTree: NavTree,
+    currentlyFocused: CurrentNavEntry | undefined,
     /**
      * The direction to navigate within the tree. Note that 1 dimensional navigation treads up and
      * left as the same, down and right as the same.
@@ -125,15 +124,9 @@ export function navigate(
     /** Set to true to allow navigation to wrap. */
     allowWrapping: boolean,
 ): NavigationResult<NavAction.Navigate> {
-    if (!navTree) {
-        return {success: false, reason: 'no nav tree', direction, navAction: NavAction.Navigate};
-    }
-
-    const currentlyFocused = getCurrentlyFocused(navTree);
-
     /** If there is no currently focused nav node, try to focus the first node in the tree. */
     if (!currentlyFocused) {
-        const newNode = findDefaultChild(navTree);
+        const newNode = findDefaultChild(navTree.children);
         if (newNode) {
             focusElement(newNode.element);
             return {
@@ -144,11 +137,6 @@ export function navigate(
                 direction,
                 navAction: NavAction.Navigate,
             };
-            /**
-             * The below else if is an edge that technically cannot be triggered, given current
-             * logic. However, it is an edge case nonetheless and thus is handled here.
-             */
-            /* node:coverage ignore next 9 */
         } else {
             /** Nothing we can do, we found no nav nodes to focus. */
             return {
@@ -160,11 +148,7 @@ export function navigate(
         }
     }
 
-    const {nextNode, requiresWrapping} = calculateNextNode(
-        currentlyFocused.parent,
-        direction,
-        currentlyFocused.node,
-    );
+    const {nextNode, requiresWrapping} = calculateNextNode(currentlyFocused.position, direction);
 
     const isWrappingValid = allowWrapping ? true : !requiresWrapping;
 
@@ -208,86 +192,56 @@ export function navigate(
 }
 
 function calculateNextNode(
-    parentNode: NavRootNode | NavNodeParent,
+    treePosition: WalkResult,
     direction: NavDirection,
-    currentNode: NavNode,
-) {
-    const isVertical = direction === NavDirection.Down || direction === NavDirection.Up;
+): {
+    nextNode: NavTreeNode | undefined;
+    requiresWrapping: boolean;
+} {
+    const parentNode = treePosition.ancestorChain[treePosition.ancestorChain.length - 1]?.node;
+    assert.isDefined(parentNode, 'missing parent');
+    const currentRow = assertWrap.isDefined(parentNode.children[treePosition.nodeCoords.y]);
 
-    if (isVertical) {
-        /** Vertical */
-        const wrapComparison = direction === NavDirection.Down ? lessThan : greaterThan;
-        const increment = direction === NavDirection.Down ? 1 : -1;
+    const isVertical =
+        parentNode.children.length > 1 &&
+        (direction === NavDirection.Down || direction === NavDirection.Up);
 
-        const nextY =
-            parentNode.type === '1d'
-                ? 0
-                : wrapNumber(currentNode.coords.y + increment, {
-                      min: 0,
-                      max: parentNode.children.length - 1,
-                  });
-        const nextRow = parentNode.type === '2d' ? parentNode.children[nextY] : undefined;
+    const increment: 1 | -1 =
+        direction === NavDirection.Down || direction === NavDirection.Right ? 1 : -1;
+    const wrapComparison = increment === -1 ? greaterThan : lessThan;
 
-        const nextCoords: Coords = {
-            x:
-                parentNode.type === '1d'
-                    ? wrapNumber(currentNode.coords.x + increment, {
-                          min: 0,
-                          max: parentNode.children.length - 1,
-                      })
-                    : /**
-                       * Handles the case where the next row has fewer elements than the currently focused element's x
-                       * index.
-                       */
-                      nextRow && currentNode.coords.x >= nextRow.length
-                      ? nextRow.length - 1
-                      : currentNode.coords.x,
-            y: nextY,
-        };
+    const nextY = isVertical
+        ? wrapNumber(treePosition.nodeCoords.y + increment, {
+              min: 0,
+              max: parentNode.children.length - 1,
+          })
+        : treePosition.nodeCoords.y;
 
-        const nextNode: NavNode | undefined =
-            parentNode.type === '1d'
-                ? parentNode.children[nextCoords.x]
-                : parentNode.children[nextCoords.y]?.[nextCoords.x];
+    const nextRow = assertWrap.isDefined(parentNode.children[nextY]);
 
-        const requiresWrapping =
-            parentNode.type === '1d'
-                ? wrapComparison(nextCoords.x, currentNode.coords.x)
-                : wrapComparison(nextCoords.y, currentNode.coords.y);
+    const nextX = isVertical
+        ? treePosition.nodeCoords.x >= nextRow.length
+            ? /**
+               * Handles the case where the next row has fewer elements than the currently focused element's x
+               * index.
+               */
+              nextRow.length - 1
+            : treePosition.nodeCoords.x
+        : wrapNumber(treePosition.nodeCoords.x + increment, {
+              min: 0,
+              max: currentRow.length - 1,
+          });
 
-        return {
-            nextNode: nextNode?.element === currentNode.element ? undefined : nextNode,
-            requiresWrapping,
-        };
-    } else {
-        /** Horizontal */
-        const wrapComparison = direction === NavDirection.Right ? lessThan : greaterThan;
-        const increment = direction === NavDirection.Right ? 1 : -1;
+    const nextNode: NavTreeNode | undefined = parentNode.children[nextY]?.[nextX];
 
-        const currentRow =
-            parentNode.type === '1d'
-                ? parentNode.children
-                : parentNode.children[currentNode.coords.y];
+    const requiresWrapping = isVertical
+        ? wrapComparison(nextY, treePosition.nodeCoords.y)
+        : wrapComparison(nextX, treePosition.nodeCoords.x);
 
-        assert.isDefined(currentRow, `No current row found at y index: '${currentNode.coords.y}'`);
-
-        const nextCoords: Coords = {
-            x: wrapNumber(currentNode.coords.x + increment, {min: 0, max: currentRow.length - 1}),
-            y: currentNode.coords.y,
-        };
-
-        const requiresWrapping = wrapComparison(nextCoords.x, currentNode.coords.x);
-
-        const nextNode: NavNode | undefined =
-            parentNode.type === '1d'
-                ? parentNode.children[nextCoords.x]
-                : parentNode.children[nextCoords.y]?.[nextCoords.x];
-
-        return {
-            nextNode: nextNode?.element === currentNode.element ? undefined : nextNode,
-            requiresWrapping,
-        };
-    }
+    return {
+        nextNode,
+        requiresWrapping,
+    };
 }
 
 /**
@@ -296,15 +250,12 @@ function calculateNextNode(
  * @category Internal
  */
 export function navigatePibling(
-    navTree: NavRootNode,
-    currentlyFocused: CurrentlyFocusedResult,
+    currentlyFocused: Readonly<CurrentNavEntry>,
     direction: NavDirection,
     allowWrapping: boolean,
 ): NavigationResult<NavAction.Pibling> {
-    const grandparent = check.isLengthAtLeast(currentlyFocused.ancestors, 2)
-        ? currentlyFocused.ancestors[1]
-        : navTree;
-    const parent = currentlyFocused.ancestors[0];
+    const parent =
+        currentlyFocused.position.ancestorChain[currentlyFocused.position.ancestorChain.length - 1];
 
     if (!parent) {
         return {
@@ -315,9 +266,11 @@ export function navigatePibling(
         };
     }
 
-    const {nextNode, requiresWrapping} = calculateNextNode(grandparent, direction, parent);
+    const {nextNode, requiresWrapping} = calculateNextNode(parent, direction);
 
-    const nodeToFocus = nextNode?.isGroup ? findDefaultChild(nextNode) : nextNode;
+    const nodeToFocus = nextNode?.navEntry.navParams.group
+        ? findDefaultChild(nextNode.children)
+        : nextNode;
 
     const isWrappingValid = allowWrapping ? true : !requiresWrapping;
 

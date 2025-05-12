@@ -1,7 +1,12 @@
 import {getNestedChildrenTree} from '@augment-vir/web';
 import {ListenTarget} from 'typed-event-target';
-import {type NavEntry} from '../directives/nav-entry.js';
-import {getCurrentlyFocused, type CurrentlyFocusedResult} from './currently-focused.js';
+import {
+    type CurrentNavEntry,
+    type NavEntry,
+    type NavEntryOperation,
+} from '../directives/nav-entry.js';
+import {mapTree, type NavTree} from '../nav-tree/nav-tree.js';
+import {findNavTreeNodeByNavEntry} from '../nav-tree/walk-nav-tree.js';
 import {enterInto} from './enter-into.js';
 import {exitOutOf} from './exit-out-of.js';
 import {
@@ -11,7 +16,6 @@ import {
     NavPiblingEvent,
     type AllNavControllerEvents,
 } from './nav-controller-events.js';
-import {mapTree, type NavTreeNode} from './nav-tree.js';
 import {
     NavAction,
     navigate,
@@ -50,33 +54,50 @@ export class NavController extends ListenTarget<AllNavControllerEvents> {
 
     /** If `true`, the nav tree will rebuild on next operation. */
     public needsUpdate = false;
-    public navEntries = new Set<NavEntry>();
+    public navEntries = new Set<Readonly<NavEntry>>();
+    public currentNavEntry: Readonly<CurrentNavEntry> | undefined;
 
-    protected cachedNavTree: NavTreeNode | undefined;
+    protected cachedNavTree: Readonly<NavTree> | undefined;
 
-    protected getNavTree() {
+    protected getNavTree(): Readonly<NavTree> {
         if (this.needsUpdate || !this.cachedNavTree) {
-            this.buildNavTree();
+            this.needsUpdate = false;
+            return this.buildNavTree();
+        } else {
+            return this.cachedNavTree;
         }
-
-        return this.cachedNavTree;
     }
 
-    /** Gets the currently focused node (is any) from within the `rootElement`'s nav tree. */
-    public getCurrentlyFocused(): CurrentlyFocusedResult | undefined {
-        return getCurrentlyFocused(this.getNavTree());
+    public triggerNavEntry(
+        navEntry: Readonly<NavEntry>,
+        enabled: boolean,
+        operation: NavEntryOperation,
+    ) {
+        if (enabled) {
+            this.navEntries.forEach((nestedNavEntry) => {
+                if (nestedNavEntry !== navEntry) {
+                    nestedNavEntry.clearNavValue();
+                }
+            });
+            this.currentNavEntry = {
+                entry: navEntry,
+                operation: operation,
+                position: findNavTreeNodeByNavEntry(this.getNavTree(), navEntry),
+            };
+        } else if (
+            this.currentNavEntry?.entry === navEntry &&
+            this.currentNavEntry.operation === operation
+        ) {
+            this.currentNavEntry = undefined;
+        }
     }
 
     /** Navigate around the nav tree. */
     public navigate({
         direction,
         allowWrapping,
-    }: NavigationInputs): NavigationResult<NavAction.Navigate> {
-        const result = navigate(this.getNavTree(), direction, allowWrapping);
-        if (result.success) {
-            // this.rootElement.querySelectorAll('.)
-            result.newElement.classList.add();
-        }
+    }: Readonly<NavigationInputs>): NavigationResult<NavAction.Navigate> {
+        const result = navigate(this.getNavTree(), this.currentNavEntry, direction, allowWrapping);
         this.dispatch(new NavigateEvent({detail: result}));
         return result;
     }
@@ -85,7 +106,7 @@ export class NavController extends ListenTarget<AllNavControllerEvents> {
      * no children to focus.
      */
     public enterInto(): NavigationResult<NavAction.Enter> {
-        const result = enterInto(this.getNavTree());
+        const result = enterInto(this.getNavTree(), this.currentNavEntry);
         this.dispatch(new NavEnterEvent({detail: result}));
         return result;
     }
@@ -94,7 +115,9 @@ export class NavController extends ListenTarget<AllNavControllerEvents> {
      * if the parent is the tree root, this fails.
      */
     public exitOutOf(): NavigationResult<NavAction.Exit> {
-        const result = exitOutOf(this.getNavTree());
+        /** Make sure the tree is fresh. */
+        this.getNavTree();
+        const result = exitOutOf(this.currentNavEntry);
         this.dispatch(new NavExitEvent({detail: result}));
         return result;
     }
@@ -102,15 +125,12 @@ export class NavController extends ListenTarget<AllNavControllerEvents> {
     public navigatePibling({
         allowWrapping,
         direction,
-    }: NavigationInputs): NavigationResult<NavAction.Pibling> {
+    }: Readonly<NavigationInputs>): NavigationResult<NavAction.Pibling> {
         const navTree = this.getNavTree();
 
-        const currentlyFocused = getCurrentlyFocused(navTree);
-
-        const rawResult =
-            !currentlyFocused || !navTree
-                ? navigate(navTree, direction, allowWrapping)
-                : navigatePibling(navTree, currentlyFocused, direction, allowWrapping);
+        const rawResult = this.currentNavEntry
+            ? navigatePibling(this.currentNavEntry, direction, allowWrapping)
+            : navigate(navTree, undefined, direction, allowWrapping);
 
         const result: NavigationResult<NavAction.Pibling> = {
             ...rawResult,
@@ -125,7 +145,7 @@ export class NavController extends ListenTarget<AllNavControllerEvents> {
     public buildNavTree() {
         const elementTree = getNestedChildrenTree(this.rootElement);
 
-        const tree = mapTree(elementTree, undefined);
+        const tree = mapTree(elementTree);
 
         this.cachedNavTree = tree;
 

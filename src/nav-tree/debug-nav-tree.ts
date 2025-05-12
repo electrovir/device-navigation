@@ -1,6 +1,5 @@
 import {check} from '@augment-vir/assert';
 import {isElementFocused} from '@augment-vir/web';
-import {type NavNode, type NavRootNode} from './nav-tree.js';
 
 // This is for debugging and cannot really be adequately tested.
 /* node:coverage disable */
@@ -12,12 +11,10 @@ import {type NavNode, type NavRootNode} from './nav-tree.js';
  */
 export function logNavTree(node: Readonly<NavRootNode | NavNode>, indent = 0): void {
     if (!indent) {
-        // eslint-disable-next-line no-console
-        console.log('vvv NAV TREE vvv');
+        console.info('vvv NAV TREE vvv');
     }
     function log(...args: unknown[]) {
-        // eslint-disable-next-line no-console
-        console.log('    '.repeat(indent) + String(args[0]), ...args.slice(1));
+        console.info('    '.repeat(indent) + String(args[0]), ...args.slice(1));
     }
 
     if (node.type === 'child') {

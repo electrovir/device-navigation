@@ -1,6 +1,6 @@
-import {css, defineElementNoInputs, html, onDomCreated} from 'element-vir';
-import {group} from '../../directives/nav-value.js';
-import {nav, navSelector} from '../../directives/nav.directive.js';
+import {css, defineElementNoInputs, html} from 'element-vir';
+import {navAttribute, NavValue} from '../../directives/nav-entry.js';
+import {nav} from '../../directives/nav.directive.js';
 import {NavController} from '../../nav-controller/nav-controller.js';
 import {NavDirection} from '../../nav-controller/navigate.js';
 
@@ -28,13 +28,13 @@ export const VirTestApp = defineElementNoInputs({
             background-color: white;
         }
 
-        ${navSelector.css.selected('div')} {
+        ${navAttribute.css('div', NavValue.Focused)} {
             border-color: red;
             outline: none;
             background-color: rgba(255, 0, 0, 0.03);
         }
 
-        ${navSelector.css.click('div')} {
+        ${navAttribute.css('div', NavValue.Active)} {
             border-color: darkred;
             background-color: rgba(255, 0, 0, 0.1);
         }
@@ -93,100 +93,75 @@ export const VirTestApp = defineElementNoInputs({
             padding: 8px 16px;
         }
     `,
-    state() {
+    state({host}) {
+        const navController = new NavController(host);
+
+        function windowListener(event: KeyboardEvent) {
+            const keyCode = event.code;
+            if (keyCode === 'ArrowDown') {
+                event.preventDefault();
+                console.info(
+                    navController.navigate({
+                        direction: NavDirection.Down,
+                        allowWrapping: false,
+                    }),
+                );
+            } else if (keyCode === 'ArrowUp') {
+                event.preventDefault();
+                console.info(
+                    navController.navigate({
+                        direction: NavDirection.Up,
+                        allowWrapping: false,
+                    }),
+                );
+            } else if (keyCode === 'ArrowLeft') {
+                event.preventDefault();
+                console.info(
+                    navController.navigate({
+                        direction: NavDirection.Left,
+                        allowWrapping: false,
+                    }),
+                );
+            } else if (keyCode === 'ArrowRight') {
+                event.preventDefault();
+                console.info(
+                    navController.navigate({
+                        direction: NavDirection.Right,
+                        allowWrapping: false,
+                    }),
+                );
+            } else if (keyCode === 'BracketRight') {
+                console.info(
+                    navController.navigatePibling({
+                        direction: NavDirection.Right,
+                        allowWrapping: true,
+                    }),
+                );
+            } else if (keyCode === 'BracketLeft') {
+                console.info(
+                    navController.navigatePibling({
+                        direction: NavDirection.Left,
+                        allowWrapping: true,
+                    }),
+                );
+            } else if (keyCode === 'Enter' || keyCode === 'Return') {
+                event.preventDefault();
+                console.info(navController.enterInto());
+            } else if (keyCode === 'Backspace' || keyCode === 'Escape') {
+                event.preventDefault();
+                console.info(navController.exitOutOf());
+            }
+        }
+        window.addEventListener('keydown', windowListener);
+
         return {
-            navController: undefined as undefined | NavController,
-            cleanup: undefined as undefined | (() => void),
+            navController,
             /** For tracking if directives unnecessarily re-render. */
             counter: 0,
         };
     },
-    init({state, updateState, host}) {
-        if (!state.navController) {
-            const navController = new NavController(host);
-            updateState({navController});
-            console.info(navController);
-            console.info(navController.buildNavTree());
-        }
-
-        if (!state.cleanup) {
-            function windowListener(event: KeyboardEvent) {
-                if (!state.navController) {
-                    return;
-                }
-
-                const keyCode = event.code;
-                if (keyCode === 'ArrowDown') {
-                    event.preventDefault();
-                    console.info(
-                        state.navController.navigate({
-                            direction: NavDirection.Down,
-                            allowWrapping: false,
-                        }),
-                    );
-                } else if (keyCode === 'ArrowUp') {
-                    event.preventDefault();
-                    console.info(
-                        state.navController.navigate({
-                            direction: NavDirection.Up,
-                            allowWrapping: false,
-                        }),
-                    );
-                } else if (keyCode === 'ArrowLeft') {
-                    event.preventDefault();
-                    console.info(
-                        state.navController.navigate({
-                            direction: NavDirection.Left,
-                            allowWrapping: false,
-                        }),
-                    );
-                } else if (keyCode === 'ArrowRight') {
-                    event.preventDefault();
-                    console.info(
-                        state.navController.navigate({
-                            direction: NavDirection.Right,
-                            allowWrapping: false,
-                        }),
-                    );
-                } else if (keyCode === 'BracketRight') {
-                    console.info(
-                        state.navController.navigatePibling({
-                            direction: NavDirection.Right,
-                            allowWrapping: true,
-                        }),
-                    );
-                } else if (keyCode === 'BracketLeft') {
-                    console.info(
-                        state.navController.navigatePibling({
-                            direction: NavDirection.Left,
-                            allowWrapping: true,
-                        }),
-                    );
-                } else if (keyCode === 'Enter' || keyCode === 'Return') {
-                    event.preventDefault();
-                    console.info(state.navController.enterInto());
-                } else if (keyCode === 'Backspace' || keyCode === 'Escape') {
-                    event.preventDefault();
-                    console.info(state.navController.exitOutOf());
-                }
-            }
-            window.addEventListener('keydown', windowListener);
-
-            updateState({
-                cleanup: () => {
-                    window.removeEventListener('keydown', windowListener);
-                },
-            });
-        }
-    },
-    cleanup({state, updateState}) {
-        state.cleanup?.();
-        updateState({cleanup: undefined});
-    },
     render({state, updateState}) {
-        setTimeout(() => {
-            updateState({counter: state.counter + 1});
-        }, 1000);
+        updateState({counter: state.counter + 1});
 
         return html`
             <header>
@@ -215,48 +190,34 @@ export const VirTestApp = defineElementNoInputs({
                 </li>
             </ul>
             <main>
-                <section
-                    ${nav(group)}
-                    ${onDomCreated(() => {
-                        if (!state.navController) {
-                            return;
-                        }
-                        if (!state.navController.getCurrentlyFocused()) {
-                            console.log('defaulting');
-                            state.navController.navigate({
-                                direction: NavDirection.Down,
-                                allowWrapping: false,
-                            });
-                        }
-                    })}
-                >
-                    <div class="cell" ${nav()}>Cell</div>
-                    <div class="cell" ${nav()}>Cell</div>
-                    <div class="cell" ${nav()}>Cell</div>
-                    <div class="double" ${nav()}>
-                        <div class="cell" ${nav()}>Cell</div>
-                        <div class="cell" ${nav()}>Cell</div>
+                <section ${nav(state.navController, {group: true})}>
+                    <div class="cell" ${nav(state.navController)}>Cell</div>
+                    <div class="cell" ${nav(state.navController)}>Cell</div>
+                    <div class="cell" ${nav(state.navController)}>Cell</div>
+                    <div class="double" ${nav(state.navController)}>
+                        <div class="cell" ${nav(state.navController)}>Cell</div>
+                        <div class="cell" ${nav(state.navController)}>Cell</div>
                     </div>
                 </section>
-                <section ${nav(group)}>
+                <section ${nav(state.navController, {group: true})}>
                     <div class="row">
-                        <div class="cell" ${nav(0, 0)}>Cell</div>
-                        <div class="cell" ${nav(1, 0)}>Cell</div>
-                        <div class="cell" ${nav(2, 0)}>Cell</div>
+                        <div class="cell" ${nav(state.navController, {x: 0, y: 0})}>Cell</div>
+                        <div class="cell" ${nav(state.navController, {x: 1, y: 0})}>Cell</div>
+                        <div class="cell" ${nav(state.navController, {x: 2, y: 0})}>Cell</div>
                     </div>
                     <div class="row">
-                        <div class="cell" ${nav(0, 1)}>Cell</div>
-                        <div class="cell" ${nav(1, 1)}>Cell</div>
-                        <div class="cell" ${nav(2, 1)}>Cell</div>
+                        <div class="cell" ${nav(state.navController, {x: 0, y: 1})}>Cell</div>
+                        <div class="cell" ${nav(state.navController, {x: 1, y: 1})}>Cell</div>
+                        <div class="cell" ${nav(state.navController, {x: 2, y: 1})}>Cell</div>
                     </div>
                     <div class="row">
-                        <div class="cell" ${nav(0, 2)}>Cell</div>
-                        <div class="cell" ${nav(1, 2)}>Cell</div>
-                        <div class="cell" ${nav(2, 2)}>Cell</div>
+                        <div class="cell" ${nav(state.navController, {x: 0, y: 2})}>Cell</div>
+                        <div class="cell" ${nav(state.navController, {x: 1, y: 2})}>Cell</div>
+                        <div class="cell" ${nav(state.navController, {x: 2, y: 2})}>Cell</div>
                     </div>
                     <div class="row">
-                        <div class="cell" ${nav(0, 3)}>Cell</div>
-                        <div class="cell" ${nav(1, 3)}>Cell</div>
+                        <div class="cell" ${nav(state.navController, {x: 0, y: 3})}>Cell</div>
+                        <div class="cell" ${nav(state.navController, {x: 1, y: 3})}>Cell</div>
                     </div>
                 </section>
             </main>
@@ -264,12 +225,12 @@ export const VirTestApp = defineElementNoInputs({
             <ol>
                 <li>
                     The
-                    <code>nav()</code>
+                    <code>nav(state.navController, )</code>
                     directive marks each element for navigation.
                 </li>
                 <li>
                     Using
-                    <code>nav(group)</code>
+                    <code>nav(state.navController, {group: true})</code>
                     marks each non-navigable section group.
                 </li>
                 <li>

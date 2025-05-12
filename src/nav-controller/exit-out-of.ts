@@ -1,6 +1,5 @@
-import {type NavRootNode} from '../nav-tree/nav-tree.js';
+import {type CurrentNavEntry} from '../directives/nav-entry.js';
 import {focusElement} from '../util/focus.js';
-import {getCurrentlyFocused} from './currently-focused.js';
 import {NavAction, type NavigationResult} from './navigate.js';
 
 /**
@@ -9,18 +8,9 @@ import {NavAction, type NavigationResult} from './navigate.js';
  *
  * @category Internal
  */
-export function exitOutOf(navTree: NavRootNode | undefined): NavigationResult<NavAction.Exit> {
-    if (!navTree) {
-        return {
-            success: false,
-            reason: 'no nav tree',
-            direction: undefined,
-            navAction: NavAction.Exit,
-        };
-    }
-
-    const currentlyFocused = getCurrentlyFocused(navTree);
-
+export function exitOutOf(
+    currentlyFocused: Readonly<CurrentNavEntry> | undefined,
+): NavigationResult<NavAction.Exit> {
     if (!currentlyFocused) {
         return {
             success: false,
@@ -30,24 +20,26 @@ export function exitOutOf(navTree: NavRootNode | undefined): NavigationResult<Na
         };
     }
 
-    const newNode = currentlyFocused.nonGroupParent;
+    const closestGroupAncestor = currentlyFocused.position.ancestorChain
+        .toReversed()
+        .find((ancestor) => !ancestor.node.root && !ancestor.node.navEntry.navParams.group)?.node;
 
-    if (newNode.isRoot) {
+    if (!closestGroupAncestor || closestGroupAncestor.root) {
         return {
             success: false,
-            reason: 'at top level nav already, nothing to exit to',
+            reason: 'failed to find ancestor, nothing to exit to',
             direction: undefined,
             navAction: NavAction.Exit,
         };
     }
 
-    focusElement(newNode.element);
+    focusElement(closestGroupAncestor.element);
 
     return {
         success: true,
         defaulted: false,
         wrapped: false,
-        newElement: newNode.element,
+        newElement: closestGroupAncestor.element,
         direction: undefined,
         navAction: NavAction.Exit,
     };

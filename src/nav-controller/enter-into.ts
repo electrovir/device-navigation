@@ -1,6 +1,6 @@
-import {type NavRootNode} from '../nav-tree/nav-tree.js';
+import {type CurrentNavEntry} from '../directives/nav-entry.js';
+import {type NavTree} from '../nav-tree/nav-tree.js';
 import {focusElement} from '../util/focus.js';
-import {getCurrentlyFocused} from './currently-focused.js';
 import {NavAction, type NavigationResult} from './navigate.js';
 
 /**
@@ -9,18 +9,10 @@ import {NavAction, type NavigationResult} from './navigate.js';
  *
  * @category Internal
  */
-export function enterInto(navTree: NavRootNode | undefined): NavigationResult<NavAction.Enter> {
-    if (!navTree) {
-        return {
-            success: false,
-            reason: 'no nav tree',
-            direction: undefined,
-            navAction: NavAction.Enter,
-        };
-    }
-
-    const currentlyFocused = getCurrentlyFocused(navTree);
-
+export function enterInto(
+    navTree: Readonly<NavTree>,
+    currentlyFocused: Readonly<CurrentNavEntry> | undefined,
+): NavigationResult<NavAction.Enter> {
     if (!currentlyFocused) {
         return {
             success: false,
@@ -30,7 +22,7 @@ export function enterInto(navTree: NavRootNode | undefined): NavigationResult<Na
         };
     }
 
-    if (currentlyFocused.node.type === 'child' || !currentlyFocused.node.children.length) {
+    if (!currentlyFocused.position.node.children.length) {
         return {
             success: false,
             reason: 'no children to enter into',
@@ -39,10 +31,7 @@ export function enterInto(navTree: NavRootNode | undefined): NavigationResult<Na
         };
     }
 
-    const newNode =
-        currentlyFocused.node.type === '1d'
-            ? currentlyFocused.node.children[0]
-            : currentlyFocused.node.children[0]?.[0];
+    const newNode = currentlyFocused.position.node.children[0]?.[0];
 
     if (!newNode) {
         return {
