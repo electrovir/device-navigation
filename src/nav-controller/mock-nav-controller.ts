@@ -1,6 +1,5 @@
 import {assert} from '@augment-vir/assert';
 import {makeWritable} from '@augment-vir/common';
-import {testWeb} from '@augment-vir/test';
 import {html, type HTMLTemplateResult} from 'element-vir';
 import {NavController} from './nav-controller.js';
 
@@ -12,6 +11,7 @@ import {NavController} from './nav-controller.js';
 export async function createMockNavController(
     templateCallback: (navController: NavController) => HTMLTemplateResult,
 ) {
+    const {testWeb} = await import('@augment-vir/test');
     const navController = new NavController(undefined as any);
     const fixture = await testWeb.render(html`
         <div>${templateCallback(navController)}</div>

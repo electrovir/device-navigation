@@ -1,6 +1,6 @@
 {
     "name": "device-navigation",
-    "version": "4.0.0",
+    "version": "4.0.1",
     "description": "Navigate HTML elements in two dimensions with non-pointer devices.",
     "keywords": [
         "keyboard",
