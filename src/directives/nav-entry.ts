@@ -81,7 +81,11 @@ export type NavParams = PartialWithUndefined<{
 
     /** Mark this element's x coordinate, either in 1D or 2D. */
     x: number;
-    /** Mark this element's 2 dimensional y coordinate. */
+    /**
+     * Mark this element's 2 dimensional y coordinate.
+     *
+     * @default 0
+     */
     y: number;
 
     /** Disable this element's navigation. */

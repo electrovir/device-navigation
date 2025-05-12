@@ -10,12 +10,10 @@ import {type NavTreeNode} from './nav-tree.js';
 type TestingNavTreeNode = {
     element: ReturnType<typeof toTagOrDefinition>;
     children: TestingNavTreeNode[][];
-    navEntry: boolean;
 };
 
 function convertTreeForTesting(navTreeNode: NavTreeNode): TestingNavTreeNode {
     return {
-        navEntry: !!navTreeNode.navEntry,
         element: toTagOrDefinition(navTreeNode.element),
         children: navTreeNode.children.map((row) => row.map(convertTreeForTesting)),
     };
@@ -67,52 +65,42 @@ describe('buildNavTree', () => {
                 [
                     {
                         element: 'main',
-                        navEntry: true,
                         children: [
                             [
                                 {
                                     element: 'div',
-                                    navEntry: true,
                                     children: [],
                                 },
                                 {
                                     element: 'div',
-                                    navEntry: true,
                                     children: [],
                                 },
                                 {
                                     element: 'div',
-                                    navEntry: true,
                                     children: [],
                                 },
                                 {
                                     element: 'div',
-                                    navEntry: true,
                                     children: [],
                                 },
                                 {
                                     element: 'section',
-                                    navEntry: true,
                                     children: [
                                         [
                                             {
                                                 element: 'div',
-                                                navEntry: true,
                                                 children: [],
                                             },
                                             {
                                                 element: 'div',
-                                                navEntry: true,
                                                 children: [],
                                             },
                                             {
                                                 element: 'div',
-                                                navEntry: true,
                                                 children: [],
                                             },
                                             {
                                                 element: 'div',
-                                                navEntry: true,
                                                 children: [],
                                             },
                                         ],
@@ -144,32 +132,26 @@ describe('buildNavTree', () => {
                 [
                     {
                         element: 'main',
-                        navEntry: true,
                         children: [
                             [
                                 {
                                     element: 'section',
-                                    navEntry: true,
                                     children: [
                                         [
                                             {
                                                 element: 'div',
-                                                navEntry: true,
                                                 children: [],
                                             },
                                             {
                                                 element: 'div',
-                                                navEntry: true,
                                                 children: [],
                                             },
                                             {
                                                 element: 'div',
-                                                navEntry: true,
                                                 children: [],
                                             },
                                             {
                                                 element: 'div',
-                                                navEntry: true,
                                                 children: [],
                                             },
                                         ],
@@ -181,58 +163,103 @@ describe('buildNavTree', () => {
                 ],
             ],
         },
-        // {
-        //     it: 'allows out of order 1D navigation',
-        //     input: (controller) => html`
-        //         <section>
-        //             <main ${nav(controller, {group: true})}>
-        //                 <section ${nav(controller, {group: true})}>
-        //                     <span ${nav(controller, {x: 3})}></span>
-        //                     <div ${nav(controller)}></div>
-        //                     <div ${nav(controller)}></div>
-        //                 </section>
-        //             </main>
-        //         </section>
-        //     `,
-        //     expect: {
-        //         element: 'section',
-        //         navEntry: false,
-        //         children: [
-        //             [
-        //                 {
-        //                     element: 'main',
-        //                     navEntry: true,
-        //                     children: [
-        //                         [
-        //                             {
-        //                                 element: 'section',
-        //                                 navEntry: true,
-        //                                 children: [
-        //                                     [
-        //                                         {
-        //                                             element: 'div',
-        //                                             navEntry: true,
-        //                                             children: [],
-        //                                         },
-        //                                         {
-        //                                             element: 'div',
-        //                                             navEntry: true,
-        //                                             children: [],
-        //                                         },
-        //                                         {
-        //                                             element: 'span',
-        //                                             navEntry: true,
-        //                                             children: [],
-        //                                         },
-        //                                     ],
-        //                                 ],
-        //                             },
-        //                         ],
-        //                     ],
-        //                 },
-        //             ],
-        //         ],
-        //     },
-        // },
+        {
+            it: 'allows out of order 1D navigation',
+            input: (controller) => html`
+                <section>
+                    <main ${nav(controller, {group: true})}>
+                        <section ${nav(controller, {group: true})}>
+                            <section ${nav(controller, {x: 1})}></section>
+                            <span ${nav(controller, {x: 2})}></span>
+                            <div ${nav(controller)}></div>
+                            <div ${nav(controller)}></div>
+                        </section>
+                    </main>
+                </section>
+            `,
+            expect: [
+                [
+                    {
+                        element: 'main',
+                        children: [
+                            [
+                                {
+                                    element: 'section',
+                                    children: [
+                                        [
+                                            {
+                                                element: 'div',
+                                                children: [],
+                                            },
+                                            {
+                                                element: 'section',
+                                                children: [],
+                                            },
+                                            {
+                                                element: 'span',
+                                                children: [],
+                                            },
+                                            {
+                                                element: 'div',
+                                                children: [],
+                                            },
+                                        ],
+                                    ],
+                                },
+                            ],
+                        ],
+                    },
+                ],
+            ],
+        },
+        {
+            it: 'allows 2D navigation',
+            input: (controller) => html`
+                <section>
+                    <main ${nav(controller, {group: true})}>
+                        <span ${nav(controller, {x: 3, y: 1})}></span>
+                        <div ${nav(controller)}></div>
+                        <div ${nav(controller)}></div>
+                        <div ${nav(controller, {x: 1, y: 3})}></div>
+                        <section ${nav(controller, {y: 3})}></section>
+                    </main>
+                </section>
+            `,
+            expect: [
+                [
+                    {
+                        element: 'main',
+                        children: [
+                            [
+                                {
+                                    element: 'div',
+                                    children: [],
+                                },
+                                {
+                                    element: 'div',
+                                    children: [],
+                                },
+                            ],
+                            [
+                                {
+                                    element: 'span',
+                                    children: [],
+                                },
+                            ],
+                            [
+                                {
+                                    element: 'section',
+                                    children: [],
+                                },
+                                {
+                                    element: 'div',
+                                    children: [],
+                                },
+                            ],
+                        ],
+                    },
+                ],
+            ],
+        },
     ]);
 });

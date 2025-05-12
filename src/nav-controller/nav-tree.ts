@@ -1,3 +1,4 @@
+import {check} from '@augment-vir/assert';
 import {getOrSet} from '@augment-vir/common';
 import {type ElementTree} from '@augment-vir/web';
 import {type NavEntry, extractNavEntry, navAttribute, NavValue} from '../directives/nav-entry.js';
@@ -51,7 +52,11 @@ function mapTreeRecursively(elementTree: ElementTree): IntermediateNavTreeNode |
 }
 
 function expandChildren(elementTreeNode: ElementTree): IntermediateNavTreeNode[][] {
-    const children: IntermediateNavTreeNode[][] = [];
+    const rawChildren: {
+        withX: {x: number; node: IntermediateNavTreeNode}[];
+        noX: IntermediateNavTreeNode[];
+        y: number;
+    }[] = [];
 
     function pushNode(node: IntermediateNavTreeNode) {
         if (node.navEntry?.navParams.group && !node.children.length) {
@@ -63,11 +68,18 @@ function expandChildren(elementTreeNode: ElementTree): IntermediateNavTreeNode[]
 
         const x = node.navEntry.navParams.x;
         const y = node.navEntry.navParams.y || 0;
-        const row = getOrSet(children, y, () => []);
+        const row = getOrSet(rawChildren, y, () => {
+            return {
+                noX: [],
+                withX: [],
+                y,
+            };
+        });
+
         if (x == undefined) {
-            row.push(node);
+            row.noX.push(node);
         } else {
-            row[x] = node;
+            row.withX.push({x, node});
         }
     }
 
@@ -78,5 +90,21 @@ function expandChildren(elementTreeNode: ElementTree): IntermediateNavTreeNode[]
         }
     });
 
-    return children;
+    // eslint-disable-next-line sonarjs/no-misleading-array-reverse
+    return rawChildren
+        .sort((rowA, rowB) => {
+            return rowA.y - rowB.y;
+        })
+        .map((row) => {
+            row.withX.sort((a, b) => {
+                return a.x - b.x;
+            });
+
+            row.withX.forEach(({x, node}) => {
+                row.noX.splice(x, 0, node);
+            });
+
+            return row.noX;
+        })
+        .filter(check.isTruthy);
 }
