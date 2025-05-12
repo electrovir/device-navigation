@@ -149,18 +149,18 @@ function createEventListener(navEntry: NavEntry) {
             if (event.target === navEntry.element) {
                 navEntry.activate(true);
             }
-        } else if (event.type === 'mouseup') {
+        } else if (event.type === 'mouseup' || event.type === 'focus') {
             if (event.target === navEntry.element) {
-                navEntry.activate(false);
+                navEntry.focus(true);
             }
-        } else if (event.type === 'focus' || event.type === 'mousemove') {
-            if (event.target === navEntry.element) {
+        } else if (event.type === 'mousemove') {
+            if (event.target === navEntry.element && navEntry.navValue !== NavValue.Active) {
                 navEntry.focus(true);
             }
         } else if (event.type === 'blur' || event.type === 'mouseleave') {
             // eslint-disable-next-line unicorn/no-lonely-if
             if (event.target === navEntry.element) {
-                navEntry.focus(false);
+                navEntry.clearNavValue();
             }
         }
     };
@@ -211,6 +211,9 @@ export class NavEntry {
     public clearNavValue() {
         makeWritable(this).navValue = undefined;
         this.element.setAttribute(navAttribute.name, '');
+        if (isElementFocused(this.element)) {
+            this.element.blur();
+        }
     }
 
     /** Focus or blur the element. */
