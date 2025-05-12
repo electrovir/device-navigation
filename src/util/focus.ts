@@ -14,7 +14,7 @@ export function focusElement(element: HTMLElement) {
 /**
  * Waits until an element is focused.
  *
- * @category Internal
+ * @category Util
  */
 export async function waitUntilFocused(
     element: Element,
@@ -32,7 +32,7 @@ export async function waitUntilFocused(
 /**
  * Waits until an element is blurred (unfocused).
  *
- * @category Internal
+ * @category Util
  */
 export async function waitUntilBlurred(
     element: Element,

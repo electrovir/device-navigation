@@ -7,7 +7,23 @@ import {type NavAction, type NavigationResult} from './navigate.js';
  * @category Events
  */
 export class NavExitEvent extends defineTypedCustomEvent<NavigationResult<NavAction.Exit>>()(
-    'nav-exit-event',
+    'nav-exit',
+) {}
+/**
+ * This event is emitted from `NavController` when a nav activate is triggered.
+ *
+ * @category Events
+ */
+export class NavActivateEvent extends defineTypedCustomEvent<
+    NavigationResult<NavAction.Activate>
+>()('nav-activate') {}
+/**
+ * This event is emitted from `NavController` when a nav focus is triggered.
+ *
+ * @category Events
+ */
+export class NavFocusEvent extends defineTypedCustomEvent<NavigationResult<NavAction.Focus>>()(
+    'nav-focus',
 ) {}
 /**
  * This event is emitted from `NavController` when a nav enter is triggered.
@@ -15,7 +31,7 @@ export class NavExitEvent extends defineTypedCustomEvent<NavigationResult<NavAct
  * @category Events
  */
 export class NavEnterEvent extends defineTypedCustomEvent<NavigationResult<NavAction.Enter>>()(
-    'nav-exit-event',
+    'nav-exit',
 ) {}
 /**
  * This event is emitted from `NavController` when a normal navigation is triggered.
@@ -23,7 +39,7 @@ export class NavEnterEvent extends defineTypedCustomEvent<NavigationResult<NavAc
  * @category Events
  */
 export class NavigateEvent extends defineTypedCustomEvent<NavigationResult<NavAction.Navigate>>()(
-    'navigate-event',
+    'nav-navigate',
 ) {}
 /**
  * This event is emitted from `NavController` when a pibling navigation is triggered.
@@ -31,7 +47,7 @@ export class NavigateEvent extends defineTypedCustomEvent<NavigationResult<NavAc
  * @category Events
  */
 export class NavPiblingEvent extends defineTypedCustomEvent<NavigationResult<NavAction.Pibling>>()(
-    'navigate-pibling-event',
+    'nav-navigate-pibling',
 ) {}
 
 /**

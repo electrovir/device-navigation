@@ -1,52 +1,55 @@
-import {assert} from '@augment-vir/assert';
-import {describe, it, testWeb} from '@augment-vir/test';
+import {assert, assertWrap} from '@augment-vir/assert';
+import {describe, it} from '@augment-vir/test';
 import {html} from 'element-vir';
 import {nav} from '../directives/nav.directive.js';
-import {buildNavTree} from '../nav-tree/nav-tree.js';
 import {waitUntilFocused} from '../util/focus.js';
 import {exitOutOf} from './exit-out-of.js';
-import {NavAction} from './navigate.js';
+import {createMockNavController} from './mock-nav-controller.js';
+import {NavDirection} from './navigate.js';
 
 describe(exitOutOf.name, () => {
-    it('fails if there is no currently focused node', async () => {
-        const rootElement = await testWeb.render(html`
-            <div ${nav()}>
-                <div ${nav(0, 1)}></div>
-            </div>
-        `);
-        assert.instanceOf(rootElement, HTMLDivElement);
-
-        const childElement = rootElement.querySelector('div');
-        assert.instanceOf(childElement, HTMLDivElement);
-
-        const navTree = buildNavTree(rootElement);
-
-        assert.deepEquals(exitOutOf(navTree), {
-            success: false,
-            reason: 'no focused node to exit out of',
-            direction: undefined,
-            navAction: NavAction.Exit,
-        });
-    });
-
-    it('focuses a parent element', async () => {
-        const rootElement = await testWeb.render(html`
-            <main>
-                <div ${nav()}>
-                    <div class="nested-child" ${nav()}></div>
+    it('fails when not possible to exit', async () => {
+        const {fixture, navController} = await createMockNavController((navController) => {
+            return html`
+                <div>
+                    <div class="parent" ${nav(navController)}>
+                        <div class="child" ${nav(navController, {x: 0, y: 1})}></div>
+                    </div>
                 </div>
-            </main>
-        `);
-        assert.instanceOf(rootElement, HTMLElement);
+            `;
+        });
 
-        const childElement = rootElement.querySelector('.nested-child');
-        assert.instanceOf(childElement, HTMLDivElement);
+        const parent = assertWrap.instanceOf(fixture.querySelector('.parent'), HTMLDivElement);
 
-        childElement.focus();
-        await waitUntilFocused(childElement);
+        assert.isTrue(
+            navController.navigate({allowWrapping: false, direction: NavDirection.Right}).success,
+        );
+        await waitUntilFocused(parent);
+        assert.isFalse(navController.exitOutOf().success);
+        await waitUntilFocused(parent);
+    });
+    it('exits out of an element', async () => {
+        const {fixture, navController} = await createMockNavController((navController) => {
+            return html`
+                <div>
+                    <div class="parent" ${nav(navController)}>
+                        <div class="child" ${nav(navController, {x: 0, y: 1})}></div>
+                    </div>
+                </div>
+            `;
+        });
 
-        const navTree = buildNavTree(rootElement);
+        const parent = assertWrap.instanceOf(fixture.querySelector('.parent'), HTMLDivElement);
 
-        assert.isTrue(exitOutOf(navTree).success);
+        assert.isTrue(
+            navController.navigate({allowWrapping: false, direction: NavDirection.Right}).success,
+        );
+        await waitUntilFocused(parent);
+        assert.isTrue(navController.enterInto().success);
+        await waitUntilFocused(
+            assertWrap.instanceOf(fixture.querySelector('.child'), HTMLDivElement),
+        );
+        assert.isTrue(navController.exitOutOf().success);
+        await waitUntilFocused(parent);
     });
 });

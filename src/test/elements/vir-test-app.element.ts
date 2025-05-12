@@ -28,17 +28,6 @@ export const VirTestApp = defineElementNoInputs({
             background-color: white;
         }
 
-        ${navAttribute.css('div', NavValue.Focused)} {
-            border-color: red;
-            outline: none;
-            background-color: rgba(255, 0, 0, 0.03);
-        }
-
-        ${navAttribute.css('div', NavValue.Active)} {
-            border-color: darkred;
-            background-color: rgba(255, 0, 0, 0.1);
-        }
-
         .row {
             display: flex;
             gap: 8px;
@@ -72,6 +61,8 @@ export const VirTestApp = defineElementNoInputs({
             display: flex;
             align-items: center;
             justify-content: center;
+            user-select: none;
+            -webkit-user-select: none;
         }
 
         code {
@@ -91,6 +82,18 @@ export const VirTestApp = defineElementNoInputs({
 
         .double .cell {
             padding: 8px 16px;
+        }
+
+        ${navAttribute.css({navValue: NavValue.Focused})} {
+            border-color: red;
+            outline: none;
+            background-color: rgba(255, 0, 0, 0.03);
+        }
+
+        ${navAttribute.css({navValue: NavValue.Active})} {
+            outline: none;
+            border-color: darkred;
+            background-color: rgba(255, 0, 0, 0.1);
         }
     `,
     state({host}) {
@@ -146,7 +149,7 @@ export const VirTestApp = defineElementNoInputs({
                 );
             } else if (keyCode === 'Enter' || keyCode === 'Return') {
                 event.preventDefault();
-                console.info(navController.enterInto());
+                console.info(navController.enterInto({fallbackToActivate: true}));
             } else if (keyCode === 'Backspace' || keyCode === 'Escape') {
                 event.preventDefault();
                 console.info(navController.exitOutOf());
@@ -225,28 +228,24 @@ export const VirTestApp = defineElementNoInputs({
             <ol>
                 <li>
                     The
-                    <code>nav(state.navController, )</code>
+                    <code>nav(state.navController)</code>
                     directive marks each element for navigation.
                 </li>
                 <li>
                     Using
                     <code>nav(state.navController, {group: true})</code>
-                    marks each non-navigable section group.
+                    creates a non-navigable group.
                 </li>
                 <li>
                     <code>NavController</code>
-                    generates a tree from those marks and allows navigation of that tree.
+                    generates a tree and allows navigation of that tree.
                 </li>
                 <li>
                     Styles are applied via
-                    <code>:focus</code>
+                    <code>navSelector.css({navValue: NavValue.Active})</code>
                     and
-                    <code>navSelector.css.click('div')</code>
-                    (
-                    <code>:active</code>
-                    cannot be triggered on non-natively-interactive elements but
-                    <code>button</code>
-                    elements can't be nested).
+                    <code>navSelector.css({navValue: NavValue.Focused})</code>
+                    .
                 </li>
                 <li>
                     Keyboard listeners trigger navigation methods on

@@ -1,10 +1,9 @@
-import {assert} from '@augment-vir/assert';
-import {makeWritable} from '@augment-vir/common';
-import {describe, itCases, testWeb} from '@augment-vir/test';
+import {describe, itCases} from '@augment-vir/test';
 import {toTagOrDefinition} from '@augment-vir/web';
 import {html, type HTMLTemplateResult} from 'element-vir';
 import {nav} from '../directives/nav.directive.js';
-import {NavController} from '../nav-controller/nav-controller.js';
+import {createMockNavController} from '../nav-controller/mock-nav-controller.js';
+import {type NavController} from '../nav-controller/nav-controller.js';
 import {type NavTreeNode} from './nav-tree.js';
 
 type TestingNavTreeNode = {
@@ -20,12 +19,9 @@ function convertTreeForTesting(navTreeNode: NavTreeNode): TestingNavTreeNode {
 }
 
 async function testTree(templateCallback: (navController: NavController) => HTMLTemplateResult) {
-    const navController = new NavController(undefined as any);
-    const fixture = await testWeb.render(templateCallback(navController));
-    assert.instanceOf(fixture, HTMLElement);
-    makeWritable(navController).rootElement = fixture;
+    const {navController} = await createMockNavController(templateCallback);
 
-    return navController.buildNavTree().map((row) => row.map(convertTreeForTesting));
+    return navController.buildNavTree().children.map((row) => row.map(convertTreeForTesting));
 }
 
 describe('buildNavTree', () => {

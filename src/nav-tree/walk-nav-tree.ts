@@ -9,6 +9,11 @@ import {type NavTree, type NavTreeNode} from './nav-tree.js';
  */
 export type WalkNavTreeCallback = (params: WalkResult) => boolean;
 
+/**
+ * Output from {@link walkNavTree}.
+ *
+ * @category Internal
+ */
 export type WalkResult = {
     ancestorChain: ReadonlyArray<WalkResult>;
     node: Readonly<NavTreeNode | NavTree>;
@@ -80,6 +85,12 @@ function walkRecursively(
     return undefined;
 }
 
+/**
+ * Finds the given {@link NavEntry} in the given {@link NavTree}. If it does not exist, error out.
+ *
+ * @category Internal
+ * @throws Error if the {@link NavEntry} is not found in the {@link NavTree}.
+ */
 export function findNavTreeNodeByNavEntry(
     navTree: Readonly<NavTree>,
     navEntry: Readonly<NavEntry>,

@@ -3,11 +3,21 @@ import {getOrSet, type Overwrite} from '@augment-vir/common';
 import {type ElementTree} from '@augment-vir/web';
 import {extractNavEntry, navAttribute, NavValue, type NavEntry} from '../directives/nav-entry.js';
 
+/**
+ * Internal root of the nav tree.
+ *
+ * @category Internal
+ */
 export type NavTree = {
     root: true;
     children: NavTreeNode[][];
 };
 
+/**
+ * Internal node of the nav tree.
+ *
+ * @category Internal
+ */
 export type NavTreeNode = {
     root: false;
     element: HTMLElement;
@@ -15,6 +25,11 @@ export type NavTreeNode = {
     children: NavTreeNode[][];
 };
 
+/**
+ * Maps an `ElementTree` to a {@link NavTree}.
+ *
+ * @category Internal
+ */
 export function mapTree(elementTree: ElementTree): NavTree {
     const children =
         (mapTreeRecursively(elementTree)?.children satisfies

@@ -14,6 +14,11 @@ import {
     type NavParams,
 } from './nav-entry.js';
 
+/**
+ * Used to determine an element's initial {@link navAttribute} value.
+ *
+ * @category Internal
+ */
 export function determineNavValue(params: Readonly<NavParams>): NavValue | '' {
     if ('group' in params) {
         return NavValue.Group;

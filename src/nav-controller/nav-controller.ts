@@ -1,10 +1,8 @@
+import {assert} from '@augment-vir/assert';
+import {type PartialWithUndefined} from '@augment-vir/common';
 import {getNestedChildrenTree} from '@augment-vir/web';
 import {ListenTarget} from 'typed-event-target';
-import {
-    type CurrentNavEntry,
-    type NavEntry,
-    type NavEntryOperation,
-} from '../directives/nav-entry.js';
+import {type CurrentNavEntry, type NavEntry} from '../directives/nav-entry.js';
 import {mapTree, type NavTree} from '../nav-tree/nav-tree.js';
 import {findNavTreeNodeByNavEntry} from '../nav-tree/walk-nav-tree.js';
 import {enterInto} from './enter-into.js';
@@ -59,6 +57,7 @@ export class NavController extends ListenTarget<AllNavControllerEvents> {
 
     protected cachedNavTree: Readonly<NavTree> | undefined;
 
+    /** Gets or builds the current nav tree. */
     protected getNavTree(): Readonly<NavTree> {
         if (this.needsUpdate || !this.cachedNavTree) {
             this.needsUpdate = false;
@@ -68,11 +67,33 @@ export class NavController extends ListenTarget<AllNavControllerEvents> {
         }
     }
 
+    /** Sets the current nav entry with the given action. */
     public triggerNavEntry(
-        navEntry: Readonly<NavEntry>,
+        navEntry: Readonly<NavEntry> | undefined,
         enabled: boolean,
-        operation: NavEntryOperation,
-    ) {
+        navAction: NavAction.Activate,
+    ): NavigationResult<NavAction.Activate>;
+    /** Sets the current nav entry with the given action. */
+    public triggerNavEntry(
+        navEntry: Readonly<NavEntry> | undefined,
+        enabled: boolean,
+        navAction: NavAction.Focus,
+    ): NavigationResult<NavAction.Focus>;
+    /** Sets the current nav entry with the given action. */
+    public triggerNavEntry(
+        navEntry: Readonly<NavEntry> | undefined,
+        enabled: boolean,
+        navAction: NavAction.Activate | NavAction.Focus,
+    ): NavigationResult<NavAction.Activate> | NavigationResult<NavAction.Focus> {
+        if (!navEntry) {
+            return {
+                success: false,
+                direction: undefined,
+                navAction: navAction,
+                reason: 'No nav entry to operate on.',
+            };
+        }
+
         if (enabled) {
             this.navEntries.forEach((nestedNavEntry) => {
                 if (nestedNavEntry !== navEntry) {
@@ -81,15 +102,24 @@ export class NavController extends ListenTarget<AllNavControllerEvents> {
             });
             this.currentNavEntry = {
                 entry: navEntry,
-                operation: operation,
+                navAction: navAction,
                 position: findNavTreeNodeByNavEntry(this.getNavTree(), navEntry),
             };
         } else if (
             this.currentNavEntry?.entry === navEntry &&
-            this.currentNavEntry.operation === operation
+            this.currentNavEntry.navAction === navAction
         ) {
             this.currentNavEntry = undefined;
         }
+
+        return {
+            success: true,
+            defaulted: false,
+            direction: undefined,
+            newElement: navEntry.element,
+            wrapped: false,
+            navAction,
+        };
     }
 
     /** Navigate around the nav tree. */
@@ -105,11 +135,48 @@ export class NavController extends ListenTarget<AllNavControllerEvents> {
      * Enter into the currently focused node's children. Focuses the first child. Fails if there are
      * no children to focus.
      */
-    public enterInto(): NavigationResult<NavAction.Enter> {
+    public enterInto(params: {
+        fallbackToActivate: true;
+    }): NavigationResult<NavAction.Enter | NavAction.Activate>;
+    public enterInto(
+        params?:
+            | {
+                  fallbackToActivate?: false | undefined;
+              }
+            | undefined,
+    ): NavigationResult<NavAction.Enter>;
+    public enterInto({
+        fallbackToActivate,
+    }: PartialWithUndefined<{
+        fallbackToActivate: boolean;
+    }> = {}): NavigationResult<NavAction.Enter | NavAction.Activate> {
         const result = enterInto(this.getNavTree(), this.currentNavEntry);
-        this.dispatch(new NavEnterEvent({detail: result}));
+        if (!result.success && fallbackToActivate) {
+            return this.activate();
+        } else {
+            this.dispatch(new NavEnterEvent({detail: result}));
+            return result;
+        }
+    }
+
+    /** Activate the currently focused nav entry. */
+    public activate(): NavigationResult<NavAction.Activate> {
+        if (!this.currentNavEntry?.entry) {
+            return {
+                success: false,
+                direction: undefined,
+                navAction: NavAction.Activate,
+                reason: 'No focused NavEntry to activate.',
+            };
+        }
+
+        const result = this.currentNavEntry.entry.activate(true);
+
+        assert.isDefined(result, 'Cannot activate a group.');
+
         return result;
     }
+
     /**
      * Shift focus from the currently focused node to its parent. If there is no parent, or rather
      * if the parent is the tree root, this fails.
@@ -117,6 +184,11 @@ export class NavController extends ListenTarget<AllNavControllerEvents> {
     public exitOutOf(): NavigationResult<NavAction.Exit> {
         /** Make sure the tree is fresh. */
         this.getNavTree();
+
+        if (this.currentNavEntry?.navAction === NavAction.Activate) {
+            this.currentNavEntry.entry.focus(true);
+        }
+
         const result = exitOutOf(this.currentNavEntry);
         this.dispatch(new NavExitEvent({detail: result}));
         return result;
@@ -142,6 +214,7 @@ export class NavController extends ListenTarget<AllNavControllerEvents> {
         return result;
     }
 
+    /** Builds the latest tree, sets it internally, and returns it. */
     public buildNavTree() {
         const elementTree = getNestedChildrenTree(this.rootElement);
 

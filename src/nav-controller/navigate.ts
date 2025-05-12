@@ -42,6 +42,9 @@ export enum NavAction {
     Enter = 'enter',
     Exit = 'exit',
 
+    Activate = 'activate',
+    Focus = 'focus',
+
     Navigate = 'navigate',
     Pibling = 'pibling',
 }
@@ -55,6 +58,9 @@ export enum NavAction {
 export type NavActionToDirectionType = {
     [NavAction.Enter]: undefined;
     [NavAction.Exit]: undefined;
+
+    [NavAction.Activate]: undefined;
+    [NavAction.Focus]: undefined;
 
     [NavAction.Navigate]: NavDirection;
     [NavAction.Pibling]: NavDirection;
