@@ -3,7 +3,7 @@ import {getObjectTypedKeys, typedMap, wrapInTry} from '@augment-vir/common';
 import {describe, it, itCases, testWeb} from '@augment-vir/test';
 import {getCenterOfElement, getDirectChildren} from '@augment-vir/web';
 import {sendKeys, sendMouse} from '@web/test-runner-commands';
-import {HTMLTemplateResult, css, html} from 'element-vir';
+import {type HTMLTemplateResult, css, html} from 'element-vir';
 import {waitUntilBlurred, waitUntilFocused} from '../util/focus.js';
 import {group} from './nav-value.js';
 import {

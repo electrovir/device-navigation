@@ -1,4 +1,4 @@
-import {Directive, PartInfo, directive, extractElement, noChange} from 'element-vir';
+import {Directive, type PartInfo, directive, extractElement, noChange} from 'element-vir';
 
 /**
  * Makes arbitrary modifications to the element that its attached to.
@@ -6,7 +6,6 @@ import {Directive, PartInfo, directive, extractElement, noChange} from 'element-
  * @category Internal
  */
 export const modifyElement = directive(
-    /** @internal */
     class extends Directive {
         public readonly element: Element;
         public lastKey: string | undefined;
@@ -17,7 +16,7 @@ export const modifyElement = directive(
             this.element = extractElement(partInfo, 'modifyElement');
         }
 
-        render(renderKey: string | undefined, callback: (element: Element) => void) {
+        public render(renderKey: string | undefined, callback: (element: Element) => void) {
             if (renderKey !== this.lastKey) {
                 callback(this.element);
                 this.lastKey = renderKey;

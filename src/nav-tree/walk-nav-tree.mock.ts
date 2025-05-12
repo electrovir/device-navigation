@@ -1,5 +1,5 @@
-import {Coords} from '../util/coords.js';
-import {NavNodeNoElement} from './nav-tree.mock.js';
+import {type Coords} from '../util/coords.js';
+import {type NavNodeNoElement} from './nav-tree.mock.js';
 
 /** These results are so big that they're saved here in a separate file instead. */
 export const walkNavTreeTestResults = {

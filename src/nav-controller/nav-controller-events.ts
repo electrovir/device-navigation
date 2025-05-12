@@ -1,5 +1,5 @@
 import {defineTypedCustomEvent} from 'typed-event-target';
-import {NavigationResult, type NavAction} from './navigate.js';
+import {type NavAction, type NavigationResult} from './navigate.js';
 
 /**
  * This event is emitted from `NavController` when a nav exit is triggered.

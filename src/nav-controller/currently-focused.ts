@@ -1,7 +1,7 @@
 import {isElementFocused} from '@augment-vir/web';
-import {NavNode, NavNodeParent, NavRootNode} from '../nav-tree/nav-tree.js';
+import {type NavNode, type NavNodeParent, type NavRootNode} from '../nav-tree/nav-tree.js';
 import {walkNavTree} from '../nav-tree/walk-nav-tree.js';
-import {Coords} from '../util/coords.js';
+import {type Coords} from '../util/coords.js';
 
 /**
  * Find the first parent that is not a group.

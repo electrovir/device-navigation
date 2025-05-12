@@ -1,10 +1,10 @@
 import {assert, check} from '@augment-vir/assert';
 import {wrapNumber} from '@augment-vir/common';
-import {NavNode, NavNodeParent, NavRootNode} from '../nav-tree/nav-tree.js';
+import {type NavNode, type NavNodeParent, type NavRootNode} from '../nav-tree/nav-tree.js';
 import {greaterThan, lessThan} from '../util/comparisons.js';
-import {Coords} from '../util/coords.js';
+import {type Coords} from '../util/coords.js';
 import {focusElement} from '../util/focus.js';
-import {CurrentlyFocusedResult, getCurrentlyFocused} from './currently-focused.js';
+import {type CurrentlyFocusedResult, getCurrentlyFocused} from './currently-focused.js';
 
 /**
  * Inputs for controlling navigation.

@@ -1,7 +1,7 @@
-import {NavRootNode} from '../nav-tree/nav-tree.js';
+import {type NavRootNode} from '../nav-tree/nav-tree.js';
 import {focusElement} from '../util/focus.js';
 import {getCurrentlyFocused} from './currently-focused.js';
-import {NavAction, NavigationResult} from './navigate.js';
+import {NavAction, type NavigationResult} from './navigate.js';
 
 /**
  * Shift focus from the currently focused node to its parent. If there is no parent, or rather if

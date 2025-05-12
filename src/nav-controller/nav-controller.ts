@@ -1,21 +1,23 @@
+import {getNestedChildrenTree} from '@augment-vir/web';
 import {ListenTarget} from 'typed-event-target';
-import {buildNavTree, NavRootNode} from '../nav-tree/nav-tree.js';
-import {CurrentlyFocusedResult, getCurrentlyFocused} from './currently-focused.js';
+import {type NavEntry} from '../directives/nav-entry.js';
+import {getCurrentlyFocused, type CurrentlyFocusedResult} from './currently-focused.js';
 import {enterInto} from './enter-into.js';
 import {exitOutOf} from './exit-out-of.js';
 import {
-    AllNavControllerEvents,
     NavEnterEvent,
     NavExitEvent,
     NavigateEvent,
     NavPiblingEvent,
+    type AllNavControllerEvents,
 } from './nav-controller-events.js';
+import {mapTree, type NavTreeNode} from './nav-tree.js';
 import {
     NavAction,
     navigate,
     navigatePibling,
-    NavigationInputs,
-    NavigationResult,
+    type NavigationInputs,
+    type NavigationResult,
 } from './navigate.js';
 
 /**
@@ -42,23 +44,27 @@ import {
  * ```
  */
 export class NavController extends ListenTarget<AllNavControllerEvents> {
-    constructor(
-        /**
-         * The parent of all navigable elements. If this element also has `nav()` applied to it, it
-         * will be ignored.
-         */
-        public readonly rootElement: HTMLElement,
-    ) {
+    constructor(public readonly rootElement: HTMLElement) {
         super();
+    }
+
+    /** If `true`, the nav tree will rebuild on next operation. */
+    public needsUpdate = false;
+    public navEntries = new Set<NavEntry>();
+
+    protected cachedNavTree: NavTreeNode | undefined;
+
+    protected getNavTree() {
+        if (this.needsUpdate || !this.cachedNavTree) {
+            this.buildNavTree();
+        }
+
+        return this.cachedNavTree;
     }
 
     /** Gets the currently focused node (is any) from within the `rootElement`'s nav tree. */
     public getCurrentlyFocused(): CurrentlyFocusedResult | undefined {
-        return getCurrentlyFocused(this.buildNavTree());
-    }
-    /** Builds a nav tree from the `rootElement`. */
-    public buildNavTree(): NavRootNode | undefined {
-        return buildNavTree(this.rootElement);
+        return getCurrentlyFocused(this.getNavTree());
     }
 
     /** Navigate around the nav tree. */
@@ -66,7 +72,11 @@ export class NavController extends ListenTarget<AllNavControllerEvents> {
         direction,
         allowWrapping,
     }: NavigationInputs): NavigationResult<NavAction.Navigate> {
-        const result = navigate(this.buildNavTree(), direction, allowWrapping);
+        const result = navigate(this.getNavTree(), direction, allowWrapping);
+        if (result.success) {
+            // this.rootElement.querySelectorAll('.)
+            result.newElement.classList.add();
+        }
         this.dispatch(new NavigateEvent({detail: result}));
         return result;
     }
@@ -75,7 +85,7 @@ export class NavController extends ListenTarget<AllNavControllerEvents> {
      * no children to focus.
      */
     public enterInto(): NavigationResult<NavAction.Enter> {
-        const result = enterInto(this.buildNavTree());
+        const result = enterInto(this.getNavTree());
         this.dispatch(new NavEnterEvent({detail: result}));
         return result;
     }
@@ -84,7 +94,7 @@ export class NavController extends ListenTarget<AllNavControllerEvents> {
      * if the parent is the tree root, this fails.
      */
     public exitOutOf(): NavigationResult<NavAction.Exit> {
-        const result = exitOutOf(this.buildNavTree());
+        const result = exitOutOf(this.getNavTree());
         this.dispatch(new NavExitEvent({detail: result}));
         return result;
     }
@@ -93,7 +103,7 @@ export class NavController extends ListenTarget<AllNavControllerEvents> {
         allowWrapping,
         direction,
     }: NavigationInputs): NavigationResult<NavAction.Pibling> {
-        const navTree = this.buildNavTree();
+        const navTree = this.getNavTree();
 
         const currentlyFocused = getCurrentlyFocused(navTree);
 
@@ -110,5 +120,15 @@ export class NavController extends ListenTarget<AllNavControllerEvents> {
         this.dispatch(new NavPiblingEvent({detail: result}));
 
         return result;
+    }
+
+    public buildNavTree() {
+        const elementTree = getNestedChildrenTree(this.rootElement);
+
+        const tree = mapTree(elementTree, undefined);
+
+        this.cachedNavTree = tree;
+
+        return tree;
     }
 }

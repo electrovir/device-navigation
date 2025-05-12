@@ -1,7 +1,7 @@
-import {NavRootNode} from '../nav-tree/nav-tree.js';
+import {type NavRootNode} from '../nav-tree/nav-tree.js';
 import {focusElement} from '../util/focus.js';
 import {getCurrentlyFocused} from './currently-focused.js';
-import {NavAction, NavigationResult} from './navigate.js';
+import {NavAction, type NavigationResult} from './navigate.js';
 
 /**
  * Enter into the currently focused node's children. Focuses the first child. Fails if there are no

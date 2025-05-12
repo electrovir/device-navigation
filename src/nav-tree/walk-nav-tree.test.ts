@@ -1,10 +1,10 @@
 import {describe, itCases} from '@augment-vir/test';
-import {HTMLTemplateResult, html} from 'element-vir';
+import {type HTMLTemplateResult, html} from 'element-vir';
 import {nav} from '../directives/nav.directive.js';
-import {Coords} from '../util/coords.js';
+import {type Coords} from '../util/coords.js';
 import {
-    NavNodeNoElement,
-    NavRootNodeNoElementChildren,
+    type NavNodeNoElement,
+    type NavRootNodeNoElementChildren,
     createNavTreeFromTemplate,
     omitElementProp,
 } from './nav-tree.mock.js';

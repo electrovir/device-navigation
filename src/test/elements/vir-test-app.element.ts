@@ -1,4 +1,4 @@
-import {css, defineElementNoInputs, html} from 'element-vir';
+import {css, defineElementNoInputs, html, onDomCreated} from 'element-vir';
 import {group} from '../../directives/nav-value.js';
 import {nav, navSelector} from '../../directives/nav.directive.js';
 import {NavController} from '../../nav-controller/nav-controller.js';
@@ -28,7 +28,7 @@ export const VirTestApp = defineElementNoInputs({
             background-color: white;
         }
 
-        div:focus {
+        ${navSelector.css.selected('div')} {
             border-color: red;
             outline: none;
             background-color: rgba(255, 0, 0, 0.03);
@@ -184,7 +184,6 @@ export const VirTestApp = defineElementNoInputs({
         updateState({cleanup: undefined});
     },
     render({state, updateState}) {
-        console.info('rendering root');
         setTimeout(() => {
             updateState({counter: state.counter + 1});
         }, 1000);
@@ -216,7 +215,21 @@ export const VirTestApp = defineElementNoInputs({
                 </li>
             </ul>
             <main>
-                <section ${nav(group)}>
+                <section
+                    ${nav(group)}
+                    ${onDomCreated(() => {
+                        if (!state.navController) {
+                            return;
+                        }
+                        if (!state.navController.getCurrentlyFocused()) {
+                            console.log('defaulting');
+                            state.navController.navigate({
+                                direction: NavDirection.Down,
+                                allowWrapping: false,
+                            });
+                        }
+                    })}
+                >
                     <div class="cell" ${nav()}>Cell</div>
                     <div class="cell" ${nav()}>Cell</div>
                     <div class="cell" ${nav()}>Cell</div>

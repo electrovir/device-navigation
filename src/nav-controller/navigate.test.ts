@@ -1,7 +1,12 @@
 import {assert} from '@augment-vir/assert';
 import {describe, it, itCases} from '@augment-vir/test';
-import {NavNodeParent} from '../nav-tree/nav-tree.js';
-import {findDefaultChild, NavigationResult, type NavAction, type NavDirection} from './navigate.js';
+import {type NavNodeParent} from '../nav-tree/nav-tree.js';
+import {
+    findDefaultChild,
+    type NavAction,
+    type NavDirection,
+    type NavigationResult,
+} from './navigate.js';
 
 /**
  * This is all that {@link findDefaultChild} actually cares about for its inputs, but the types make

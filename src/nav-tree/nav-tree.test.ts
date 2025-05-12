@@ -1,16 +1,15 @@
 import {assert, check} from '@augment-vir/assert';
 import {describe, it, itCases, testWeb} from '@augment-vir/test';
-import {HTMLTemplateResult, html} from 'element-vir';
-import {ParsedNavValue} from '../directives/nav-value.js';
+import {type HTMLTemplateResult, html} from 'element-vir';
 import {nav} from '../directives/nav.directive.js';
 import {
-    BuildingTreeNavNode,
+    type BuildingTreeNavNode,
     buildNavTree,
     calculateChildCoords,
     convertTree,
     getNavChildren,
 } from './nav-tree.js';
-import {NavRootNodeNoElementChildren, omitElementProp} from './nav-tree.mock.js';
+import {type NavRootNodeNoElementChildren, omitElementProp} from './nav-tree.mock.js';
 
 type BuildingTreeNavNodeNoElement = {
     children: BuildingTreeNavNodeNoElement[];

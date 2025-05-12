@@ -2,7 +2,7 @@ import {assert} from '@augment-vir/assert';
 import {describe, it, testWeb} from '@augment-vir/test';
 import {html} from 'element-vir';
 import {nav} from '../directives/nav.directive.js';
-import {NavNode, NavRootNode} from '../nav-tree/nav-tree.js';
+import {type NavNode, type NavRootNode} from '../nav-tree/nav-tree.js';
 import {waitUntilFocused} from '../util/focus.js';
 import {enterInto} from './enter-into.js';
 import {NavAction} from './navigate.js';

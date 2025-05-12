@@ -1,9 +1,15 @@
 import {assert} from '@augment-vir/assert';
 import {omitObjectKeys} from '@augment-vir/common';
 import {testWeb} from '@augment-vir/test';
-import {HTMLTemplateResult} from 'element-vir';
-import {Coords} from '../util/coords.js';
-import {NavNode, NavNode1d, NavNode2d, NavRootNode, buildNavTree} from './nav-tree.js';
+import {type HTMLTemplateResult} from 'element-vir';
+import {type Coords} from '../util/coords.js';
+import {
+    type NavNode,
+    type NavNode1d,
+    type NavNode2d,
+    type NavRootNode,
+    buildNavTree,
+} from './nav-tree.js';
 
 export async function createNavTreeFromTemplate(template: HTMLTemplateResult) {
     const rootElement = await testWeb.render(template);

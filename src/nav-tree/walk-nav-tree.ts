@@ -1,6 +1,6 @@
 import {check} from '@augment-vir/assert';
-import {Coords} from '../util/coords.js';
-import {NavNode, NavNodeParent, NavRootNode} from './nav-tree.js';
+import {type Coords} from '../util/coords.js';
+import {type NavNode, type NavNodeParent, type NavRootNode} from './nav-tree.js';
 
 /**
  * Callback type for `walkNavTree`.

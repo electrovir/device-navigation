@@ -1,6 +1,6 @@
 import {describe, itCases, testWeb} from '@augment-vir/test';
-import {HTMLTemplateResult, html} from 'element-vir';
-import {AttributesMap, applyAttributes, readAttributes} from './attributes.js';
+import {type HTMLTemplateResult, html} from 'element-vir';
+import {type AttributesMap, applyAttributes, readAttributes} from './attributes.js';
 
 describe(applyAttributes.name, () => {
     async function testApplyAttributes(template: HTMLTemplateResult, attributes: AttributesMap) {

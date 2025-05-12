@@ -1,8 +1,8 @@
 import {assert, waitUntil} from '@augment-vir/assert';
-import {addPrefix, ArrayElement, awaitedForEach} from '@augment-vir/common';
+import {addPrefix, type ArrayElement, awaitedForEach} from '@augment-vir/common';
 import {describe, it, testWeb} from '@augment-vir/test';
 import {getDirectChildren, getNestedChildren, isElementFocused} from '@augment-vir/web';
-import {defineElement, html, HTMLTemplateResult} from 'element-vir';
+import {defineElement, html, type HTMLTemplateResult} from 'element-vir';
 import {group} from '../directives/nav-value.js';
 import {nav, navAttribute} from '../directives/nav.directive.js';
 import {focusElement, waitUntilFocused} from '../util/focus.js';

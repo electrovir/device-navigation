@@ -1,8 +1,7 @@
 import {assert, check} from '@augment-vir/assert';
-import {getDirectChildren, isElementFocused} from '@augment-vir/web';
-import {ParsedNavValue, parseNavValueString} from '../directives/nav-value.js';
-import {navAttribute} from '../directives/nav.directive.js';
-import {Coords} from '../util/coords.js';
+import {getDirectChildren} from '@augment-vir/web';
+import {navAttribute} from '../directives/nav-entry.js';
+import {type Coords} from '../util/coords.js';
 
 /**
  * Shared properties for each NavNode.
@@ -74,67 +73,8 @@ export type NavRootNode =
 export type BuildingTreeNavNode = {
     element: HTMLElement;
     children: BuildingTreeNavNode[];
-    navValue: ParsedNavValue;
+    navValue: Readonly<NavParams>;
 };
-
-// The following is for debugging and cannot really be adequately tested.
-/* node:coverage disable */
-
-/**
- * Log a whole nav tree for debugging purposes
- *
- * @category Util
- */
-export function logNavTree(node: Readonly<NavRootNode | NavNode>, indent = 0): void {
-    if (!indent) {
-        // eslint-disable-next-line no-console
-        console.log('vvv NAV TREE vvv');
-    }
-    function log(...args: unknown[]) {
-        // eslint-disable-next-line no-console
-        console.log('    '.repeat(indent) + String(args[0]), ...args.slice(1));
-    }
-
-    if (node.type === 'child') {
-        log('type    : ', node.type);
-        log('focused : ', isElementFocused(node.element));
-        log('coords  : ', node.coords);
-        log('element : ', node.element);
-    } else if (node.isRoot) {
-        log('type    : ', node.type);
-        log('isRoot  : ', node.isRoot);
-        log('isGroup : ', node.isGroup);
-    } else {
-        log('type    : ', node.type);
-        log('focused : ', isElementFocused(node.element));
-        log('isGroup : ', node.isGroup);
-        log('coords  : ', node.coords);
-        log('element : ', node.element);
-    }
-
-    if ('children' in node) {
-        log('children');
-        node.children.forEach((child, yCoord) => {
-            if (check.isArray(child)) {
-                // 2d children
-                child.forEach((innerChild, xCoord) => {
-                    log(
-                        [
-                            xCoord,
-                            yCoord,
-                        ].join(', '),
-                    );
-                    logNavTree(innerChild, indent + 1);
-                });
-            } else {
-                // 1d children
-                log(yCoord);
-                logNavTree(child, indent + 1);
-            }
-        });
-    }
-}
-/* node:coverage enable */
 
 /**
  * Generates intermediate `BuildingTreeNavNode` nodes that finds all children of the given
@@ -157,9 +97,8 @@ export function getNavChildren(
         }
 
         const descendants = getNavChildren(childElement);
-        const navValue = childElement.hasAttribute(navAttribute.name)
-            ? parseNavValueString(childElement.getAttribute(navAttribute.name) || '')
-            : undefined;
+
+        const navValue = childElement.hasAttribute(navAttribute.name);
 
         if (!navValue) {
             childNodes.push(...descendants);
@@ -276,9 +215,7 @@ export function calculateChildCoords(
             x: child.navValue.xCord,
             y: child.navValue.yCord,
         };
-    } else if (
-        (child.navValue as Pick<BuildingTreeNavNode, 'navValue'>['navValue']).type === '1d'
-    ) {
+    } else if (child.navValue.type === '1d') {
         return {
             x: currentChildren.length,
             y: 0,
