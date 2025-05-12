@@ -27,9 +27,7 @@ async function testTree(templateCallback: (navController: NavController) => HTML
     assert.instanceOf(fixture, HTMLElement);
     makeWritable(navController).rootElement = fixture;
 
-    const tree = navController.buildNavTree();
-
-    return tree ? convertTreeForTesting(tree) : undefined;
+    return navController.buildNavTree().map((row) => row.map(convertTreeForTesting));
 }
 
 describe('buildNavTree', () => {
@@ -65,70 +63,66 @@ describe('buildNavTree', () => {
                     </main>
                 </section>
             `,
-            expect: {
-                element: 'section',
-                navEntry: false,
-                children: [
-                    [
-                        {
-                            element: 'main',
-                            navEntry: true,
-                            children: [
-                                [
-                                    {
-                                        element: 'div',
-                                        navEntry: true,
-                                        children: [],
-                                    },
-                                    {
-                                        element: 'div',
-                                        navEntry: true,
-                                        children: [],
-                                    },
-                                    {
-                                        element: 'div',
-                                        navEntry: true,
-                                        children: [],
-                                    },
-                                    {
-                                        element: 'div',
-                                        navEntry: true,
-                                        children: [],
-                                    },
-                                    {
-                                        element: 'section',
-                                        navEntry: true,
-                                        children: [
-                                            [
-                                                {
-                                                    element: 'div',
-                                                    navEntry: true,
-                                                    children: [],
-                                                },
-                                                {
-                                                    element: 'div',
-                                                    navEntry: true,
-                                                    children: [],
-                                                },
-                                                {
-                                                    element: 'div',
-                                                    navEntry: true,
-                                                    children: [],
-                                                },
-                                                {
-                                                    element: 'div',
-                                                    navEntry: true,
-                                                    children: [],
-                                                },
-                                            ],
+            expect: [
+                [
+                    {
+                        element: 'main',
+                        navEntry: true,
+                        children: [
+                            [
+                                {
+                                    element: 'div',
+                                    navEntry: true,
+                                    children: [],
+                                },
+                                {
+                                    element: 'div',
+                                    navEntry: true,
+                                    children: [],
+                                },
+                                {
+                                    element: 'div',
+                                    navEntry: true,
+                                    children: [],
+                                },
+                                {
+                                    element: 'div',
+                                    navEntry: true,
+                                    children: [],
+                                },
+                                {
+                                    element: 'section',
+                                    navEntry: true,
+                                    children: [
+                                        [
+                                            {
+                                                element: 'div',
+                                                navEntry: true,
+                                                children: [],
+                                            },
+                                            {
+                                                element: 'div',
+                                                navEntry: true,
+                                                children: [],
+                                            },
+                                            {
+                                                element: 'div',
+                                                navEntry: true,
+                                                children: [],
+                                            },
+                                            {
+                                                element: 'div',
+                                                navEntry: true,
+                                                children: [],
+                                            },
                                         ],
-                                    },
-                                ],
+                                    ],
+                                },
                             ],
-                        },
-                    ],
+                        ],
+                    },
                 ],
-            },
+            ],
         },
         {
             it: 'allows nested groups',
@@ -146,50 +140,46 @@ describe('buildNavTree', () => {
                     </main>
                 </section>
             `,
-            expect: {
-                element: 'section',
-                navEntry: false,
-                children: [
-                    [
-                        {
-                            element: 'main',
-                            navEntry: true,
-                            children: [
-                                [
-                                    {
-                                        element: 'section',
-                                        navEntry: true,
-                                        children: [
-                                            [
-                                                {
-                                                    element: 'div',
-                                                    navEntry: true,
-                                                    children: [],
-                                                },
-                                                {
-                                                    element: 'div',
-                                                    navEntry: true,
-                                                    children: [],
-                                                },
-                                                {
-                                                    element: 'div',
-                                                    navEntry: true,
-                                                    children: [],
-                                                },
-                                                {
-                                                    element: 'div',
-                                                    navEntry: true,
-                                                    children: [],
-                                                },
-                                            ],
+            expect: [
+                [
+                    {
+                        element: 'main',
+                        navEntry: true,
+                        children: [
+                            [
+                                {
+                                    element: 'section',
+                                    navEntry: true,
+                                    children: [
+                                        [
+                                            {
+                                                element: 'div',
+                                                navEntry: true,
+                                                children: [],
+                                            },
+                                            {
+                                                element: 'div',
+                                                navEntry: true,
+                                                children: [],
+                                            },
+                                            {
+                                                element: 'div',
+                                                navEntry: true,
+                                                children: [],
+                                            },
+                                            {
+                                                element: 'div',
+                                                navEntry: true,
+                                                children: [],
+                                            },
                                         ],
-                                    },
-                                ],
+                                    ],
+                                },
                             ],
-                        },
-                    ],
+                        ],
+                    },
                 ],
-            },
+            ],
         },
         // {
         //     it: 'allows out of order 1D navigation',

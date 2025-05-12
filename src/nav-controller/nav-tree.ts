@@ -4,15 +4,25 @@ import {type NavEntry, extractNavEntry, navAttribute, NavValue} from '../directi
 
 export type NavTreeNode = {
     element: HTMLElement;
-    navEntry: NavEntry | undefined;
+    navEntry: NavEntry;
     children: NavTreeNode[][];
-    parent: NavTreeNode | undefined;
 };
 
-export function mapTree(
-    elementTree: ElementTree,
-    parent: NavTreeNode | undefined,
-): NavTreeNode | undefined {
+export function mapTree(elementTree: ElementTree): NavTreeNode[][] {
+    return (
+        (mapTreeRecursively(elementTree)?.children satisfies
+            | IntermediateNavTreeNode[][]
+            | undefined as NavTreeNode[][] | undefined) || []
+    );
+}
+
+type IntermediateNavTreeNode = {
+    element: HTMLElement;
+    navEntry: NavEntry | undefined;
+    children: IntermediateNavTreeNode[][];
+};
+
+function mapTreeRecursively(elementTree: ElementTree): IntermediateNavTreeNode | undefined {
     const element = elementTree.element;
     if (!(element instanceof HTMLElement)) {
         return undefined;
@@ -25,33 +35,25 @@ export function mapTree(
     }
 
     const navEntry = extractNavEntry(element);
+    const children = expandChildren(elementTree);
 
-    const hasNestedNav = false as boolean;
+    const isValidGroup: boolean = navEntry?.navParams.group ? !!children.length : false;
 
-    const currentNode: NavTreeNode = {
-        element,
-        navEntry,
-        children: [],
-        parent,
-    };
-
-    currentNode.children = expandChildren(elementTree, currentNode);
-
-    const isValidGroup: boolean = navEntry?.navParams.group ? !!currentNode.children.length : false;
-    const hasNav: boolean =
-        hasNestedNav || isValidGroup || !!currentNode.children.length || !!navEntry;
-
-    if (hasNav) {
-        return currentNode;
+    if (isValidGroup || !!children.length || !!navEntry) {
+        return {
+            element,
+            navEntry,
+            children,
+        };
     } else {
         return undefined;
     }
 }
 
-function expandChildren(elementTreeNode: ElementTree, parentNode: NavTreeNode): NavTreeNode[][] {
-    const children: NavTreeNode[][] = [];
+function expandChildren(elementTreeNode: ElementTree): IntermediateNavTreeNode[][] {
+    const children: IntermediateNavTreeNode[][] = [];
 
-    function pushNode(node: NavTreeNode) {
+    function pushNode(node: IntermediateNavTreeNode) {
         if (node.navEntry?.navParams.group && !node.children.length) {
             return;
         } else if (!node.navEntry) {
@@ -70,7 +72,7 @@ function expandChildren(elementTreeNode: ElementTree, parentNode: NavTreeNode): 
     }
 
     elementTreeNode.children.forEach((child) => {
-        const newNode = mapTree(child, parentNode);
+        const newNode = mapTreeRecursively(child);
         if (newNode) {
             pushNode(newNode);
         }
