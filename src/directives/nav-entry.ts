@@ -168,7 +168,11 @@ export function extractNavEntry(element: Element): NavEntry | undefined {
 
 function createEventListener(navEntry: NavEntry) {
     return (event: Event) => {
-        if (navEntry.navParams.group || navEntry.navParams.disabled) {
+        if (
+            navEntry.navParams.group ||
+            navEntry.navParams.disabled ||
+            navEntry.navController.locked
+        ) {
             return;
         } else if (event.type === 'mousedown') {
             if (event.target === navEntry.element) {
@@ -235,6 +239,9 @@ export class NavEntry {
 
     /** Clear all nav values from the element, just leave the plain attribute (without a value). */
     public clearNavValue() {
+        if (this.navParams.group || this.navController.locked) {
+            return;
+        }
         makeWritable(this).navValue = undefined;
         this.element.setAttribute(navAttribute.name, '');
         if (isElementFocused(this.element)) {
@@ -251,7 +258,7 @@ export class NavEntry {
         enabled: boolean,
         skipListener?: boolean | undefined,
     ) {
-        if (this.navParams.group) {
+        if (this.navParams.group || this.navController.locked) {
             return;
         }
 
@@ -287,7 +294,7 @@ export class NavEntry {
          */
         enabled: boolean,
     ) {
-        if (this.navParams.group) {
+        if (this.navParams.group || this.navController.locked) {
             return;
         }
         this.focus(enabled, true);

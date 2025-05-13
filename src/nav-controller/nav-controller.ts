@@ -66,6 +66,8 @@ export class NavController extends ListenTarget<AllNavControllerEvents> {
 
     /** If `true`, the nav tree will rebuild on next operation. */
     public needsUpdate = false;
+    /** If true, all nav is prevented. */
+    public locked = false;
     protected navEntries = new Set<Readonly<NavEntry>>();
     public currentNavEntry: Readonly<CurrentNavEntry> | undefined;
 
@@ -124,7 +126,14 @@ export class NavController extends ListenTarget<AllNavControllerEvents> {
         enabled: boolean,
         navAction: NavAction.Activate | NavAction.Focus,
     ): NavigationResult<NavAction.Activate | NavAction.Focus> {
-        if (!navEntry) {
+        if (this.locked) {
+            return {
+                success: false,
+                direction: undefined,
+                navAction,
+                reason: 'NavController is locked.',
+            };
+        } else if (!navEntry) {
             return {
                 success: false,
                 direction: undefined,
@@ -170,6 +179,14 @@ export class NavController extends ListenTarget<AllNavControllerEvents> {
         direction,
         allowWrapping,
     }: Readonly<NavigationInputs>): NavigationResult<NavAction.Navigate> {
+        if (this.locked) {
+            return {
+                success: false,
+                direction,
+                navAction: NavAction.Navigate,
+                reason: 'NavController is locked.',
+            };
+        }
         const result = navigate(this.getNavTree(), this.currentNavEntry, direction, allowWrapping);
         this.dispatch(new NavigateEvent({detail: result}));
         return result;
@@ -193,6 +210,14 @@ export class NavController extends ListenTarget<AllNavControllerEvents> {
     }: PartialWithUndefined<{
         fallbackToActivate: boolean;
     }> = {}): NavigationResult<NavAction.Enter | NavAction.Activate> {
+        if (this.locked) {
+            return {
+                success: false,
+                direction: undefined,
+                navAction: NavAction.Enter,
+                reason: 'NavController is locked.',
+            };
+        }
         const result = enterInto(this.getNavTree(), this.currentNavEntry);
         if (!result.success && fallbackToActivate) {
             return this.activate();
@@ -204,6 +229,14 @@ export class NavController extends ListenTarget<AllNavControllerEvents> {
 
     /** Activate the currently focused nav entry. */
     public activate(): NavigationResult<NavAction.Activate> {
+        if (this.locked) {
+            return {
+                success: false,
+                direction: undefined,
+                navAction: NavAction.Activate,
+                reason: 'NavController is locked.',
+            };
+        }
         if (!this.currentNavEntry?.entry) {
             return {
                 success: false,
@@ -225,6 +258,14 @@ export class NavController extends ListenTarget<AllNavControllerEvents> {
      * if the parent is the tree root, this fails.
      */
     public exitOutOf(): NavigationResult<NavAction.Exit> {
+        if (this.locked) {
+            return {
+                success: false,
+                direction: undefined,
+                navAction: NavAction.Exit,
+                reason: 'NavController is locked.',
+            };
+        }
         if (this.currentNavEntry?.navAction === NavAction.Activate) {
             this.currentNavEntry.entry.focus(true);
         }
@@ -238,6 +279,14 @@ export class NavController extends ListenTarget<AllNavControllerEvents> {
         allowWrapping,
         direction,
     }: Readonly<NavigationInputs>): NavigationResult<NavAction.Pibling> {
+        if (this.locked) {
+            return {
+                success: false,
+                direction,
+                navAction: NavAction.Pibling,
+                reason: 'NavController is locked.',
+            };
+        }
         const navTree = this.getNavTree();
 
         const rawResult = this.currentNavEntry

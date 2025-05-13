@@ -1,4 +1,4 @@
-import {css, defineElementNoInputs, html} from 'element-vir';
+import {css, defineElementNoInputs, html, listen} from 'element-vir';
 import {navAttribute, NavValue} from '../../directives/nav-entry.js';
 import {nav} from '../../directives/nav.directive.js';
 import {NavController} from '../../nav-controller/nav-controller.js';
@@ -35,6 +35,10 @@ export const VirTestApp = defineElementNoInputs({
 
         .row > * {
             flex-grow: 1;
+        }
+
+        .lock-button {
+            align-self: flex-start;
         }
 
         section {
@@ -160,11 +164,13 @@ export const VirTestApp = defineElementNoInputs({
         return {
             navController,
             /** For tracking if directives unnecessarily re-render. */
-            counter: 0,
+            renderCounter: 0,
+            lockCounter: undefined as undefined | number,
         };
     },
     render({state, updateState}) {
-        updateState({counter: state.counter + 1});
+        updateState({renderCounter: state.renderCounter + 1});
+        console.info(`Render: ${state.renderCounter}`);
 
         return html`
             <header>
@@ -281,6 +287,37 @@ export const VirTestApp = defineElementNoInputs({
                     <a href="https://www.npmjs.com/package/device-navigation">npm</a>
                 </li>
             </ul>
+            <button
+                class="lock-button"
+                ${listen('click', () => {
+                    if (state.lockCounter != undefined) {
+                        return;
+                    }
+
+                    updateState({
+                        lockCounter: 0,
+                    });
+                    setInterval(() => {
+                        if (state.lockCounter == undefined || state.navController.locked) {
+                            return;
+                        }
+
+                        if (state.lockCounter >= 3) {
+                            state.navController.locked = true;
+                        }
+
+                        updateState({
+                            lockCounter: state.lockCounter + 1,
+                        });
+                    }, 1000);
+                })}
+            >
+                ${state.lockCounter == undefined
+                    ? 'Allow Locking'
+                    : state.lockCounter > 3
+                      ? 'Locked'
+                      : `${3 - state.lockCounter}...`}
+            </button>
         `;
     },
 });
