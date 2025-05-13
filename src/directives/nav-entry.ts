@@ -105,6 +105,7 @@ export type NavListenerParams = {
     enabled: boolean;
     navEntry: NavEntry;
     element: HTMLElement;
+    previousNavValue: NavValue | undefined;
 };
 
 /**
@@ -258,30 +259,36 @@ export class NavEntry {
         enabled: boolean,
         skipListener?: boolean | undefined,
     ) {
-        if (this.navParams.group || this.navController.locked) {
+        const previousNavValue = this.navValue;
+        const alreadySet = enabled === (previousNavValue === NavValue.Focused);
+
+        if (
+            this.navParams.group ||
+            this.navController.locked ||
+            alreadySet ||
+            (!enabled && this.navController.options.alwaysRequireFocused)
+        ) {
             return;
         }
-        const alreadySet = enabled === (this.navValue === NavValue.Focused);
 
         if (enabled) {
+            this.setNavValue(NavValue.Focused);
             if (!isElementFocused(this.element)) {
                 this.element.focus();
             }
-            this.setNavValue(NavValue.Focused);
         } else {
+            this.removeNavValue(NavValue.Focused);
             if (isElementFocused(this.element)) {
                 this.element.blur();
             }
-            if (!this.navController.options.alwaysRequireFocused) {
-                this.removeNavValue(NavValue.Focused);
-            }
         }
 
-        if (!skipListener && !alreadySet) {
+        if (!skipListener) {
             void this.navParams.listeners?.focus?.({
                 element: this.element,
                 navEntry: this,
                 enabled,
+                previousNavValue,
             });
         }
         return this.navController.triggerNavEntry(this, enabled, NavAction.Focus);
@@ -295,23 +302,24 @@ export class NavEntry {
          */
         enabled: boolean,
     ) {
-        if (this.navParams.group || this.navController.locked) {
+        const previousNavValue = this.navValue;
+        const alreadySet = enabled === (previousNavValue === NavValue.Active);
+
+        if (this.navParams.group || this.navController.locked || alreadySet) {
             return;
         }
-        const alreadySet = enabled === (this.navValue === NavValue.Focused);
         this.focus(enabled, true);
         if (enabled) {
             this.setNavValue(NavValue.Active);
         } else {
             this.setNavValue(NavValue.Focused);
         }
-        if (!alreadySet) {
-            void this.navParams.listeners?.activate?.({
-                element: this.element,
-                navEntry: this,
-                enabled,
-            });
-        }
+        void this.navParams.listeners?.activate?.({
+            element: this.element,
+            navEntry: this,
+            enabled,
+            previousNavValue,
+        });
         return this.navController.triggerNavEntry(this, enabled, NavAction.Activate);
     }
 
