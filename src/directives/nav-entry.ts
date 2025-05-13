@@ -261,6 +261,7 @@ export class NavEntry {
         if (this.navParams.group || this.navController.locked) {
             return;
         }
+        const alreadySet = enabled === (this.navValue === NavValue.Focused);
 
         if (enabled) {
             if (!isElementFocused(this.element)) {
@@ -276,7 +277,7 @@ export class NavEntry {
             }
         }
 
-        if (!skipListener) {
+        if (!skipListener && !alreadySet) {
             void this.navParams.listeners?.focus?.({
                 element: this.element,
                 navEntry: this,
@@ -297,17 +298,20 @@ export class NavEntry {
         if (this.navParams.group || this.navController.locked) {
             return;
         }
+        const alreadySet = enabled === (this.navValue === NavValue.Focused);
         this.focus(enabled, true);
         if (enabled) {
             this.setNavValue(NavValue.Active);
         } else {
             this.setNavValue(NavValue.Focused);
         }
-        void this.navParams.listeners?.activate?.({
-            element: this.element,
-            navEntry: this,
-            enabled,
-        });
+        if (!alreadySet) {
+            void this.navParams.listeners?.activate?.({
+                element: this.element,
+                navEntry: this,
+                enabled,
+            });
+        }
         return this.navController.triggerNavEntry(this, enabled, NavAction.Activate);
     }
 
