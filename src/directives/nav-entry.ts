@@ -143,7 +143,7 @@ export function extractNavEntry(element: Element): NavEntry | undefined {
 
 function createEventListener(navEntry: NavEntry) {
     return (event: Event) => {
-        if (navEntry.navParams.group) {
+        if (navEntry.navParams.group || navEntry.navParams.disabled) {
             return;
         } else if (event.type === 'mousedown') {
             if (event.target === navEntry.element) {

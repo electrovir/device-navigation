@@ -45,9 +45,8 @@ export function nav(
         navController.needsUpdate = true;
         const isNavigable: boolean =
             /** Groups are not directly navigable. */
-            !('group' in params) &&
+            !params.group &&
             /** Disabled entries are not navigable. */
-            !('disabled' in params) &&
             !params.disabled;
 
         assert.instanceOf(element, HTMLElement);
