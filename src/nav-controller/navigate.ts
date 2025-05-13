@@ -1,5 +1,5 @@
 import {assert, assertWrap} from '@augment-vir/assert';
-import {wrapNumber} from '@augment-vir/common';
+import {type Coords, wrapNumber} from '@augment-vir/common';
 import {type CurrentNavEntry} from '../directives/nav-entry.js';
 import {type NavTree, type NavTreeNode} from '../nav-tree/nav-tree.js';
 import {type WalkResult} from '../nav-tree/walk-nav-tree.js';
@@ -85,6 +85,7 @@ export type NavigationResult<Action extends NavAction = NavAction> = (
           defaulted: boolean;
           /** The element that the performed navigation focused. */
           newElement: HTMLElement;
+          coords: Coords;
       }
     | {
           /** Indicates that the intended navigation succeeded or failed. */
@@ -102,7 +103,12 @@ export type NavigationResult<Action extends NavAction = NavAction> = (
  *
  * @category Internal
  */
-export function findDefaultChild(children: ReadonlyArray<ReadonlyArray<NavTreeNode>>) {
+export function findDefaultChild(children: ReadonlyArray<ReadonlyArray<NavTreeNode>>):
+    | {
+          node: NavTreeNode;
+          coords: Coords;
+      }
+    | undefined {
     const firstNode = children[0]?.[0];
 
     if (!firstNode) {
@@ -110,7 +116,13 @@ export function findDefaultChild(children: ReadonlyArray<ReadonlyArray<NavTreeNo
     } else if (firstNode.navEntry.navParams.group) {
         return findDefaultChild(firstNode.children);
     } else {
-        return firstNode;
+        return {
+            node: firstNode,
+            coords: {
+                x: 0,
+                y: 0,
+            },
+        };
     }
 }
 
@@ -132,14 +144,15 @@ export function navigate(
 ): NavigationResult<NavAction.Navigate> {
     /** If there is no currently focused nav node, try to focus the first node in the tree. */
     if (!currentlyFocused) {
-        const newNode = findDefaultChild(navTree.children);
-        if (newNode) {
-            focusElement(newNode.element);
+        const defaulted = findDefaultChild(navTree.children);
+        if (defaulted) {
+            focusElement(defaulted.node.element);
             return {
                 success: true,
                 wrapped: false,
                 defaulted: true,
-                newElement: newNode.element,
+                newElement: defaulted.node.element,
+                coords: defaulted.coords,
                 direction,
                 navAction: NavAction.Navigate,
             };
@@ -154,7 +167,10 @@ export function navigate(
         }
     }
 
-    const {nextNode, requiresWrapping} = calculateNextNode(currentlyFocused.position, direction);
+    const {nextNode, requiresWrapping, coords} = calculateNextNode(
+        currentlyFocused.position,
+        direction,
+    );
 
     const isWrappingValid = allowWrapping ? true : !requiresWrapping;
 
@@ -167,6 +183,7 @@ export function navigate(
             wrapped: requiresWrapping,
             direction,
             navAction: NavAction.Navigate,
+            coords,
         };
     } else if (!nextNode) {
         return {
@@ -203,6 +220,7 @@ function calculateNextNode(
 ): {
     nextNode: NavTreeNode | undefined;
     requiresWrapping: boolean;
+    coords: Coords;
 } {
     const parentNode = treePosition.ancestorChain[treePosition.ancestorChain.length - 1]?.node;
     assert.isDefined(parentNode, 'missing parent');
@@ -247,6 +265,10 @@ function calculateNextNode(
     return {
         nextNode,
         requiresWrapping,
+        coords: {
+            x: nextX,
+            y: nextY,
+        },
     };
 }
 
@@ -272,15 +294,15 @@ export function navigatePibling(
         };
     }
 
-    const {nextNode, requiresWrapping} = calculateNextNode(parent, direction);
+    const {nextNode, requiresWrapping, coords} = calculateNextNode(parent, direction);
 
     const nodeToFocus = nextNode?.navEntry.navParams.group
         ? findDefaultChild(nextNode.children)
-        : nextNode;
+        : {node: nextNode, coords};
 
     const isWrappingValid = allowWrapping ? true : !requiresWrapping;
 
-    if (!nodeToFocus) {
+    if (!nodeToFocus || !nodeToFocus.node) {
         return {
             success: false,
             reason: 'no node to navigate to',
@@ -288,12 +310,13 @@ export function navigatePibling(
             navAction: NavAction.Pibling,
         };
     } else if (isWrappingValid) {
-        focusElement(nodeToFocus.element);
+        focusElement(nodeToFocus.node.element);
         return {
             success: true,
             defaulted: false,
-            newElement: nodeToFocus.element,
+            newElement: nodeToFocus.node.element,
             wrapped: requiresWrapping,
+            coords: nodeToFocus.coords,
             direction,
             navAction: NavAction.Pibling,
         };

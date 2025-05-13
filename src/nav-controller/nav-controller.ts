@@ -83,7 +83,7 @@ export class NavController extends ListenTarget<AllNavControllerEvents> {
 
     /** Focus the default element for the whole tree. */
     public focusDefaultElement() {
-        findDefaultChild(this.getNavTree().children)?.element.focus();
+        findDefaultChild(this.getNavTree().children)?.node.element.focus();
     }
 
     /** Add a new {@link NavEntry} to this controller. */
@@ -123,7 +123,7 @@ export class NavController extends ListenTarget<AllNavControllerEvents> {
         navEntry: Readonly<NavEntry> | undefined,
         enabled: boolean,
         navAction: NavAction.Activate | NavAction.Focus,
-    ): NavigationResult<NavAction.Activate> | NavigationResult<NavAction.Focus> {
+    ): NavigationResult<NavAction.Activate | NavAction.Focus> {
         if (!navEntry) {
             return {
                 success: false,
@@ -132,6 +132,8 @@ export class NavController extends ListenTarget<AllNavControllerEvents> {
                 reason: 'No nav entry to operate on.',
             };
         }
+
+        const position = findNavTreeNodeByNavEntry(this.getNavTree(), navEntry);
 
         if (enabled) {
             this.navEntries.forEach((nestedNavEntry) => {
@@ -142,7 +144,7 @@ export class NavController extends ListenTarget<AllNavControllerEvents> {
             this.currentNavEntry = {
                 entry: navEntry,
                 navAction: navAction,
-                position: findNavTreeNodeByNavEntry(this.getNavTree(), navEntry),
+                position,
             };
         } else if (
             this.currentNavEntry?.entry === navEntry &&
@@ -159,6 +161,7 @@ export class NavController extends ListenTarget<AllNavControllerEvents> {
             newElement: navEntry.element,
             wrapped: false,
             navAction,
+            coords: position.nodeCoords,
         };
     }
 
@@ -222,14 +225,11 @@ export class NavController extends ListenTarget<AllNavControllerEvents> {
      * if the parent is the tree root, this fails.
      */
     public exitOutOf(): NavigationResult<NavAction.Exit> {
-        /** Make sure the tree is fresh. */
-        this.getNavTree();
-
         if (this.currentNavEntry?.navAction === NavAction.Activate) {
             this.currentNavEntry.entry.focus(true);
         }
 
-        const result = exitOutOf(this.currentNavEntry);
+        const result = exitOutOf(this.getNavTree(), this.currentNavEntry);
         this.dispatch(new NavExitEvent({detail: result}));
         return result;
     }

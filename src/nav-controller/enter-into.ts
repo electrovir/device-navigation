@@ -51,5 +51,9 @@ export function enterInto(
         newElement: newNode.element,
         direction: undefined,
         navAction: NavAction.Enter,
+        coords: {
+            x: 0,
+            y: 0,
+        },
     };
 }

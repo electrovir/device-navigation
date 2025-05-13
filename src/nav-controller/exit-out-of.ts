@@ -1,4 +1,6 @@
 import {type CurrentNavEntry} from '../directives/nav-entry.js';
+import {type NavTree} from '../nav-tree/nav-tree.js';
+import {findNavTreeNodeByNavEntry} from '../nav-tree/walk-nav-tree.js';
 import {focusElement} from '../util/focus.js';
 import {NavAction, type NavigationResult} from './navigate.js';
 
@@ -9,6 +11,7 @@ import {NavAction, type NavigationResult} from './navigate.js';
  * @category Internal
  */
 export function exitOutOf(
+    navTree: Readonly<NavTree>,
     currentlyFocused: Readonly<CurrentNavEntry> | undefined,
 ): NavigationResult<NavAction.Exit> {
     if (!currentlyFocused) {
@@ -33,6 +36,8 @@ export function exitOutOf(
         };
     }
 
+    const {nodeCoords} = findNavTreeNodeByNavEntry(navTree, closestGroupAncestor.navEntry);
+
     focusElement(closestGroupAncestor.element);
 
     return {
@@ -42,5 +47,6 @@ export function exitOutOf(
         newElement: closestGroupAncestor.element,
         direction: undefined,
         navAction: NavAction.Exit,
+        coords: nodeCoords,
     };
 }
