@@ -195,7 +195,21 @@ export const VirTestApp = defineElementNoInputs({
             <main>
                 <section ${nav(state.navController, {group: true})}>
                     <div class="cell" ${nav(state.navController)}>Cell</div>
-                    <div class="cell" ${nav(state.navController)}>Cell</div>
+                    <div
+                        class="cell"
+                        ${nav(state.navController, {
+                            listeners: {
+                                activate({enabled}) {
+                                    console.info('activate', enabled);
+                                },
+                                focus({enabled}) {
+                                    console.info('focus', enabled);
+                                },
+                            },
+                        })}
+                    >
+                        CELL
+                    </div>
                     <div class="cell" ${nav(state.navController)}>Cell</div>
                     <div class="double" ${nav(state.navController)}>
                         <div class="cell" ${nav(state.navController)}>Cell</div>

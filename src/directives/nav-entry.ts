@@ -1,5 +1,5 @@
 import {assert, assertWrap} from '@augment-vir/assert';
-import {makeWritable, type PartialWithUndefined} from '@augment-vir/common';
+import {makeWritable, type MaybePromise, type PartialWithUndefined} from '@augment-vir/common';
 import {isElementFocused} from '@augment-vir/web';
 import {css, unsafeCSS} from 'element-vir';
 import {type NavController} from '../nav-controller/nav-controller.js';
@@ -97,6 +97,24 @@ export function hasNavEntry(element: Element): element is WithNavEntry<typeof el
 }
 
 /**
+ * Params for {@link NavListener}.
+ *
+ * @category Internal
+ */
+export type NavListenerParams = {
+    enabled: boolean;
+    navEntry: NavEntry;
+    element: HTMLElement;
+};
+
+/**
+ * Listener callback for listeners in {@link NavParams}.
+ *
+ * @category Internal
+ */
+export type NavListener = (params: NavListenerParams) => MaybePromise<void>;
+
+/**
  * Params for a nav element. This has the following navigation options:
  *
  * - Provide `x` and `y` this element's 2D navigation coordinates.
@@ -124,6 +142,13 @@ export type NavParams = PartialWithUndefined<{
 
     /** Disable this element's navigation. */
     disabled: boolean;
+
+    listeners: PartialWithUndefined<{
+        /** Will be fired when this element is activated. */
+        activate: NavListener;
+        /** Will be fired when this element is focused. */
+        focus: NavListener;
+    }>;
 }>;
 
 /**
@@ -224,6 +249,7 @@ export class NavEntry {
          * - `false` to unfocus (or "blur")
          */
         enabled: boolean,
+        skipListener?: boolean | undefined,
     ) {
         if (this.navParams.group) {
             return;
@@ -243,6 +269,13 @@ export class NavEntry {
             }
         }
 
+        if (!skipListener) {
+            void this.navParams.listeners?.focus?.({
+                element: this.element,
+                navEntry: this,
+                enabled,
+            });
+        }
         return this.navController.triggerNavEntry(this, enabled, NavAction.Focus);
     }
 
@@ -257,12 +290,17 @@ export class NavEntry {
         if (this.navParams.group) {
             return;
         }
-        this.focus(enabled);
+        this.focus(enabled, true);
         if (enabled) {
             this.setNavValue(NavValue.Active);
         } else {
             this.setNavValue(NavValue.Focused);
         }
+        void this.navParams.listeners?.activate?.({
+            element: this.element,
+            navEntry: this,
+            enabled,
+        });
         return this.navController.triggerNavEntry(this, enabled, NavAction.Activate);
     }
 
