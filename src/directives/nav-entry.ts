@@ -160,7 +160,8 @@ function createEventListener(navEntry: NavEntry) {
         } else if (event.type === 'blur' || event.type === 'mouseleave') {
             // eslint-disable-next-line unicorn/no-lonely-if
             if (event.target === navEntry.element) {
-                navEntry.clearNavValue();
+                navEntry.activate(false);
+                navEntry.focus(false);
             }
         }
     };
@@ -192,9 +193,9 @@ export class NavEntry {
     /** Set the {@link NavController} and add this instance to it. */
     public set navController(navController: NavController) {
         if (this._navController !== navController) {
-            this._navController?.navEntries.delete(this);
+            this._navController?.removeNavEntry(this);
             this._navController = navController;
-            navController.navEntries.add(this);
+            navController.addNavEntry(this);
         }
     }
     /** Set the current {@link NavController}. */
@@ -237,7 +238,9 @@ export class NavEntry {
             if (isElementFocused(this.element)) {
                 this.element.blur();
             }
-            this.removeNavValue(NavValue.Focused);
+            if (!this.navController.options.alwaysRequireFocused) {
+                this.removeNavValue(NavValue.Focused);
+            }
         }
 
         return this.navController.triggerNavEntry(this, enabled, NavAction.Focus);
@@ -258,7 +261,7 @@ export class NavEntry {
         if (enabled) {
             this.setNavValue(NavValue.Active);
         } else {
-            this.removeNavValue(NavValue.Active);
+            this.setNavValue(NavValue.Focused);
         }
         return this.navController.triggerNavEntry(this, enabled, NavAction.Activate);
     }

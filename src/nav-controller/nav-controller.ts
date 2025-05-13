@@ -15,12 +15,23 @@ import {
     type AllNavControllerEvents,
 } from './nav-controller-events.js';
 import {
+    findDefaultChild,
     NavAction,
     navigate,
     navigatePibling,
     type NavigationInputs,
     type NavigationResult,
 } from './navigate.js';
+
+/**
+ * Options for {@link NavController}.
+ *
+ * @category Internal
+ */
+export type NavControllerOptions = PartialWithUndefined<{
+    /** Always require an element within the nav tree to be focused. */
+    alwaysRequireFocused: boolean;
+}>;
 
 /**
  * Allows navigation around the nav tree contained within the given `rootElement`. If there is no
@@ -46,13 +57,16 @@ import {
  * ```
  */
 export class NavController extends ListenTarget<AllNavControllerEvents> {
-    constructor(public readonly rootElement: HTMLElement) {
+    constructor(
+        public readonly rootElement: HTMLElement,
+        public readonly options: NavControllerOptions = {},
+    ) {
         super();
     }
 
     /** If `true`, the nav tree will rebuild on next operation. */
     public needsUpdate = false;
-    public navEntries = new Set<Readonly<NavEntry>>();
+    protected navEntries = new Set<Readonly<NavEntry>>();
     public currentNavEntry: Readonly<CurrentNavEntry> | undefined;
 
     protected cachedNavTree: Readonly<NavTree> | undefined;
@@ -64,6 +78,31 @@ export class NavController extends ListenTarget<AllNavControllerEvents> {
             return this.buildNavTree();
         } else {
             return this.cachedNavTree;
+        }
+    }
+
+    /** Focus the default element for the whole tree. */
+    public focusDefaultElement() {
+        findDefaultChild(this.getNavTree().children)?.element.focus();
+    }
+
+    /** Add a new {@link NavEntry} to this controller. */
+    public addNavEntry(navEntry: NavEntry) {
+        this.navEntries.add(navEntry);
+        if (this.options.alwaysRequireFocused && !this.currentNavEntry) {
+            requestAnimationFrame(() => {
+                this.focusDefaultElement();
+            });
+        }
+    }
+
+    /** Remove a {@link NavEntry} from this controller. */
+    public removeNavEntry(navEntry: NavEntry) {
+        this.navEntries.delete(navEntry);
+        if (this.options.alwaysRequireFocused && !this.currentNavEntry) {
+            requestAnimationFrame(() => {
+                this.focusDefaultElement();
+            });
         }
     }
 
@@ -107,7 +146,8 @@ export class NavController extends ListenTarget<AllNavControllerEvents> {
             };
         } else if (
             this.currentNavEntry?.entry === navEntry &&
-            this.currentNavEntry.navAction === navAction
+            this.currentNavEntry.navAction === navAction &&
+            !this.options.alwaysRequireFocused
         ) {
             this.currentNavEntry = undefined;
         }
