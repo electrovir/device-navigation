@@ -55,4 +55,10 @@ export class NavPiblingEvent extends defineTypedCustomEvent<NavigationResult<Nav
  *
  * @category Internal
  */
-export type AllNavControllerEvents = NavExitEvent | NavEnterEvent | NavigateEvent | NavPiblingEvent;
+export type AllNavControllerEvents =
+    | NavExitEvent
+    | NavEnterEvent
+    | NavigateEvent
+    | NavPiblingEvent
+    | NavFocusEvent
+    | NavActivateEvent;

@@ -8,8 +8,10 @@ import {findNavTreeNodeByNavEntry} from '../nav-tree/walk-nav-tree.js';
 import {enterInto} from './enter-into.js';
 import {exitOutOf} from './exit-out-of.js';
 import {
+    NavActivateEvent,
     NavEnterEvent,
     NavExitEvent,
+    NavFocusEvent,
     NavigateEvent,
     NavPiblingEvent,
     type AllNavControllerEvents,
@@ -163,7 +165,7 @@ export class NavController extends ListenTarget<AllNavControllerEvents> {
             this.currentNavEntry = undefined;
         }
 
-        return {
+        const result: NavigationResult<NavAction.Activate | NavAction.Focus> = {
             success: true,
             defaulted: false,
             direction: undefined,
@@ -172,6 +174,16 @@ export class NavController extends ListenTarget<AllNavControllerEvents> {
             navAction,
             coords: position.nodeCoords,
         };
+        if (navAction === NavAction.Activate) {
+            this.dispatch(
+                new NavActivateEvent({detail: result as NavigationResult<NavAction.Activate>}),
+            );
+            // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+        } else if (navAction === NavAction.Focus) {
+            this.dispatch(new NavFocusEvent({detail: result as NavigationResult<NavAction.Focus>}));
+        }
+
+        return result;
     }
 
     /** Navigate around the nav tree. */
