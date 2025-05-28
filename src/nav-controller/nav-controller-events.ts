@@ -31,7 +31,7 @@ export class NavFocusEvent extends defineTypedCustomEvent<NavigationResult<NavAc
  * @category Events
  */
 export class NavEnterEvent extends defineTypedCustomEvent<NavigationResult<NavAction.Enter>>()(
-    'nav-exit',
+    'nav-enter',
 ) {}
 /**
  * This event is emitted from `NavController` when a normal navigation is triggered.
