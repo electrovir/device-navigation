@@ -185,13 +185,17 @@ export class NavController extends ListenTarget<AllNavControllerEvents> {
             navAction,
             coords: position.nodeCoords,
         };
-        if (navAction === NavAction.Activate) {
-            this.dispatch(
-                new NavActivateEvent({detail: result as NavigationResult<NavAction.Activate>}),
-            );
-            // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-        } else if (navAction === NavAction.Focus) {
-            this.dispatch(new NavFocusEvent({detail: result as NavigationResult<NavAction.Focus>}));
+        if (enabled) {
+            if (navAction === NavAction.Activate) {
+                this.dispatch(
+                    new NavActivateEvent({detail: result as NavigationResult<NavAction.Activate>}),
+                );
+                // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+            } else if (navAction === NavAction.Focus) {
+                this.dispatch(
+                    new NavFocusEvent({detail: result as NavigationResult<NavAction.Focus>}),
+                );
+            }
         }
 
         return result;
