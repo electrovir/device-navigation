@@ -1,7 +1,7 @@
 import {check} from '@augment-vir/assert';
 import {getOrSet, type Overwrite} from '@augment-vir/common';
 import {type ElementTree} from '@augment-vir/web';
-import {extractNavEntry, navAttribute, NavValue, type NavEntry} from '../directives/nav-entry.js';
+import {extractNavEntry, type NavEntry} from '../directives/nav-entry.js';
 
 /**
  * Internal root of the nav tree.
@@ -53,12 +53,6 @@ type IntermediateNavTreeNode = Overwrite<
 function mapTreeRecursively(elementTree: ElementTree): IntermediateNavTreeNode | undefined {
     const element = elementTree.element;
     if (!(element instanceof HTMLElement)) {
-        return undefined;
-    }
-
-    const navAttributeValue = element.getAttribute(navAttribute.name);
-
-    if (navAttributeValue === NavValue.Disabled) {
         return undefined;
     }
 
