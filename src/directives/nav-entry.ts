@@ -175,7 +175,10 @@ function createEventListener(navEntry: NavEntry) {
             navEntry.navController.locked
         ) {
             return;
-        } else if (event.type === 'mousedown') {
+        } else if (
+            (event.type === 'mousedown' && !navEntry.navController.options.activateOnMouseUp) ||
+            (event.type === 'mouseup' && navEntry.navController.options.activateOnMouseUp)
+        ) {
             if (event.target === navEntry.element) {
                 navEntry.activate(true);
             }

@@ -31,8 +31,19 @@ import {
  * @category Internal
  */
 export type NavControllerOptions = PartialWithUndefined<{
-    /** Always require an element within the nav tree to be focused. */
+    /**
+     * Always require an element within the nav tree to be focused.
+     *
+     * @default false
+     */
     alwaysRequireFocused: boolean;
+    /**
+     * By default, element activation is triggered on mousedown. Set this to `true` to instead
+     * activate it on `mouseup`.
+     *
+     * @default false
+     */
+    activateOnMouseUp: boolean;
 }>;
 
 /**
