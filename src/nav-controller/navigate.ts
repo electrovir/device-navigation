@@ -109,20 +109,39 @@ export function findDefaultChild(children: ReadonlyArray<ReadonlyArray<NavTreeNo
           coords: Coords;
       }
     | undefined {
-    const firstNode = children[0]?.[0];
+    const coords = {
+        x: -1,
+        y: -1,
+    };
 
-    if (!firstNode) {
-        return undefined;
-    } else if (firstNode.navEntry.navParams.group) {
-        return findDefaultChild(firstNode.children);
-    } else {
+    let node: NavTreeNode | undefined;
+
+    while (coords.y < children.length - 1 && !node) {
+        coords.y++;
+        const row = children[coords.y];
+        while (row && coords.x < row.length - 1 && !node) {
+            coords.x++;
+            const cell = row[coords.x];
+            if (cell) {
+                if (cell.navEntry.navParams.group) {
+                    const results = findDefaultChild(cell.children);
+                    if (results) {
+                        node = results.node;
+                    }
+                } else if (!cell.navEntry.navParams.disabled) {
+                    node = cell;
+                }
+            }
+        }
+    }
+
+    if (node) {
         return {
-            node: firstNode,
-            coords: {
-                x: 0,
-                y: 0,
-            },
+            node,
+            coords,
         };
+    } else {
+        return undefined;
     }
 }
 
