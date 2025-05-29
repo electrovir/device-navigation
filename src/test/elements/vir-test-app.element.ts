@@ -69,6 +69,10 @@ export const VirTestApp = defineElementNoInputs({
             -webkit-user-select: none;
         }
 
+        .disabled {
+            opacity: 0.3;
+        }
+
         code {
             background-color: #eee;
             padding: 0 4px;
@@ -229,7 +233,12 @@ export const VirTestApp = defineElementNoInputs({
                         <div class="cell" ${nav(state.navController, {x: 2, y: 0})}>Cell</div>
                     </div>
                     <div class="row">
-                        <div class="cell" ${nav(state.navController, {x: 0, y: 1})}>Cell</div>
+                        <div
+                            class="cell disabled"
+                            ${nav(state.navController, {x: 0, y: 1, disabled: true})}
+                        >
+                            Cell
+                        </div>
                         <div class="cell" ${nav(state.navController, {x: 1, y: 1})}>Cell</div>
                         <div class="cell" ${nav(state.navController, {x: 2, y: 1})}>Cell</div>
                     </div>

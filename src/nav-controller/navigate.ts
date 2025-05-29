@@ -1,5 +1,5 @@
 import {assert, assertWrap} from '@augment-vir/assert';
-import {type Coords, wrapNumber} from '@augment-vir/common';
+import {type Coords, log, wrapNumber} from '@augment-vir/common';
 import {type CurrentNavEntry} from '../directives/nav-entry.js';
 import {type NavTree, type NavTreeNode} from '../nav-tree/nav-tree.js';
 import {type WalkResult} from '../nav-tree/walk-nav-tree.js';
@@ -214,14 +214,38 @@ export function navigate(
     }
 }
 
-function calculateNextNode(
-    treePosition: WalkResult,
-    direction: NavDirection,
-): {
+type CalculateNextNodeOutput = {
     nextNode: NavTreeNode | undefined;
     requiresWrapping: boolean;
     coords: Coords;
-} {
+};
+
+function calculateNextNode(
+    treePosition: WalkResult,
+    direction: NavDirection,
+): CalculateNextNodeOutput {
+    let isEnabled = false;
+    let output: undefined | CalculateNextNodeOutput;
+    let step = 1;
+    const startTime = Date.now();
+    while (!isEnabled || !output) {
+        output = innerCalculateNextNode(treePosition, direction, step);
+        isEnabled = !output.nextNode?.navEntry.navParams.disabled;
+        step++;
+        if (Date.now() - startTime > 1000) {
+            log.warning('Failed to find next non-disabled node.');
+            return output;
+        }
+    }
+    return output;
+}
+
+function innerCalculateNextNode(
+    treePosition: WalkResult,
+    direction: NavDirection,
+    /** Number of steps to take. Usually this should be just one. */
+    step: number,
+): CalculateNextNodeOutput {
     const parentNode = treePosition.ancestorChain[treePosition.ancestorChain.length - 1]?.node;
     assert.isDefined(parentNode, 'missing parent');
     const currentRow = assertWrap.isDefined(parentNode.children[treePosition.nodeCoords.y]);
@@ -230,14 +254,15 @@ function calculateNextNode(
         parentNode.children.length > 1 &&
         (direction === NavDirection.Down || direction === NavDirection.Up);
 
-    const increment: 1 | -1 =
-        direction === NavDirection.Down || direction === NavDirection.Right ? 1 : -1;
-    const wrapComparison = increment === -1 ? greaterThan : lessThan;
+    const increment: number =
+        direction === NavDirection.Down || direction === NavDirection.Right ? step : -1 * step;
+    const wrapComparison = increment < 0 ? greaterThan : lessThan;
 
     const nextY = isVertical
         ? wrapNumber(treePosition.nodeCoords.y + increment, {
               min: 0,
               max: parentNode.children.length - 1,
+              takeOverflow: true,
           })
         : treePosition.nodeCoords.y;
 
@@ -254,6 +279,7 @@ function calculateNextNode(
         : wrapNumber(treePosition.nodeCoords.x + increment, {
               min: 0,
               max: currentRow.length - 1,
+              takeOverflow: true,
           });
 
     const nextNode: NavTreeNode | undefined = parentNode.children[nextY]?.[nextX];
