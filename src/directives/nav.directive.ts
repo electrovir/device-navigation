@@ -53,7 +53,7 @@ export function nav(
 
         const allAttributes = {
             [navAttribute.name]: determineNavValue(params),
-            tabindex: isNavigable ? 0 : undefined,
+            tabindex: isNavigable ? 0 : -1,
         };
         applyAttributes(element, allAttributes);
 
