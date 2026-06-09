@@ -101,7 +101,10 @@ function expandChildren(elementTreeNode: ElementTree): IntermediateNavTreeNode[]
         if (x == undefined) {
             row.noX.push(node);
         } else {
-            row.withX.push({x, node});
+            row.withX.push({
+                x,
+                node,
+            });
         }
     }
 

@@ -343,7 +343,10 @@ export function navigatePibling(
 
     const nodeToFocus = nextNode?.navEntry.navParams.group
         ? findDefaultChild(nextNode.children)
-        : {node: nextNode, coords};
+        : {
+              node: nextNode,
+              coords,
+          };
 
     const isWrappingValid = allowWrapping ? true : !requiresWrapping;
 

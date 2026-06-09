@@ -14,14 +14,23 @@ describe(enterInto.name, () => {
             return html`
                 <div>
                     <div class="parent" ${nav(navController)}>
-                        <div class="child" ${nav(navController, {x: 0, y: 1})}></div>
+                        <div
+                            class="child"
+                            ${nav(navController, {
+                                x: 0,
+                                y: 1,
+                            })}
+                        ></div>
                     </div>
                 </div>
             `;
         });
 
         assert.isTrue(
-            navController.navigate({allowWrapping: false, direction: NavDirection.Right}).success,
+            navController.navigate({
+                allowWrapping: false,
+                direction: NavDirection.Right,
+            }).success,
         );
         await waitUntilFocused(
             assertWrap.instanceOf(fixture.querySelector('.parent'), HTMLDivElement),
@@ -39,14 +48,23 @@ describe(enterInto.name, () => {
             return html`
                 <div>
                     <div class="parent" ${nav(navController)}>
-                        <div class="child" ${nav(navController, {x: 0, y: 1})}></div>
+                        <div
+                            class="child"
+                            ${nav(navController, {
+                                x: 0,
+                                y: 1,
+                            })}
+                        ></div>
                     </div>
                 </div>
             `;
         });
 
         assert.isTrue(
-            navController.navigate({allowWrapping: false, direction: NavDirection.Right}).success,
+            navController.navigate({
+                allowWrapping: false,
+                direction: NavDirection.Right,
+            }).success,
         );
         await waitUntilFocused(
             assertWrap.instanceOf(fixture.querySelector('.parent'), HTMLDivElement),

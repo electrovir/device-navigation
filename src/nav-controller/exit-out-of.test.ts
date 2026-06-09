@@ -13,7 +13,13 @@ describe(exitOutOf.name, () => {
             return html`
                 <div>
                     <div class="parent" ${nav(navController)}>
-                        <div class="child" ${nav(navController, {x: 0, y: 1})}></div>
+                        <div
+                            class="child"
+                            ${nav(navController, {
+                                x: 0,
+                                y: 1,
+                            })}
+                        ></div>
                     </div>
                 </div>
             `;
@@ -22,7 +28,10 @@ describe(exitOutOf.name, () => {
         const parent = assertWrap.instanceOf(fixture.querySelector('.parent'), HTMLDivElement);
 
         assert.isTrue(
-            navController.navigate({allowWrapping: false, direction: NavDirection.Right}).success,
+            navController.navigate({
+                allowWrapping: false,
+                direction: NavDirection.Right,
+            }).success,
         );
         await waitUntilFocused(parent);
         assert.isFalse(navController.exitOutOf().success);
@@ -33,7 +42,13 @@ describe(exitOutOf.name, () => {
             return html`
                 <div>
                     <div class="parent" ${nav(navController)}>
-                        <div class="child" ${nav(navController, {x: 0, y: 1})}></div>
+                        <div
+                            class="child"
+                            ${nav(navController, {
+                                x: 0,
+                                y: 1,
+                            })}
+                        ></div>
                     </div>
                 </div>
             `;
@@ -42,7 +57,10 @@ describe(exitOutOf.name, () => {
         const parent = assertWrap.instanceOf(fixture.querySelector('.parent'), HTMLDivElement);
 
         assert.isTrue(
-            navController.navigate({allowWrapping: false, direction: NavDirection.Right}).success,
+            navController.navigate({
+                allowWrapping: false,
+                direction: NavDirection.Right,
+            }).success,
         );
         await waitUntilFocused(parent);
         assert.isTrue(navController.enterInto().success);

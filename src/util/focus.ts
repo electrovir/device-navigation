@@ -7,7 +7,11 @@ import {isElementFocused} from '@augment-vir/web';
  * @category Util
  */
 export function focusElement(element: HTMLElement) {
-    element.scrollIntoView({behavior: 'smooth', inline: 'center', block: 'center'});
+    element.scrollIntoView({
+        behavior: 'smooth',
+        inline: 'center',
+        block: 'center',
+    });
     element.focus();
 }
 

@@ -1,7 +1,7 @@
-import {defineElementNoInputs, html} from 'element-vir';
+import {defineElement, html} from 'element-vir';
 import {nav, NavController, NavDirection} from '../index.js';
 
-export const MyElement = defineElementNoInputs({
+export const MyElement = defineElement()({
     tagName: 'my-element',
     state({host}) {
         const navController = new NavController(host);

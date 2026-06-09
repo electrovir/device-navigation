@@ -150,7 +150,7 @@ export class NavController extends ListenTarget<AllNavControllerEvents> {
             return {
                 success: false,
                 direction: undefined,
-                navAction: navAction,
+                navAction,
                 reason: 'No nav entry to operate on.',
             };
         }
@@ -165,7 +165,7 @@ export class NavController extends ListenTarget<AllNavControllerEvents> {
             });
             this.currentNavEntry = {
                 entry: navEntry,
-                navAction: navAction,
+                navAction,
                 position,
             };
         } else if (
@@ -188,12 +188,16 @@ export class NavController extends ListenTarget<AllNavControllerEvents> {
         if (enabled) {
             if (navAction === NavAction.Activate) {
                 this.dispatch(
-                    new NavActivateEvent({detail: result as NavigationResult<NavAction.Activate>}),
+                    new NavActivateEvent({
+                        detail: result as NavigationResult<NavAction.Activate>,
+                    }),
                 );
                 // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
             } else if (navAction === NavAction.Focus) {
                 this.dispatch(
-                    new NavFocusEvent({detail: result as NavigationResult<NavAction.Focus>}),
+                    new NavFocusEvent({
+                        detail: result as NavigationResult<NavAction.Focus>,
+                    }),
                 );
             }
         }
@@ -215,7 +219,11 @@ export class NavController extends ListenTarget<AllNavControllerEvents> {
             };
         }
         const result = navigate(this.getNavTree(), this.currentNavEntry, direction, allowWrapping);
-        this.dispatch(new NavigateEvent({detail: result}));
+        this.dispatch(
+            new NavigateEvent({
+                detail: result,
+            }),
+        );
         return result;
     }
     /**
@@ -249,7 +257,11 @@ export class NavController extends ListenTarget<AllNavControllerEvents> {
         if (!result.success && fallbackToActivate) {
             return this.activate();
         } else {
-            this.dispatch(new NavEnterEvent({detail: result}));
+            this.dispatch(
+                new NavEnterEvent({
+                    detail: result,
+                }),
+            );
             return result;
         }
     }
@@ -263,8 +275,7 @@ export class NavController extends ListenTarget<AllNavControllerEvents> {
                 navAction: NavAction.Activate,
                 reason: 'NavController is locked.',
             };
-        }
-        if (!this.currentNavEntry?.entry) {
+        } else if (!this.currentNavEntry?.entry) {
             return {
                 success: false,
                 direction: undefined,
@@ -298,7 +309,11 @@ export class NavController extends ListenTarget<AllNavControllerEvents> {
         }
 
         const result = exitOutOf(this.getNavTree(), this.currentNavEntry);
-        this.dispatch(new NavExitEvent({detail: result}));
+        this.dispatch(
+            new NavExitEvent({
+                detail: result,
+            }),
+        );
         return result;
     }
     /** Navigate to siblings of the parent of the currently focused element, if they exist. */
@@ -325,7 +340,11 @@ export class NavController extends ListenTarget<AllNavControllerEvents> {
             navAction: NavAction.Pibling,
         };
 
-        this.dispatch(new NavPiblingEvent({detail: result}));
+        this.dispatch(
+            new NavPiblingEvent({
+                detail: result,
+            }),
+        );
 
         return result;
     }

@@ -1,17 +1,21 @@
-import {css, defineElementNoInputs, html} from 'element-vir';
+import {css, defineElement, html} from 'element-vir';
 import {nav, navAttribute, NavController, NavValue} from '../index.js';
 
-export const MyElement = defineElementNoInputs({
+export const MyElement = defineElement()({
     tagName: 'my-element',
     styles: css`
         div {
             border: 2px solid blue;
         }
 
-        ${navAttribute.css({navValue: NavValue.Active})} {
+        ${navAttribute.css({
+            navValue: NavValue.Active,
+        })} {
             border-color: red;
         }
-        ${navAttribute.css({navValue: NavValue.Focused})} {
+        ${navAttribute.css({
+            navValue: NavValue.Focused,
+        })} {
             border-color: green;
         }
     `,

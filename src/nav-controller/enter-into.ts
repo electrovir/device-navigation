@@ -20,9 +20,7 @@ export function enterInto(
             direction: undefined,
             navAction: NavAction.Enter,
         };
-    }
-
-    if (!currentlyFocused.position.node.children.length) {
+    } else if (!currentlyFocused.position.node.children.length) {
         return {
             success: false,
             reason: 'no children to enter into',

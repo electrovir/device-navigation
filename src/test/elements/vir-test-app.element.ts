@@ -1,10 +1,10 @@
-import {css, defineElementNoInputs, html, listen} from 'element-vir';
+import {css, defineElement, html, listen} from 'element-vir';
 import {navAttribute, NavValue} from '../../directives/nav-entry.js';
 import {nav} from '../../directives/nav.directive.js';
 import {NavController} from '../../nav-controller/nav-controller.js';
 import {NavDirection} from '../../nav-controller/navigate.js';
 
-export const VirTestApp = defineElementNoInputs({
+export const VirTestApp = defineElement()({
     tagName: 'vir-test-app',
     styles: css`
         :host {
@@ -92,13 +92,17 @@ export const VirTestApp = defineElementNoInputs({
             padding: 8px 16px;
         }
 
-        ${navAttribute.css({navValue: NavValue.Focused})} {
+        ${navAttribute.css({
+            navValue: NavValue.Focused,
+        })} {
             border-color: red;
             outline: none;
             background-color: rgba(255, 0, 0, 0.03);
         }
 
-        ${navAttribute.css({navValue: NavValue.Active})} {
+        ${navAttribute.css({
+            navValue: NavValue.Active,
+        })} {
             outline: none;
             border-color: darkred;
             background-color: rgba(255, 0, 0, 0.1);
@@ -157,7 +161,11 @@ export const VirTestApp = defineElementNoInputs({
                 );
             } else if (keyCode === 'Enter' || keyCode === 'Return') {
                 event.preventDefault();
-                console.info(navController.enterInto({fallbackToActivate: true}));
+                console.info(
+                    navController.enterInto({
+                        fallbackToActivate: true,
+                    }),
+                );
             } else if (keyCode === 'Backspace' || keyCode === 'Escape') {
                 event.preventDefault();
                 console.info(navController.exitOutOf());
@@ -173,7 +181,9 @@ export const VirTestApp = defineElementNoInputs({
         };
     },
     render({state, updateState}) {
-        updateState({renderCounter: state.renderCounter + 1});
+        updateState({
+            renderCounter: state.renderCounter + 1,
+        });
         console.info(`Render: ${state.renderCounter}`);
 
         return html`
@@ -203,7 +213,11 @@ export const VirTestApp = defineElementNoInputs({
                 </li>
             </ul>
             <main>
-                <section ${nav(state.navController, {group: true})}>
+                <section
+                    ${nav(state.navController, {
+                        group: true,
+                    })}
+                >
                     <div class="cell" ${nav(state.navController)}>Cell</div>
                     <div
                         class="cell"
@@ -226,30 +240,118 @@ export const VirTestApp = defineElementNoInputs({
                         <div class="cell" ${nav(state.navController)}>Cell</div>
                     </div>
                 </section>
-                <section ${nav(state.navController, {group: true})}>
+                <section
+                    ${nav(state.navController, {
+                        group: true,
+                    })}
+                >
                     <div class="row">
-                        <div class="cell" ${nav(state.navController, {x: 0, y: 0})}>Cell</div>
-                        <div class="cell" ${nav(state.navController, {x: 1, y: 0})}>Cell</div>
-                        <div class="cell" ${nav(state.navController, {x: 2, y: 0})}>Cell</div>
+                        <div
+                            class="cell"
+                            ${nav(state.navController, {
+                                x: 0,
+                                y: 0,
+                            })}
+                        >
+                            Cell
+                        </div>
+                        <div
+                            class="cell"
+                            ${nav(state.navController, {
+                                x: 1,
+                                y: 0,
+                            })}
+                        >
+                            Cell
+                        </div>
+                        <div
+                            class="cell"
+                            ${nav(state.navController, {
+                                x: 2,
+                                y: 0,
+                            })}
+                        >
+                            Cell
+                        </div>
                     </div>
                     <div class="row">
                         <div
                             class="cell disabled"
-                            ${nav(state.navController, {x: 0, y: 1, disabled: true})}
+                            ${nav(state.navController, {
+                                x: 0,
+                                y: 1,
+                                disabled: true,
+                            })}
                         >
                             Cell
                         </div>
-                        <div class="cell" ${nav(state.navController, {x: 1, y: 1})}>Cell</div>
-                        <div class="cell" ${nav(state.navController, {x: 2, y: 1})}>Cell</div>
+                        <div
+                            class="cell"
+                            ${nav(state.navController, {
+                                x: 1,
+                                y: 1,
+                            })}
+                        >
+                            Cell
+                        </div>
+                        <div
+                            class="cell"
+                            ${nav(state.navController, {
+                                x: 2,
+                                y: 1,
+                            })}
+                        >
+                            Cell
+                        </div>
                     </div>
                     <div class="row">
-                        <div class="cell" ${nav(state.navController, {x: 0, y: 2})}>Cell</div>
-                        <div class="cell" ${nav(state.navController, {x: 1, y: 2})}>Cell</div>
-                        <div class="cell" ${nav(state.navController, {x: 2, y: 2})}>Cell</div>
+                        <div
+                            class="cell"
+                            ${nav(state.navController, {
+                                x: 0,
+                                y: 2,
+                            })}
+                        >
+                            Cell
+                        </div>
+                        <div
+                            class="cell"
+                            ${nav(state.navController, {
+                                x: 1,
+                                y: 2,
+                            })}
+                        >
+                            Cell
+                        </div>
+                        <div
+                            class="cell"
+                            ${nav(state.navController, {
+                                x: 2,
+                                y: 2,
+                            })}
+                        >
+                            Cell
+                        </div>
                     </div>
                     <div class="row">
-                        <div class="cell" ${nav(state.navController, {x: 0, y: 3})}>Cell</div>
-                        <div class="cell" ${nav(state.navController, {x: 1, y: 3})}>Cell</div>
+                        <div
+                            class="cell"
+                            ${nav(state.navController, {
+                                x: 0,
+                                y: 3,
+                            })}
+                        >
+                            Cell
+                        </div>
+                        <div
+                            class="cell"
+                            ${nav(state.navController, {
+                                x: 1,
+                                y: 3,
+                            })}
+                        >
+                            Cell
+                        </div>
                     </div>
                 </section>
             </main>

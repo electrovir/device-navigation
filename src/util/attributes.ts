@@ -39,14 +39,21 @@ export function applyAttributes(element: Element, attributes: AttributesMap) {
 export function readAttributes(element: Element): Record<string, string> {
     const attributeNames = element.getAttributeNames();
 
-    const attributeEntries = attributeNames.map((attributeName): [string, string] => {
-        const attributeValue = element.getAttribute(attributeName);
-
-        return [
+    const attributeEntries = attributeNames.map(
+        (
             attributeName,
-            attributeValue || '',
-        ];
-    });
+        ): [
+            string,
+            string,
+        ] => {
+            const attributeValue = element.getAttribute(attributeName);
+
+            return [
+                attributeName,
+                attributeValue || '',
+            ];
+        },
+    );
 
     return typedObjectFromEntries(attributeEntries);
 }

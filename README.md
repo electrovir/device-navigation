@@ -22,10 +22,10 @@ npm i device-navigation
     <!-- example-link: src/readme-examples/nav-controller.example.ts -->
 
     ```TypeScript
-    import {defineElementNoInputs, html} from 'element-vir';
+    import {defineElement, html} from 'element-vir';
     import {nav, NavController} from 'device-navigation';
 
-    export const MyElement = defineElementNoInputs({
+    export const MyElement = defineElement()({
         tagName: 'my-element',
         state({host}) {
             return {
@@ -49,10 +49,10 @@ npm i device-navigation
     <!-- example-link: src/readme-examples/navigation.example.ts -->
 
     ```TypeScript
-    import {defineElementNoInputs, html} from 'element-vir';
+    import {defineElement, html} from 'element-vir';
     import {nav, NavController, NavDirection} from 'device-navigation';
 
-    export const MyElement = defineElementNoInputs({
+    export const MyElement = defineElement()({
         tagName: 'my-element',
         state({host}) {
             const navController = new NavController(host);
@@ -99,20 +99,24 @@ Apply styles vis the `navAttribute.css` selector creator:
 <!-- example-link: src/readme-examples/styles.example.ts -->
 
 ```TypeScript
-import {css, defineElementNoInputs, html} from 'element-vir';
+import {css, defineElement, html} from 'element-vir';
 import {nav, navAttribute, NavController, NavValue} from 'device-navigation';
 
-export const MyElement = defineElementNoInputs({
+export const MyElement = defineElement()({
     tagName: 'my-element',
     styles: css`
         div {
             border: 2px solid blue;
         }
 
-        ${navAttribute.css({navValue: NavValue.Active})} {
+        ${navAttribute.css({
+            navValue: NavValue.Active,
+        })} {
             border-color: red;
         }
-        ${navAttribute.css({navValue: NavValue.Focused})} {
+        ${navAttribute.css({
+            navValue: NavValue.Focused,
+        })} {
             border-color: green;
         }
     `,

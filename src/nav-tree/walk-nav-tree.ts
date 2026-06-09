@@ -65,7 +65,10 @@ function walkRecursively(
             const node = row[x]!;
             const walkResult: WalkResult = {
                 ancestorChain,
-                nodeCoords: {x, y},
+                nodeCoords: {
+                    x,
+                    y,
+                },
                 node,
             };
             if (callback(walkResult)) {
@@ -100,7 +103,7 @@ export function findNavTreeNodeByNavEntry(
     });
 
     if (!walkResult) {
-        throw new Error(`Failed to find NavEntry in NavTree.`);
+        throw new Error('Failed to find NavEntry in NavTree.');
     }
 
     return walkResult;

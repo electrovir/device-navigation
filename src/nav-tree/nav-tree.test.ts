@@ -30,8 +30,16 @@ describe('buildNavTree', () => {
             it: 'allows nested groups',
             input: (controller) => html`
                 <section>
-                    <main ${nav(controller, {group: true})}>
-                        <section ${nav(controller, {group: true})}>
+                    <main
+                        ${nav(controller, {
+                            group: true,
+                        })}
+                    >
+                        <section
+                            ${nav(controller, {
+                                group: true,
+                            })}
+                        >
                             <div>
                                 <div ${nav(controller)}></div>
                             </div>
@@ -81,10 +89,26 @@ describe('buildNavTree', () => {
             it: 'allows out of order 1D navigation',
             input: (controller) => html`
                 <section>
-                    <main ${nav(controller, {group: true})}>
-                        <section ${nav(controller, {group: true})}>
-                            <section ${nav(controller, {x: 1})}></section>
-                            <span ${nav(controller, {x: 2})}></span>
+                    <main
+                        ${nav(controller, {
+                            group: true,
+                        })}
+                    >
+                        <section
+                            ${nav(controller, {
+                                group: true,
+                            })}
+                        >
+                            <section
+                                ${nav(controller, {
+                                    x: 1,
+                                })}
+                            ></section>
+                            <span
+                                ${nav(controller, {
+                                    x: 2,
+                                })}
+                            ></span>
                             <div ${nav(controller)}></div>
                             <div ${nav(controller)}></div>
                         </section>
@@ -130,12 +154,30 @@ describe('buildNavTree', () => {
             it: 'allows 2D navigation',
             input: (controller) => html`
                 <section>
-                    <main ${nav(controller, {group: true})}>
-                        <span ${nav(controller, {x: 3, y: 1})}></span>
+                    <main
+                        ${nav(controller, {
+                            group: true,
+                        })}
+                    >
+                        <span
+                            ${nav(controller, {
+                                x: 3,
+                                y: 1,
+                            })}
+                        ></span>
                         <div ${nav(controller)}></div>
                         <div ${nav(controller)}></div>
-                        <div ${nav(controller, {x: 1, y: 3})}></div>
-                        <section ${nav(controller, {y: 3})}></section>
+                        <div
+                            ${nav(controller, {
+                                x: 1,
+                                y: 3,
+                            })}
+                        ></div>
+                        <section
+                            ${nav(controller, {
+                                y: 3,
+                            })}
+                        ></section>
                     </main>
                 </section>
             `,
