@@ -1,5 +1,10 @@
 import {assert, assertWrap} from '@augment-vir/assert';
-import {makeWritable, type MaybePromise, type PartialWithUndefined} from '@augment-vir/common';
+import {
+    type EmptyFunction,
+    makeWritable,
+    type MaybePromise,
+    type PartialWithUndefined,
+} from '@augment-vir/common';
 import {isElementFocused} from '@augment-vir/web';
 import {css, unsafeCSS} from 'element-vir';
 import {type NavController} from '../nav-controller/nav-controller.js';
@@ -16,6 +21,7 @@ export type CurrentNavEntry = {
     entry: Readonly<NavEntry>;
     navAction: NavAction.Activate | NavAction.Focus;
     position: Readonly<WalkResult>;
+    removeDisconnectListener: EmptyFunction;
 };
 
 /**

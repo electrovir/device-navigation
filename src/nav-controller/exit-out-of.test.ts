@@ -4,7 +4,7 @@ import {html} from 'element-vir';
 import {nav} from '../directives/nav.directive.js';
 import {waitUntilFocused} from '../util/focus.js';
 import {exitOutOf} from './exit-out-of.js';
-import {createMockNavController} from './mock-nav-controller.js';
+import {createMockNavController} from './nav-controller.mock.js';
 import {NavDirection} from './navigate.js';
 
 describe(exitOutOf.name, () => {

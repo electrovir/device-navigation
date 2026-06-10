@@ -4,7 +4,7 @@ import {html} from 'element-vir';
 import {nav} from '../directives/nav.directive.js';
 import {waitUntilFocused} from '../util/focus.js';
 import {enterInto} from './enter-into.js';
-import {createMockNavController} from './mock-nav-controller.js';
+import {createMockNavController} from './nav-controller.mock.js';
 import {NavDirection} from './navigate.js';
 
 /** Note that most of enterInto's functionality is tested in the NavController tests. */

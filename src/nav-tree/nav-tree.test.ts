@@ -2,8 +2,8 @@ import {describe, itCases} from '@augment-vir/test';
 import {toTagOrDefinition} from '@augment-vir/web';
 import {html, type HTMLTemplateResult} from 'element-vir';
 import {nav} from '../directives/nav.directive.js';
-import {createMockNavController} from '../nav-controller/mock-nav-controller.js';
 import {type NavController} from '../nav-controller/nav-controller.js';
+import {createMockNavController} from '../nav-controller/nav-controller.mock.js';
 import {type NavTreeNode} from './nav-tree.js';
 
 type TestingNavTreeNode = {

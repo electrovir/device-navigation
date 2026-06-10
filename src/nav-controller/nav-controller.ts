@@ -1,6 +1,6 @@
 import {assert} from '@augment-vir/assert';
 import {type PartialWithUndefined} from '@augment-vir/common';
-import {getNestedChildrenTree} from '@augment-vir/web';
+import {getNestedChildrenTree, listenToElementDisconnect} from '@augment-vir/web';
 import {ListenTarget} from 'typed-event-target';
 import {type CurrentNavEntry, type NavEntry} from '../directives/nav-entry.js';
 import {mapTree, type NavTree} from '../nav-tree/nav-tree.js';
@@ -163,16 +163,23 @@ export class NavController extends ListenTarget<AllNavControllerEvents> {
                     nestedNavEntry.clearNavValue();
                 }
             });
+            this.currentNavEntry?.removeDisconnectListener();
             this.currentNavEntry = {
                 entry: navEntry,
                 navAction,
                 position,
+                removeDisconnectListener: listenToElementDisconnect(navEntry.element, () => {
+                    if (this.currentNavEntry?.entry.element === navEntry.element) {
+                        this.currentNavEntry = undefined;
+                    }
+                }),
             };
         } else if (
             this.currentNavEntry?.entry === navEntry &&
             this.currentNavEntry.navAction === navAction &&
             !this.options.alwaysRequireFocused
         ) {
+            this.currentNavEntry.removeDisconnectListener();
             this.currentNavEntry = undefined;
         }
 
