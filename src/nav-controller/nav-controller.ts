@@ -98,27 +98,62 @@ export class NavController extends ListenTarget<AllNavControllerEvents> {
 
     /** Focus the default element for the whole tree. */
     public focusDefaultElement() {
-        findDefaultChild(this.getNavTree().children)?.node.element.focus();
+        findDefaultChild(this.getNavTree().children)?.node.navEntry.focus(true);
+    }
+
+    /**
+     * Schedules a post-render pass that ensures a valid nav entry is focused when
+     * `alwaysRequireFocused` is enabled.
+     *
+     * This reconciles controller state after dynamic DOM updates: it keeps the current entry when
+     * it still exists in the rebuilt nav tree, clears it when it was removed or became
+     * non-navigable, and focuses the tree's default entry when no current entry remains.
+     *
+     * @internal
+     */
+    public queueDefaultFocus(force = false) {
+        if (this.options.alwaysRequireFocused && (force || !this.currentNavEntry)) {
+            requestAnimationFrame(() => {
+                this.needsUpdate = true;
+
+                const currentNavEntry = this.currentNavEntry;
+                if (currentNavEntry) {
+                    try {
+                        findNavTreeNodeByNavEntry(this.getNavTree(), currentNavEntry.entry);
+
+                        if (
+                            currentNavEntry.entry.navParams.group ||
+                            currentNavEntry.entry.navParams.disabled
+                        ) {
+                            currentNavEntry.removeDisconnectListener();
+                            this.currentNavEntry = undefined;
+                        } else {
+                            currentNavEntry.entry.focus(true);
+                            return;
+                        }
+                    } catch {
+                        currentNavEntry.removeDisconnectListener();
+                        this.currentNavEntry = undefined;
+                    }
+                }
+
+                if (!this.currentNavEntry) {
+                    this.focusDefaultElement();
+                }
+            });
+        }
     }
 
     /** Add a new {@link NavEntry} to this controller. */
     public addNavEntry(navEntry: NavEntry) {
         this.navEntries.add(navEntry);
-        if (this.options.alwaysRequireFocused && !this.currentNavEntry) {
-            requestAnimationFrame(() => {
-                this.focusDefaultElement();
-            });
-        }
+        this.queueDefaultFocus();
     }
 
     /** Remove a {@link NavEntry} from this controller. */
     public removeNavEntry(navEntry: NavEntry) {
         this.navEntries.delete(navEntry);
-        if (this.options.alwaysRequireFocused && !this.currentNavEntry) {
-            requestAnimationFrame(() => {
-                this.focusDefaultElement();
-            });
-        }
+        this.queueDefaultFocus();
     }
 
     /** Sets the current nav entry with the given action. */
@@ -171,6 +206,7 @@ export class NavController extends ListenTarget<AllNavControllerEvents> {
                 removeDisconnectListener: listenToElementDisconnect(navEntry.element, () => {
                     if (this.currentNavEntry?.entry.element === navEntry.element) {
                         this.currentNavEntry = undefined;
+                        this.queueDefaultFocus();
                     }
                 }),
             };

@@ -51,13 +51,15 @@ export function nav(
 
         assert.instanceOf(element, HTMLElement);
 
+        const navEntry = extractNavEntry(element) || new NavEntry(element, navController, params);
+
         const allAttributes = {
-            [navAttribute.name]: determineNavValue(params),
+            [navAttribute.name]: isNavigable
+                ? navEntry.navValue || determineNavValue(params)
+                : determineNavValue(params),
             tabindex: isNavigable ? 0 : -1,
         };
         applyAttributes(element, allAttributes);
-
-        const navEntry = extractNavEntry(element) || new NavEntry(element, navController, params);
 
         if (hasNavEntry(element)) {
             navEntry.navParams = params;
@@ -71,5 +73,7 @@ export function nav(
         } else {
             element.style.removeProperty('cursor');
         }
+
+        navController.queueDefaultFocus(true);
     });
 }
