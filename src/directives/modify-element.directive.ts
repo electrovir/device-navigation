@@ -16,11 +16,18 @@ export const modifyElement = directive(
             this.element = extractElement(partInfo, 'modifyElement');
         }
 
-        public render(renderKey: string | undefined, callback: (element: Element) => void) {
+        public render(
+            renderKey: string | undefined,
+            /** Runs only when `renderKey` changes. */
+            callback: (element: Element) => void,
+            /** Runs every time this is called. */
+            updateCallback?: ((element: Element) => void) | undefined,
+        ) {
             if (renderKey !== this.lastKey) {
                 callback(this.element);
                 this.lastKey = renderKey;
             }
+            updateCallback?.(this.element);
             return noChange;
         }
     },
