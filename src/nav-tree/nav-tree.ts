@@ -126,10 +126,14 @@ function expandChildren(elementTreeNode: ElementTree): IntermediateNavTreeNode[]
             });
 
             row.withX.forEach(({x, node}) => {
-                row.noX.splice(x, 0, node);
+                if (row.noX[x]) {
+                    row.noX.splice(x, 0, node);
+                } else {
+                    row.noX[x] = node;
+                }
             });
 
             return row.noX;
         })
-        .filter(check.isTruthy);
+        .filter((row) => row.some(check.isTruthy));
 }

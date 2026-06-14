@@ -119,6 +119,7 @@ export const VirTestApp = defineElement()({
                     navController.navigate({
                         direction: NavDirection.Down,
                         allowWrapping: false,
+                        shouldSkipHoles: true,
                     }),
                 );
             } else if (keyCode === 'ArrowUp') {
@@ -127,6 +128,7 @@ export const VirTestApp = defineElement()({
                     navController.navigate({
                         direction: NavDirection.Up,
                         allowWrapping: false,
+                        shouldSkipHoles: true,
                     }),
                 );
             } else if (keyCode === 'ArrowLeft') {
@@ -135,6 +137,7 @@ export const VirTestApp = defineElement()({
                     navController.navigate({
                         direction: NavDirection.Left,
                         allowWrapping: false,
+                        shouldSkipHoles: true,
                     }),
                 );
             } else if (keyCode === 'ArrowRight') {
@@ -143,6 +146,7 @@ export const VirTestApp = defineElement()({
                     navController.navigate({
                         direction: NavDirection.Right,
                         allowWrapping: false,
+                        shouldSkipHoles: true,
                     }),
                 );
             } else if (keyCode === 'BracketRight') {
@@ -150,6 +154,7 @@ export const VirTestApp = defineElement()({
                     navController.navigatePibling({
                         direction: NavDirection.Right,
                         allowWrapping: true,
+                        shouldSkipHoles: true,
                     }),
                 );
             } else if (keyCode === 'BracketLeft') {
@@ -157,6 +162,7 @@ export const VirTestApp = defineElement()({
                     navController.navigatePibling({
                         direction: NavDirection.Left,
                         allowWrapping: true,
+                        shouldSkipHoles: true,
                     }),
                 );
             } else if (keyCode === 'Enter' || keyCode === 'Return') {

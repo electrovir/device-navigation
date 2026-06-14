@@ -252,6 +252,7 @@ export class NavController extends ListenTarget<AllNavControllerEvents> {
     public navigate({
         direction,
         allowWrapping,
+        shouldSkipHoles,
     }: Readonly<NavigationInputs>): NavigationResult<NavAction.Navigate> {
         if (this.locked) {
             return {
@@ -261,7 +262,13 @@ export class NavController extends ListenTarget<AllNavControllerEvents> {
                 reason: 'NavController is locked.',
             };
         }
-        const result = navigate(this.getNavTree(), this.currentNavEntry, direction, allowWrapping);
+        const result = navigate(
+            this.getNavTree(),
+            this.currentNavEntry,
+            direction,
+            allowWrapping,
+            !!shouldSkipHoles,
+        );
         this.dispatch(
             new NavigateEvent({
                 detail: result,
@@ -363,6 +370,7 @@ export class NavController extends ListenTarget<AllNavControllerEvents> {
     public navigatePibling({
         allowWrapping,
         direction,
+        shouldSkipHoles,
     }: Readonly<NavigationInputs>): NavigationResult<NavAction.Pibling> {
         if (this.locked) {
             return {
@@ -375,8 +383,8 @@ export class NavController extends ListenTarget<AllNavControllerEvents> {
         const navTree = this.getNavTree();
 
         const rawResult = this.currentNavEntry
-            ? navigatePibling(this.currentNavEntry, direction, allowWrapping)
-            : navigate(navTree, undefined, direction, allowWrapping);
+            ? navigatePibling(this.currentNavEntry, direction, allowWrapping, !!shouldSkipHoles)
+            : navigate(navTree, undefined, direction, allowWrapping, !!shouldSkipHoles);
 
         const result: NavigationResult<NavAction.Pibling> = {
             ...rawResult,

@@ -5,6 +5,8 @@ import {navAttribute, NavValue} from '../directives/nav-entry.js';
 import {nav} from '../directives/nav.directive.js';
 import {waitUntilFocused} from '../util/focus.js';
 import {NavController} from './nav-controller.js';
+import {createMockNavController} from './nav-controller.mock.js';
+import {NavDirection} from './navigate.js';
 
 const NavControllerTestElement = defineElement<{
     showSettings: boolean;
@@ -32,6 +34,232 @@ const NavControllerTestElement = defineElement<{
 });
 
 describe(NavController.name, () => {
+    it('moves vertically to a matching explicit x slot', async () => {
+        const {fixture, navController} = await createMockNavController((navController) => {
+            return html`
+                <button
+                    class="one"
+                    ${nav(navController, {
+                        x: 1,
+                        y: 0,
+                    })}
+                >
+                    1
+                </button>
+                <button
+                    class="two"
+                    ${nav(navController, {
+                        x: 2,
+                        y: 0,
+                    })}
+                >
+                    2
+                </button>
+                <button
+                    class="tab"
+                    ${nav(navController, {
+                        x: 0,
+                        y: 1,
+                    })}
+                >
+                    Tab
+                </button>
+                <button
+                    class="q"
+                    ${nav(navController, {
+                        x: 2,
+                        y: 1,
+                    })}
+                >
+                    q
+                </button>
+            `;
+        });
+        const twoButton = assertWrap.instanceOf(fixture.querySelector('.two'), HTMLButtonElement);
+        const qButton = assertWrap.instanceOf(fixture.querySelector('.q'), HTMLButtonElement);
+
+        twoButton.focus();
+        await waitUntilFocused(twoButton);
+
+        navController.navigate({
+            allowWrapping: true,
+            direction: NavDirection.Down,
+        });
+
+        await waitUntilFocused(qButton);
+        assert.strictEquals(qButton.getAttribute(navAttribute.name), NavValue.Focused);
+    });
+
+    it('moves vertically to the next lower x slot when the target row has a hole', async () => {
+        const {fixture, navController} = await createMockNavController((navController) => {
+            return html`
+                <button
+                    class="one"
+                    ${nav(navController, {
+                        x: 1,
+                        y: 0,
+                    })}
+                >
+                    1
+                </button>
+                <button
+                    class="tab"
+                    ${nav(navController, {
+                        x: 0,
+                        y: 1,
+                    })}
+                >
+                    Tab
+                </button>
+                <button
+                    class="q"
+                    ${nav(navController, {
+                        x: 2,
+                        y: 1,
+                    })}
+                >
+                    q
+                </button>
+                <button
+                    class="z"
+                    ${nav(navController, {
+                        x: 1,
+                        y: 2,
+                    })}
+                >
+                    z
+                </button>
+            `;
+        });
+        const oneButton = assertWrap.instanceOf(fixture.querySelector('.one'), HTMLButtonElement);
+        const tabButton = assertWrap.instanceOf(fixture.querySelector('.tab'), HTMLButtonElement);
+
+        oneButton.focus();
+        await waitUntilFocused(oneButton);
+
+        navController.navigate({
+            allowWrapping: true,
+            direction: NavDirection.Down,
+        });
+
+        await waitUntilFocused(tabButton);
+        assert.strictEquals(tabButton.getAttribute(navAttribute.name), NavValue.Focused);
+    });
+
+    it('skips target rows with holes when requested', async () => {
+        const {fixture, navController} = await createMockNavController((navController) => {
+            return html`
+                <button
+                    class="one"
+                    ${nav(navController, {
+                        x: 1,
+                        y: 0,
+                    })}
+                >
+                    1
+                </button>
+                <button
+                    class="tab"
+                    ${nav(navController, {
+                        x: 0,
+                        y: 1,
+                    })}
+                >
+                    Tab
+                </button>
+                <button
+                    class="q"
+                    ${nav(navController, {
+                        x: 2,
+                        y: 1,
+                    })}
+                >
+                    q
+                </button>
+                <button
+                    class="z"
+                    ${nav(navController, {
+                        x: 1,
+                        y: 2,
+                    })}
+                >
+                    z
+                </button>
+            `;
+        });
+        const oneButton = assertWrap.instanceOf(fixture.querySelector('.one'), HTMLButtonElement);
+        const zButton = assertWrap.instanceOf(fixture.querySelector('.z'), HTMLButtonElement);
+
+        oneButton.focus();
+        await waitUntilFocused(oneButton);
+
+        navController.navigate({
+            allowWrapping: true,
+            direction: NavDirection.Down,
+            shouldSkipHoles: true,
+        });
+
+        await waitUntilFocused(zButton);
+        assert.strictEquals(zButton.getAttribute(navAttribute.name), NavValue.Focused);
+    });
+
+    it('skips target pibling rows with holes when requested', async () => {
+        const {fixture, navController} = await createMockNavController((navController) => {
+            return html`
+                <section
+                    ${nav(navController, {
+                        group: true,
+                        x: 1,
+                        y: 0,
+                    })}
+                >
+                    <button class="one" ${nav(navController)}>1</button>
+                </section>
+                <section
+                    ${nav(navController, {
+                        group: true,
+                        x: 0,
+                        y: 1,
+                    })}
+                >
+                    <button class="tab" ${nav(navController)}>Tab</button>
+                </section>
+                <section
+                    ${nav(navController, {
+                        group: true,
+                        x: 2,
+                        y: 1,
+                    })}
+                >
+                    <button class="q" ${nav(navController)}>q</button>
+                </section>
+                <section
+                    ${nav(navController, {
+                        group: true,
+                        x: 1,
+                        y: 2,
+                    })}
+                >
+                    <button class="z" ${nav(navController)}>z</button>
+                </section>
+            `;
+        });
+        const oneButton = assertWrap.instanceOf(fixture.querySelector('.one'), HTMLButtonElement);
+        const zButton = assertWrap.instanceOf(fixture.querySelector('.z'), HTMLButtonElement);
+
+        oneButton.focus();
+        await waitUntilFocused(oneButton);
+
+        navController.navigatePibling({
+            allowWrapping: true,
+            direction: NavDirection.Down,
+            shouldSkipHoles: true,
+        });
+
+        await waitUntilFocused(zButton);
+        assert.strictEquals(zButton.getAttribute(navAttribute.name), NavValue.Focused);
+    });
+
     it('focuses the default entry when the current entry is removed from the DOM', async () => {
         const host = assertWrap.instanceOf(
             await testWeb.render(html`

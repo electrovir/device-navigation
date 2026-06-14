@@ -19,6 +19,15 @@ export type NavigationInputs = {
     direction: NavDirection;
     /** Set to true to allow navigation to wrap. */
     allowWrapping: boolean;
+    /**
+     * Skip vertical target rows when the current x slot is empty.
+     *
+     * When this is false, vertical navigation stays on the adjacent target row by selecting the
+     * nearest lower x slot, then the nearest higher x slot if no lower slot exists.
+     *
+     * @default false
+     */
+    shouldSkipHoles?: boolean | undefined;
 };
 
 /**
@@ -160,6 +169,8 @@ export function navigate(
     direction: NavDirection,
     /** Set to true to allow navigation to wrap. */
     allowWrapping: boolean,
+    /** Set to true to skip vertical rows when the target x slot is empty. */
+    shouldSkipHoles: boolean,
 ): NavigationResult<NavAction.Navigate> {
     /** If there is no currently focused nav node, try to focus the first node in the tree. */
     if (!currentlyFocused) {
@@ -189,6 +200,7 @@ export function navigate(
     const {nextNode, requiresWrapping, coords} = calculateNextNode(
         currentlyFocused.position,
         direction,
+        shouldSkipHoles,
     );
 
     const isWrappingValid = allowWrapping ? true : !requiresWrapping;
@@ -242,14 +254,15 @@ type CalculateNextNodeOutput = {
 function calculateNextNode(
     treePosition: WalkResult,
     direction: NavDirection,
+    shouldSkipHoles: boolean,
 ): CalculateNextNodeOutput {
     let isEnabled = false;
     let output: undefined | CalculateNextNodeOutput;
     let step = 1;
     const startTime = Date.now();
     while (!isEnabled || !output) {
-        output = innerCalculateNextNode(treePosition, direction, step);
-        isEnabled = !output.nextNode?.navEntry.navParams.disabled;
+        output = innerCalculateNextNode(treePosition, direction, step, shouldSkipHoles);
+        isEnabled = !!output.nextNode && !output.nextNode.navEntry.navParams.disabled;
         step++;
         if (Date.now() - startTime > 1000) {
             log.warning('Failed to find next non-disabled node.');
@@ -264,6 +277,7 @@ function innerCalculateNextNode(
     direction: NavDirection,
     /** Number of steps to take. Usually this should be just one. */
     step: number,
+    shouldSkipHoles: boolean,
 ): CalculateNextNodeOutput {
     const parentNode = treePosition.ancestorChain[treePosition.ancestorChain.length - 1]?.node;
     assert.isDefined(parentNode, 'missing parent');
@@ -287,21 +301,25 @@ function innerCalculateNextNode(
 
     const nextRow = assertWrap.isDefined(parentNode.children[nextY]);
 
+    const closestVerticalNode = isVertical
+        ? findNodeInRow({
+              row: nextRow,
+              shouldSkipHoles,
+              x: treePosition.nodeCoords.x,
+          })
+        : undefined;
+
     const nextX = isVertical
-        ? treePosition.nodeCoords.x >= nextRow.length
-            ? /**
-               * Handles the case where the next row has fewer elements than the currently focused element's x
-               * index.
-               */
-              nextRow.length - 1
-            : treePosition.nodeCoords.x
+        ? (closestVerticalNode?.x ?? treePosition.nodeCoords.x)
         : wrapNumber(treePosition.nodeCoords.x + increment, {
               min: 0,
               max: currentRow.length - 1,
               takeOverflow: true,
           });
 
-    const nextNode: NavTreeNode | undefined = parentNode.children[nextY]?.[nextX];
+    const nextNode: NavTreeNode | undefined = isVertical
+        ? closestVerticalNode?.node
+        : parentNode.children[nextY]?.[nextX];
 
     const requiresWrapping = isVertical
         ? wrapComparison(nextY, treePosition.nodeCoords.y)
@@ -317,6 +335,49 @@ function innerCalculateNextNode(
     };
 }
 
+function findNodeInRow({
+    row,
+    shouldSkipHoles,
+    x,
+}: Readonly<{
+    row: ReadonlyArray<NavTreeNode | undefined>;
+    shouldSkipHoles: boolean;
+    x: number;
+}>): {node: NavTreeNode; x: number} | undefined {
+    const exactNode = row[x];
+    if (exactNode && (shouldSkipHoles || !exactNode.navEntry.navParams.disabled)) {
+        return {
+            node: exactNode,
+            x,
+        };
+    } else if (shouldSkipHoles) {
+        return undefined;
+    }
+
+    let lower: {node: NavTreeNode; x: number} | undefined;
+    let higher: {node: NavTreeNode; x: number} | undefined;
+
+    row.forEach((node, index) => {
+        if (!node || node.navEntry.navParams.disabled) {
+            return;
+        }
+
+        if (index < x && (!lower || index > lower.x)) {
+            lower = {
+                node,
+                x: index,
+            };
+        } else if (index > x && (!higher || index < higher.x)) {
+            higher = {
+                node,
+                x: index,
+            };
+        }
+    });
+
+    return lower || higher;
+}
+
 /**
  * Navigate only to piblings (siblings of parent).
  *
@@ -326,6 +387,7 @@ export function navigatePibling(
     currentlyFocused: Readonly<CurrentNavEntry>,
     direction: NavDirection,
     allowWrapping: boolean,
+    shouldSkipHoles: boolean,
 ): NavigationResult<NavAction.Pibling> {
     const parent =
         currentlyFocused.position.ancestorChain[currentlyFocused.position.ancestorChain.length - 1];
@@ -339,7 +401,11 @@ export function navigatePibling(
         };
     }
 
-    const {nextNode, requiresWrapping, coords} = calculateNextNode(parent, direction);
+    const {nextNode, requiresWrapping, coords} = calculateNextNode(
+        parent,
+        direction,
+        shouldSkipHoles,
+    );
 
     const nodeToFocus = nextNode?.navEntry.navParams.group
         ? findDefaultChild(nextNode.children)

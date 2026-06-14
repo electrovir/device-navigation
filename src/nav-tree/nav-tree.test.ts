@@ -8,20 +8,32 @@ import {type NavTreeNode} from './nav-tree.js';
 
 type TestingNavTreeNode = {
     element: ReturnType<typeof toTagOrDefinition>;
-    children: TestingNavTreeNode[][];
+    children: (TestingNavTreeNode | undefined)[][];
 };
 
 function convertTreeForTesting(navTreeNode: NavTreeNode): TestingNavTreeNode {
     return {
         element: toTagOrDefinition(navTreeNode.element),
-        children: navTreeNode.children.map((row) => row.map(convertTreeForTesting)),
+        children: navTreeNode.children.map((row) => {
+            const sparseRow: ReadonlyArray<NavTreeNode | undefined> = row;
+
+            return Array.from(sparseRow, (node) => {
+                return node ? convertTreeForTesting(node) : undefined;
+            });
+        }),
     };
 }
 
 async function testTree(templateCallback: (navController: NavController) => HTMLTemplateResult) {
     const {navController} = await createMockNavController(templateCallback);
 
-    return navController.buildNavTree().children.map((row) => row.map(convertTreeForTesting));
+    return navController.buildNavTree().children.map((row) => {
+        const sparseRow: ReadonlyArray<NavTreeNode | undefined> = row;
+
+        return Array.from(sparseRow, (node) => {
+            return node ? convertTreeForTesting(node) : undefined;
+        });
+    });
 }
 
 describe('buildNavTree', () => {
@@ -197,6 +209,9 @@ describe('buildNavTree', () => {
                                 },
                             ],
                             [
+                                undefined,
+                                undefined,
+                                undefined,
                                 {
                                     element: 'span',
                                     children: [],

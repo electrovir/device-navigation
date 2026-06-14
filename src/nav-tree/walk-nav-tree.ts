@@ -61,8 +61,12 @@ function walkRecursively(
 
         // eslint-disable-next-line unicorn/no-for-loop
         for (let x = 0; x < row.length; x++) {
-            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-            const node = row[x]!;
+            const node = row[x];
+
+            if (!node) {
+                continue;
+            }
+
             const walkResult: WalkResult = {
                 ancestorChain,
                 nodeCoords: {
