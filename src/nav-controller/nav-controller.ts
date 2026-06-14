@@ -1,4 +1,3 @@
-import {assert} from '@augment-vir/assert';
 import {type PartialWithUndefined} from '@augment-vir/common';
 import {getNestedChildrenTree, listenToElementDisconnect} from '@augment-vir/web';
 import {ListenTarget} from 'typed-event-target';
@@ -336,9 +335,48 @@ export class NavController extends ListenTarget<AllNavControllerEvents> {
 
         const result = this.currentNavEntry.entry.activate(true);
 
-        assert.isDefined(result, 'Cannot activate a group.');
+        if (result) {
+            return result;
+        } else {
+            return {
+                success: false,
+                direction: undefined,
+                navAction: NavAction.Activate,
+                reason: 'Cannot activate a group',
+            };
+        }
+    }
 
-        return result;
+    /** Deactivate the currently active nav entry. */
+    public deactivate(): NavigationResult<NavAction.Activate> {
+        if (this.locked) {
+            return {
+                success: false,
+                direction: undefined,
+                navAction: NavAction.Activate,
+                reason: 'NavController is locked.',
+            };
+        } else if (this.currentNavEntry?.navAction !== NavAction.Activate) {
+            return {
+                success: false,
+                direction: undefined,
+                navAction: NavAction.Activate,
+                reason: 'No active NavEntry to deactivate.',
+            };
+        }
+
+        const result = this.currentNavEntry.entry.activate(false);
+
+        if (result) {
+            return result;
+        } else {
+            return {
+                success: false,
+                direction: undefined,
+                navAction: NavAction.Activate,
+                reason: 'Cannot deactivate a group',
+            };
+        }
     }
 
     /**

@@ -1,12 +1,12 @@
 import {assert, assertWrap} from '@augment-vir/assert';
 import {describe, it, testWeb} from '@augment-vir/test';
 import {defineElement, html} from 'element-vir';
-import {navAttribute, NavValue} from '../directives/nav-entry.js';
+import {extractNavEntry, navAttribute, NavValue} from '../directives/nav-entry.js';
 import {nav} from '../directives/nav.directive.js';
 import {waitUntilFocused} from '../util/focus.js';
 import {NavController} from './nav-controller.js';
 import {createMockNavController} from './nav-controller.mock.js';
-import {NavDirection} from './navigate.js';
+import {NavAction, NavDirection} from './navigate.js';
 
 const NavControllerTestElement = defineElement<{
     showSettings: boolean;
@@ -258,6 +258,97 @@ describe(NavController.name, () => {
 
         await waitUntilFocused(zButton);
         assert.strictEquals(zButton.getAttribute(navAttribute.name), NavValue.Focused);
+    });
+
+    it('deactivates the currently active entry', async () => {
+        const {fixture, navController} = await createMockNavController((navController) => {
+            return html`
+                <button class="one" ${nav(navController)}>1</button>
+            `;
+        });
+        const oneButton = assertWrap.instanceOf(fixture.querySelector('.one'), HTMLButtonElement);
+
+        oneButton.focus();
+        await waitUntilFocused(oneButton);
+
+        assert.isTrue(navController.activate().success);
+        assert.strictEquals(oneButton.getAttribute(navAttribute.name), NavValue.Active);
+
+        assert.isTrue(navController.deactivate().success);
+
+        assert.strictEquals(oneButton.getAttribute(navAttribute.name), NavValue.Focused);
+        assert.isUndefined(navController.currentNavEntry);
+    });
+
+    it('fails to deactivate when no entry is active', async () => {
+        const {fixture, navController} = await createMockNavController((navController) => {
+            return html`
+                <button class="one" ${nav(navController)}>1</button>
+            `;
+        });
+        const oneButton = assertWrap.instanceOf(fixture.querySelector('.one'), HTMLButtonElement);
+
+        oneButton.focus();
+        await waitUntilFocused(oneButton);
+
+        assert.deepEquals(navController.deactivate(), {
+            success: false,
+            direction: undefined,
+            navAction: NavAction.Activate,
+            reason: 'No active NavEntry to deactivate.',
+        });
+    });
+
+    it('fails to activate a focused group', async () => {
+        const {fixture, navController} = await createMockNavController((navController) => {
+            return html`
+                <section
+                    class="group"
+                    ${nav(navController, {
+                        group: true,
+                    })}
+                >
+                    <button ${nav(navController)}>Child</button>
+                </section>
+            `;
+        });
+        const group = assertWrap.instanceOf(fixture.querySelector('.group'), HTMLElement);
+        const groupNavEntry = assertWrap.isDefined(extractNavEntry(group));
+
+        navController.triggerNavEntry(groupNavEntry, true, NavAction.Focus);
+
+        assert.deepEquals(navController.activate(), {
+            success: false,
+            direction: undefined,
+            navAction: NavAction.Activate,
+            reason: 'Cannot activate a group',
+        });
+    });
+
+    it('fails to deactivate an active group', async () => {
+        const {fixture, navController} = await createMockNavController((navController) => {
+            return html`
+                <section
+                    class="group"
+                    ${nav(navController, {
+                        group: true,
+                    })}
+                >
+                    <button ${nav(navController)}>Child</button>
+                </section>
+            `;
+        });
+        const group = assertWrap.instanceOf(fixture.querySelector('.group'), HTMLElement);
+        const groupNavEntry = assertWrap.isDefined(extractNavEntry(group));
+
+        navController.triggerNavEntry(groupNavEntry, true, NavAction.Activate);
+
+        assert.deepEquals(navController.deactivate(), {
+            success: false,
+            direction: undefined,
+            navAction: NavAction.Activate,
+            reason: 'Cannot deactivate a group',
+        });
     });
 
     it('focuses the default entry when the current entry is removed from the DOM', async () => {
