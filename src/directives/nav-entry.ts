@@ -146,6 +146,17 @@ export type NavParams = PartialWithUndefined<{
      * @default 0
      */
     y: number;
+    /**
+     * The number of horizontal x slots this entry occupies, starting at `x`. Set this for wide
+     * entries so that:
+     *
+     * - Vertical navigation _into_ the entry lands on it across its full width
+     * - Vertical navigation _out_ of the entry originates from its center slot
+     * - Horizontal navigation steps over the entry as a single unit.
+     *
+     * @default 1
+     */
+    width: number;
 
     /** Disable this element's navigation. */
     disabled: boolean;

@@ -1,5 +1,5 @@
 import {assert, assertWrap} from '@augment-vir/assert';
-import {type Coords, log, wrapNumber} from '@augment-vir/common';
+import {type Coords, wrapNumber} from '@augment-vir/common';
 import {type CurrentNavEntry} from '../directives/nav-entry.js';
 import {type NavTree, type NavTreeNode} from '../nav-tree/nav-tree.js';
 import {type WalkResult} from '../nav-tree/walk-nav-tree.js';
@@ -256,17 +256,38 @@ function calculateNextNode(
     direction: NavDirection,
     shouldSkipHoles: boolean,
 ): CalculateNextNodeOutput {
-    let isEnabled = false;
+    const parentNode = treePosition.ancestorChain[treePosition.ancestorChain.length - 1]?.node;
+    /**
+     * The entry being navigated away from. A multi-slot (wide) entry occupies several x slots, so
+     * stepping into one of its own slots must be skipped to actually move off of it.
+     */
+    const sourceEntry = treePosition.node.root ? undefined : treePosition.node.navEntry;
+    /**
+     * Cap iteration at a full cycle through the relevant dimension so a row or column that only
+     * contains the source entry (e.g. a single wide key) can't loop forever while skipping itself.
+     */
+    const maxSteps =
+        Math.max(
+            parentNode?.children.length ?? 0,
+            parentNode?.children[treePosition.nodeCoords.y]?.length ?? 0,
+        ) + 1;
+
+    let isValidTarget = false;
     let output: undefined | CalculateNextNodeOutput;
     let step = 1;
-    const startTime = Date.now();
-    while (!isEnabled || !output) {
+    while (!isValidTarget || !output) {
         output = innerCalculateNextNode(treePosition, direction, step, shouldSkipHoles);
-        isEnabled = !!output.nextNode && !output.nextNode.navEntry.navParams.disabled;
+        isValidTarget =
+            !!output.nextNode &&
+            !output.nextNode.navEntry.navParams.disabled &&
+            output.nextNode.navEntry !== sourceEntry;
         step++;
-        if (Date.now() - startTime > 1000) {
-            log.warning('Failed to find next non-disabled node.');
-            return output;
+        if (step > maxSteps) {
+            return {
+                nextNode: undefined,
+                requiresWrapping: output.requiresWrapping,
+                coords: output.coords,
+            };
         }
     }
     return output;
@@ -301,16 +322,18 @@ function innerCalculateNextNode(
 
     const nextRow = assertWrap.isDefined(parentNode.children[nextY]);
 
+    const verticalSourceX = getVerticalSourceX(treePosition);
+
     const closestVerticalNode = isVertical
         ? findNodeInRow({
               row: nextRow,
               shouldSkipHoles,
-              x: treePosition.nodeCoords.x,
+              x: verticalSourceX,
           })
         : undefined;
 
     const nextX = isVertical
-        ? (closestVerticalNode?.x ?? treePosition.nodeCoords.x)
+        ? (closestVerticalNode?.x ?? verticalSourceX)
         : wrapNumber(treePosition.nodeCoords.x + increment, {
               min: 0,
               max: currentRow.length - 1,
@@ -333,6 +356,20 @@ function innerCalculateNextNode(
             y: nextY,
         },
     };
+}
+
+/**
+ * The x slot a vertical navigation should originate from. For a multi-slot (wide) entry this is its
+ * center slot, so moving up or down lands on whatever sits above or below its middle rather than
+ * its leading edge.
+ */
+function getVerticalSourceX(treePosition: WalkResult): number {
+    const node = treePosition.node;
+    if (node.root || node.navEntry.navParams.x == undefined) {
+        return treePosition.nodeCoords.x;
+    }
+
+    return node.navEntry.navParams.x + Math.floor(((node.navEntry.navParams.width || 1) - 1) / 2);
 }
 
 function findNodeInRow({

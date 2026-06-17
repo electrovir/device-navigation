@@ -1,5 +1,5 @@
 import {check} from '@augment-vir/assert';
-import {getOrSet, type Overwrite} from '@augment-vir/common';
+import {createArray, getOrSet, type Overwrite} from '@augment-vir/common';
 import {type ElementTree} from '@augment-vir/web';
 import {extractNavEntry, type NavEntry} from '../directives/nav-entry.js';
 
@@ -126,11 +126,16 @@ function expandChildren(elementTreeNode: ElementTree): IntermediateNavTreeNode[]
             });
 
             row.withX.forEach(({x, node}) => {
-                if (row.noX[x]) {
-                    row.noX.splice(x, 0, node);
-                } else {
-                    row.noX[x] = node;
-                }
+                const width = node.navEntry?.navParams.width || 1;
+
+                /** Fill every x slot the entry spans so vertical nav into it works at any column. */
+                createArray(width, (offset) => x + offset).forEach((slot) => {
+                    if (row.noX[slot]) {
+                        row.noX.splice(slot, 0, node);
+                    } else {
+                        row.noX[slot] = node;
+                    }
+                });
             });
 
             return row.noX;

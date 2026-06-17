@@ -232,5 +232,56 @@ describe('buildNavTree', () => {
                 ],
             ],
         },
+        {
+            it: 'fills every x slot a wide entry spans',
+            input: (controller) => html`
+                <main
+                    ${nav(controller, {
+                        group: true,
+                    })}
+                >
+                    <button
+                        ${nav(controller, {
+                            x: 0,
+                            y: 0,
+                            width: 3,
+                        })}
+                    ></button>
+                    <button
+                        ${nav(controller, {
+                            x: 3,
+                            y: 0,
+                        })}
+                    ></button>
+                </main>
+            `,
+            expect: [
+                [
+                    {
+                        element: 'main',
+                        children: [
+                            [
+                                {
+                                    element: 'button',
+                                    children: [],
+                                },
+                                {
+                                    element: 'button',
+                                    children: [],
+                                },
+                                {
+                                    element: 'button',
+                                    children: [],
+                                },
+                                {
+                                    element: 'button',
+                                    children: [],
+                                },
+                            ],
+                        ],
+                    },
+                ],
+            ],
+        },
     ]);
 });

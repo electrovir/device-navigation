@@ -260,6 +260,171 @@ describe(NavController.name, () => {
         assert.strictEquals(zButton.getAttribute(navAttribute.name), NavValue.Focused);
     });
 
+    it('navigates out of a wide entry from its center slot', async () => {
+        const {fixture, navController} = await createMockNavController((navController) => {
+            return html`
+                <button
+                    class="one"
+                    ${nav(navController, {
+                        x: 0,
+                        y: 0,
+                    })}
+                >
+                    1
+                </button>
+                <button
+                    class="two"
+                    ${nav(navController, {
+                        x: 1,
+                        y: 0,
+                    })}
+                >
+                    2
+                </button>
+                <button
+                    class="three"
+                    ${nav(navController, {
+                        x: 2,
+                        y: 0,
+                    })}
+                >
+                    3
+                </button>
+                <button
+                    class="space"
+                    ${nav(navController, {
+                        x: 0,
+                        y: 1,
+                        width: 3,
+                    })}
+                >
+                    space
+                </button>
+            `;
+        });
+        const spaceButton = assertWrap.instanceOf(
+            fixture.querySelector('.space'),
+            HTMLButtonElement,
+        );
+        const twoButton = assertWrap.instanceOf(fixture.querySelector('.two'), HTMLButtonElement);
+
+        spaceButton.focus();
+        await waitUntilFocused(spaceButton);
+
+        navController.navigate({
+            allowWrapping: true,
+            direction: NavDirection.Up,
+        });
+
+        await waitUntilFocused(twoButton);
+        assert.strictEquals(twoButton.getAttribute(navAttribute.name), NavValue.Focused);
+    });
+
+    it('navigates into a wide entry from any slot it spans', async () => {
+        const {fixture, navController} = await createMockNavController((navController) => {
+            return html`
+                <button
+                    class="one"
+                    ${nav(navController, {
+                        x: 0,
+                        y: 0,
+                    })}
+                >
+                    1
+                </button>
+                <button
+                    class="two"
+                    ${nav(navController, {
+                        x: 1,
+                        y: 0,
+                    })}
+                >
+                    2
+                </button>
+                <button
+                    class="three"
+                    ${nav(navController, {
+                        x: 2,
+                        y: 0,
+                    })}
+                >
+                    3
+                </button>
+                <button
+                    class="space"
+                    ${nav(navController, {
+                        x: 0,
+                        y: 1,
+                        width: 3,
+                    })}
+                >
+                    space
+                </button>
+            `;
+        });
+        const threeButton = assertWrap.instanceOf(
+            fixture.querySelector('.three'),
+            HTMLButtonElement,
+        );
+        const spaceButton = assertWrap.instanceOf(
+            fixture.querySelector('.space'),
+            HTMLButtonElement,
+        );
+
+        threeButton.focus();
+        await waitUntilFocused(threeButton);
+
+        navController.navigate({
+            allowWrapping: true,
+            direction: NavDirection.Down,
+        });
+
+        await waitUntilFocused(spaceButton);
+        assert.strictEquals(spaceButton.getAttribute(navAttribute.name), NavValue.Focused);
+    });
+
+    it('steps over a wide entry as a single unit when navigating horizontally', async () => {
+        const {fixture, navController} = await createMockNavController((navController) => {
+            return html`
+                <button
+                    class="space"
+                    ${nav(navController, {
+                        x: 0,
+                        y: 0,
+                        width: 3,
+                    })}
+                >
+                    space
+                </button>
+                <button
+                    class="edge"
+                    ${nav(navController, {
+                        x: 3,
+                        y: 0,
+                    })}
+                >
+                    edge
+                </button>
+            `;
+        });
+        const spaceButton = assertWrap.instanceOf(
+            fixture.querySelector('.space'),
+            HTMLButtonElement,
+        );
+        const edgeButton = assertWrap.instanceOf(fixture.querySelector('.edge'), HTMLButtonElement);
+
+        spaceButton.focus();
+        await waitUntilFocused(spaceButton);
+
+        navController.navigate({
+            allowWrapping: false,
+            direction: NavDirection.Right,
+        });
+
+        await waitUntilFocused(edgeButton);
+        assert.strictEquals(edgeButton.getAttribute(navAttribute.name), NavValue.Focused);
+    });
+
     it('deactivates the currently active entry', async () => {
         const {fixture, navController} = await createMockNavController((navController) => {
             return html`
