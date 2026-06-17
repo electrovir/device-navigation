@@ -84,7 +84,19 @@ function expandChildren(elementTreeNode: ElementTree): IntermediateNavTreeNode[]
         if (node.navEntry?.navParams.group && !node.children.length) {
             return;
         } else if (!node.navEntry) {
-            node.children.forEach((row) => row.forEach((child) => pushNode(child)));
+            /**
+             * A wide entry occupies multiple slots in its already-expanded children, so dedupe
+             * repeated references to avoid pushing (and re-expanding) the same entry many times.
+             */
+            const pushed = new Set<IntermediateNavTreeNode>();
+            node.children.forEach((row) =>
+                row.forEach((child) => {
+                    if (!pushed.has(child)) {
+                        pushed.add(child);
+                        pushNode(child);
+                    }
+                }),
+            );
             return;
         }
 

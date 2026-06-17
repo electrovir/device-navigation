@@ -283,5 +283,58 @@ describe('buildNavTree', () => {
                 ],
             ],
         },
+        {
+            it: 'does not duplicate a wide entry nested under a plain wrapper',
+            input: (controller) => html`
+                <main
+                    ${nav(controller, {
+                        group: true,
+                    })}
+                >
+                    <div class="row">
+                        <button
+                            ${nav(controller, {
+                                x: 0,
+                                y: 0,
+                                width: 3,
+                            })}
+                        ></button>
+                        <button
+                            ${nav(controller, {
+                                x: 3,
+                                y: 0,
+                            })}
+                        ></button>
+                    </div>
+                </main>
+            `,
+            expect: [
+                [
+                    {
+                        element: 'main',
+                        children: [
+                            [
+                                {
+                                    element: 'button',
+                                    children: [],
+                                },
+                                {
+                                    element: 'button',
+                                    children: [],
+                                },
+                                {
+                                    element: 'button',
+                                    children: [],
+                                },
+                                {
+                                    element: 'button',
+                                    children: [],
+                                },
+                            ],
+                        ],
+                    },
+                ],
+            ],
+        },
     ]);
 });
