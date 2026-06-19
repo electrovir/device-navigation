@@ -89,9 +89,42 @@ export class NavController extends ListenTarget<AllNavControllerEvents> {
     protected getNavTree(): Readonly<NavTree> {
         if (this.needsUpdate || !this.cachedNavTree) {
             this.needsUpdate = false;
-            return this.buildNavTree();
+            const navTree = this.buildNavTree();
+            this.syncCurrentNavEntry(navTree);
+            return navTree;
         } else {
             return this.cachedNavTree;
+        }
+    }
+
+    /** Clears the current nav entry and disconnect listener when it matches the active entry. */
+    protected clearCurrentNavEntry(currentNavEntry: Readonly<CurrentNavEntry> | undefined) {
+        currentNavEntry?.removeDisconnectListener();
+        if (!currentNavEntry || this.currentNavEntry === currentNavEntry) {
+            this.currentNavEntry = undefined;
+        }
+    }
+
+    /** Updates the current nav entry's position after the nav tree changes. */
+    protected syncCurrentNavEntry(navTree: Readonly<NavTree>) {
+        const currentNavEntry = this.currentNavEntry;
+        if (!currentNavEntry) {
+            return;
+        }
+
+        try {
+            const position = findNavTreeNodeByNavEntry(navTree, currentNavEntry.entry);
+
+            if (currentNavEntry.entry.navParams.group || currentNavEntry.entry.navParams.disabled) {
+                this.clearCurrentNavEntry(currentNavEntry);
+            } else {
+                this.currentNavEntry = {
+                    ...currentNavEntry,
+                    position,
+                };
+            }
+        } catch {
+            this.clearCurrentNavEntry(currentNavEntry);
         }
     }
 
@@ -112,27 +145,15 @@ export class NavController extends ListenTarget<AllNavControllerEvents> {
      */
     public queueDefaultFocus(force = false) {
         if (this.options.alwaysRequireFocused && (force || !this.currentNavEntry)) {
+            this.needsUpdate = true;
             requestAnimationFrame(() => {
-                this.needsUpdate = true;
-
                 const currentNavEntry = this.currentNavEntry;
                 if (currentNavEntry) {
-                    try {
-                        findNavTreeNodeByNavEntry(this.getNavTree(), currentNavEntry.entry);
+                    this.getNavTree();
 
-                        if (
-                            currentNavEntry.entry.navParams.group ||
-                            currentNavEntry.entry.navParams.disabled
-                        ) {
-                            currentNavEntry.removeDisconnectListener();
-                            this.currentNavEntry = undefined;
-                        } else {
-                            currentNavEntry.entry.focus(true);
-                            return;
-                        }
-                    } catch {
-                        currentNavEntry.removeDisconnectListener();
-                        this.currentNavEntry = undefined;
+                    if (this.currentNavEntry) {
+                        currentNavEntry.entry.focus(true);
+                        return;
                     }
                 }
 
@@ -145,12 +166,14 @@ export class NavController extends ListenTarget<AllNavControllerEvents> {
 
     /** Add a new {@link NavEntry} to this controller. */
     public addNavEntry(navEntry: NavEntry) {
+        this.needsUpdate = true;
         this.navEntries.add(navEntry);
         this.queueDefaultFocus();
     }
 
     /** Remove a {@link NavEntry} from this controller. */
     public removeNavEntry(navEntry: NavEntry) {
+        this.needsUpdate = true;
         this.navEntries.delete(navEntry);
         this.queueDefaultFocus();
     }
@@ -204,6 +227,7 @@ export class NavController extends ListenTarget<AllNavControllerEvents> {
                 position,
                 removeDisconnectListener: listenToElementDisconnect(navEntry.element, () => {
                     if (this.currentNavEntry?.entry.element === navEntry.element) {
+                        this.needsUpdate = true;
                         this.currentNavEntry = undefined;
                         this.queueDefaultFocus();
                     }
@@ -392,11 +416,13 @@ export class NavController extends ListenTarget<AllNavControllerEvents> {
                 reason: 'NavController is locked.',
             };
         }
+        const navTree = this.getNavTree();
+
         if (this.currentNavEntry?.navAction === NavAction.Activate) {
             this.currentNavEntry.entry.focus(true);
         }
 
-        const result = exitOutOf(this.getNavTree(), this.currentNavEntry);
+        const result = exitOutOf(navTree, this.currentNavEntry);
         this.dispatch(
             new NavExitEvent({
                 detail: result,

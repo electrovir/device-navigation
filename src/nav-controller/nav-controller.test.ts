@@ -547,6 +547,45 @@ describe(NavController.name, () => {
         assert.strictEquals(backButton.getAttribute(navAttribute.name), NavValue.Focused);
     });
 
+    it('does not throw when exiting after the active entry is removed from the DOM', async () => {
+        const host = assertWrap.instanceOf(
+            await testWeb.render(html`
+                <${NavControllerTestElement.assign({
+                    showSettings: false,
+                })}></${NavControllerTestElement}>
+            `),
+            NavControllerTestElement,
+        );
+
+        const settingsButton = assertWrap.instanceOf(
+            host.shadowRoot.querySelector('.settings'),
+            HTMLButtonElement,
+        );
+        const navController = assertWrap.isDefined(extractNavEntry(settingsButton)).navController;
+
+        settingsButton.focus();
+        await waitUntilFocused(settingsButton);
+        assert.isTrue(navController.activate().success);
+
+        host.assignInputs({
+            showSettings: true,
+        });
+        await host.updateComplete;
+
+        const result = navController.exitOutOf();
+
+        assert.deepEquals(
+            {
+                success: result.success,
+                navAction: result.navAction,
+            },
+            {
+                success: false,
+                navAction: NavAction.Exit,
+            },
+        );
+    });
+
     it('preserves focus when the current entry is reused across renders', async () => {
         const host = assertWrap.instanceOf(
             await testWeb.render(html`
