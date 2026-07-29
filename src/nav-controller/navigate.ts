@@ -159,6 +159,7 @@ export function findDefaultChild(children: ReadonlyArray<ReadonlyArray<NavTreeNo
  *
  * @category Internal
  */
+// eslint-disable-next-line @virmator/prefer-params-object
 export function navigate(
     navTree: NavTree,
     currentlyFocused: CurrentNavEntry | undefined,
@@ -276,7 +277,12 @@ function calculateNextNode(
     let output: undefined | CalculateNextNodeOutput;
     let step = 1;
     while (!isValidTarget || !output) {
-        output = innerCalculateNextNode(treePosition, direction, step, shouldSkipHoles);
+        output = innerCalculateNextNode({
+            treePosition,
+            direction,
+            step,
+            shouldSkipHoles,
+        });
         isValidTarget =
             !!output.nextNode &&
             !output.nextNode.navEntry.navParams.disabled &&
@@ -293,13 +299,17 @@ function calculateNextNode(
     return output;
 }
 
-function innerCalculateNextNode(
-    treePosition: WalkResult,
-    direction: NavDirection,
-    /** Number of steps to take. Usually this should be just one. */
-    step: number,
-    shouldSkipHoles: boolean,
-): CalculateNextNodeOutput {
+function innerCalculateNextNode({
+    treePosition,
+    direction,
+    step,
+    shouldSkipHoles,
+}: Readonly<{
+    treePosition: WalkResult;
+    direction: NavDirection;
+    step: number;
+    shouldSkipHoles: boolean;
+}>): CalculateNextNodeOutput {
     const parentNode = treePosition.ancestorChain[treePosition.ancestorChain.length - 1]?.node;
     assert.isDefined(parentNode, 'missing parent');
     const currentRow = assertWrap.isDefined(parentNode.children[treePosition.nodeCoords.y]);
@@ -420,6 +430,7 @@ function findNodeInRow({
  *
  * @category Internal
  */
+// eslint-disable-next-line @virmator/prefer-params-object
 export function navigatePibling(
     currentlyFocused: Readonly<CurrentNavEntry>,
     direction: NavDirection,

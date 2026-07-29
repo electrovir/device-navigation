@@ -1,3 +1,4 @@
+/* eslint-disable @virmator/prefer-params-object */
 /**
  * Just a wrapper for `>`.
  *
