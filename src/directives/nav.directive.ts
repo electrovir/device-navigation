@@ -42,7 +42,12 @@ export function nav(
     params: Readonly<NavParams> = {},
 ): DirectiveResult {
     return modifyElement(
-        stringify(omitObjectKeys(params, ['listeners'])),
+        stringify(
+            omitObjectKeys(params, [
+                'autoFocus',
+                'listeners',
+            ]),
+        ),
         (element) => {
             navController.needsUpdate = true;
             const isNavigable: boolean =
@@ -53,8 +58,8 @@ export function nav(
 
             assert.instanceOf(element, HTMLElement);
 
-            const navEntry =
-                extractNavEntry(element) || new NavEntry(element, navController, params);
+            const existingNavEntry = extractNavEntry(element);
+            const navEntry = existingNavEntry || new NavEntry(element, navController, params);
 
             const allAttributes = {
                 [navAttribute.name]: isNavigable
@@ -69,6 +74,12 @@ export function nav(
                 navEntry.navController = navController;
             } else {
                 (element as AnyObject)[navEntryPropertyKey] = navEntry;
+            }
+
+            if (!existingNavEntry && params.autoFocus && isNavigable) {
+                window.requestAnimationFrame(() => {
+                    extractNavEntry(element)?.focus(true);
+                });
             }
 
             if (isNavigable) {

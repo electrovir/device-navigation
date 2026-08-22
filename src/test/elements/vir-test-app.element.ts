@@ -281,6 +281,7 @@ export const VirTestApp = defineElement()({
                             ${nav(state.navController, {
                                 x: 1,
                                 y: 0,
+                                autoFocus: true,
                             })}
                         >
                             Cell

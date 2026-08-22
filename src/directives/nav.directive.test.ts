@@ -1,8 +1,10 @@
 import {assert, assertWrap} from '@augment-vir/assert';
 import {describe, it, testWeb} from '@augment-vir/test';
+import {waitForAnimationFrame} from '@augment-vir/web';
 import {css, defineElement, html} from 'element-vir';
 import {NavController} from '../nav-controller/nav-controller.js';
-import {extractNavEntry, navAttribute, type NavListener} from './nav-entry.js';
+import {waitUntilFocused} from '../util/focus.js';
+import {extractNavEntry, navAttribute, NavValue, type NavListener} from './nav-entry.js';
 import {nav} from './nav.directive.js';
 
 const NavListenerTestElement = defineElement<{
@@ -25,6 +27,43 @@ const NavListenerTestElement = defineElement<{
                 })}
             >
                 Target
+            </button>
+        `;
+    },
+});
+
+const NavAutoFocusTestElement = defineElement<{
+    showButton: boolean;
+    targetX: number;
+}>()({
+    tagName: 'nav-auto-focus-test-element',
+    state({host}) {
+        return {
+            navController: new NavController(host),
+        };
+    },
+    render({inputs, state}) {
+        if (!inputs.showButton) {
+            return html``;
+        }
+
+        return html`
+            <button
+                class="target"
+                ${nav(state.navController, {
+                    autoFocus: true,
+                    x: inputs.targetX,
+                })}
+            >
+                Target
+            </button>
+            <button
+                class="other"
+                ${nav(state.navController, {
+                    x: 1,
+                })}
+            >
+                Other
             </button>
         `;
     },
@@ -60,6 +99,72 @@ describe(nav.name, () => {
 
         assert.strictEquals(navEntry.navParams.listeners.activate, secondActivateListener);
         assert.isFalse(navEntry.navController.needsUpdate);
+    });
+
+    it('focuses dynamically rendered auto-focus entries', async () => {
+        const host = assertWrap.instanceOf(
+            await testWeb.render(html`
+                <${NavAutoFocusTestElement.assign({
+                    showButton: false,
+                    targetX: 0,
+                })}></${NavAutoFocusTestElement}>
+            `),
+            NavAutoFocusTestElement,
+        );
+
+        host.assignInputs({
+            showButton: true,
+            targetX: 0,
+        });
+        await host.updateComplete;
+
+        const button = assertWrap.instanceOf(
+            host.shadowRoot.querySelector('.target'),
+            HTMLButtonElement,
+        );
+        await waitUntilFocused(button);
+
+        assert.strictEquals(button.getAttribute(navAttribute.name), NavValue.Focused);
+    });
+
+    it('does not refocus auto-focus entries after nav updates', async () => {
+        const host = assertWrap.instanceOf(
+            await testWeb.render(html`
+                <${NavAutoFocusTestElement.assign({
+                    showButton: false,
+                    targetX: 0,
+                })}></${NavAutoFocusTestElement}>
+            `),
+            NavAutoFocusTestElement,
+        );
+        host.assignInputs({
+            showButton: true,
+            targetX: 0,
+        });
+        await host.updateComplete;
+
+        const targetButton = assertWrap.instanceOf(
+            host.shadowRoot.querySelector('.target'),
+            HTMLButtonElement,
+        );
+        const otherButton = assertWrap.instanceOf(
+            host.shadowRoot.querySelector('.other'),
+            HTMLButtonElement,
+        );
+        const otherNavEntry = assertWrap.isDefined(extractNavEntry(otherButton));
+
+        await waitUntilFocused(targetButton);
+        otherNavEntry.focus(true);
+        await waitUntilFocused(otherButton);
+
+        host.assignInputs({
+            showButton: true,
+            targetX: 2,
+        });
+        await host.updateComplete;
+        await waitForAnimationFrame();
+
+        assert.strictEquals(otherButton.getAttribute(navAttribute.name), NavValue.Focused);
     });
 });
 

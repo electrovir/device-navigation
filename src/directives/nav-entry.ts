@@ -174,6 +174,9 @@ export type NavParams = PartialWithUndefined<{
     /** Disable this element's navigation. */
     disabled: boolean;
 
+    /** Focus this element when it is rendered. */
+    autoFocus: boolean;
+
     listeners: PartialWithUndefined<{
         /** Will be fired when this element is activated. */
         activate: NavListener;
