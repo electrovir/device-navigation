@@ -1,6 +1,6 @@
 {
     "name": "device-navigation",
-    "version": "4.8.2",
+    "version": "4.8.3",
     "description": "Navigate HTML elements in two dimensions with non-pointer devices.",
     "keywords": [
         "keyboard",
@@ -103,7 +103,7 @@
         "vite-tsconfig-paths": "^6.1.1"
     },
     "peerDependencies": {
-        "element-vir": ">=25"
+        "element-vir": "^26"
     },
     "engines": {
         "node": ">=22"
