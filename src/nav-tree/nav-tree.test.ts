@@ -40,28 +40,30 @@ describe('buildNavTree', () => {
     itCases(testTree, [
         {
             it: 'allows nested groups',
-            input: (controller) => html`
-                <section>
-                    <main
-                        ${nav(controller, {
-                            group: true,
-                        })}
-                    >
-                        <section
+            input: (controller) => {
+                return html`
+                    <section>
+                        <main
                             ${nav(controller, {
                                 group: true,
                             })}
                         >
-                            <div>
+                            <section
+                                ${nav(controller, {
+                                    group: true,
+                                })}
+                            >
+                                <div>
+                                    <div ${nav(controller)}></div>
+                                </div>
                                 <div ${nav(controller)}></div>
-                            </div>
-                            <div ${nav(controller)}></div>
-                            <div ${nav(controller)}></div>
-                            <div ${nav(controller)}></div>
-                        </section>
-                    </main>
-                </section>
-            `,
+                                <div ${nav(controller)}></div>
+                                <div ${nav(controller)}></div>
+                            </section>
+                        </main>
+                    </section>
+                `;
+            },
             expect: [
                 [
                     {
@@ -99,34 +101,36 @@ describe('buildNavTree', () => {
         },
         {
             it: 'allows out of order 1D navigation',
-            input: (controller) => html`
-                <section>
-                    <main
-                        ${nav(controller, {
-                            group: true,
-                        })}
-                    >
-                        <section
+            input: (controller) => {
+                return html`
+                    <section>
+                        <main
                             ${nav(controller, {
                                 group: true,
                             })}
                         >
                             <section
                                 ${nav(controller, {
-                                    x: 1,
+                                    group: true,
                                 })}
-                            ></section>
-                            <span
-                                ${nav(controller, {
-                                    x: 2,
-                                })}
-                            ></span>
-                            <div ${nav(controller)}></div>
-                            <div ${nav(controller)}></div>
-                        </section>
-                    </main>
-                </section>
-            `,
+                            >
+                                <section
+                                    ${nav(controller, {
+                                        x: 1,
+                                    })}
+                                ></section>
+                                <span
+                                    ${nav(controller, {
+                                        x: 2,
+                                    })}
+                                ></span>
+                                <div ${nav(controller)}></div>
+                                <div ${nav(controller)}></div>
+                            </section>
+                        </main>
+                    </section>
+                `;
+            },
             expect: [
                 [
                     {
@@ -164,35 +168,37 @@ describe('buildNavTree', () => {
         },
         {
             it: 'allows 2D navigation',
-            input: (controller) => html`
-                <section>
-                    <main
-                        ${nav(controller, {
-                            group: true,
-                        })}
-                    >
-                        <span
+            input: (controller) => {
+                return html`
+                    <section>
+                        <main
                             ${nav(controller, {
-                                x: 3,
-                                y: 1,
+                                group: true,
                             })}
-                        ></span>
-                        <div ${nav(controller)}></div>
-                        <div ${nav(controller)}></div>
-                        <div
-                            ${nav(controller, {
-                                x: 1,
-                                y: 3,
-                            })}
-                        ></div>
-                        <section
-                            ${nav(controller, {
-                                y: 3,
-                            })}
-                        ></section>
-                    </main>
-                </section>
-            `,
+                        >
+                            <span
+                                ${nav(controller, {
+                                    x: 3,
+                                    y: 1,
+                                })}
+                            ></span>
+                            <div ${nav(controller)}></div>
+                            <div ${nav(controller)}></div>
+                            <div
+                                ${nav(controller, {
+                                    x: 1,
+                                    y: 3,
+                                })}
+                            ></div>
+                            <section
+                                ${nav(controller, {
+                                    y: 3,
+                                })}
+                            ></section>
+                        </main>
+                    </section>
+                `;
+            },
             expect: [
                 [
                     {
@@ -234,27 +240,29 @@ describe('buildNavTree', () => {
         },
         {
             it: 'fills every x slot a wide entry spans',
-            input: (controller) => html`
-                <main
-                    ${nav(controller, {
-                        group: true,
-                    })}
-                >
-                    <button
+            input: (controller) => {
+                return html`
+                    <main
                         ${nav(controller, {
-                            x: 0,
-                            y: 0,
-                            width: 3,
+                            group: true,
                         })}
-                    ></button>
-                    <button
-                        ${nav(controller, {
-                            x: 3,
-                            y: 0,
-                        })}
-                    ></button>
-                </main>
-            `,
+                    >
+                        <button
+                            ${nav(controller, {
+                                x: 0,
+                                y: 0,
+                                width: 3,
+                            })}
+                        ></button>
+                        <button
+                            ${nav(controller, {
+                                x: 3,
+                                y: 0,
+                            })}
+                        ></button>
+                    </main>
+                `;
+            },
             expect: [
                 [
                     {
@@ -285,29 +293,31 @@ describe('buildNavTree', () => {
         },
         {
             it: 'does not duplicate a wide entry nested under a plain wrapper',
-            input: (controller) => html`
-                <main
-                    ${nav(controller, {
-                        group: true,
-                    })}
-                >
-                    <div class="row">
-                        <button
-                            ${nav(controller, {
-                                x: 0,
-                                y: 0,
-                                width: 3,
-                            })}
-                        ></button>
-                        <button
-                            ${nav(controller, {
-                                x: 3,
-                                y: 0,
-                            })}
-                        ></button>
-                    </div>
-                </main>
-            `,
+            input: (controller) => {
+                return html`
+                    <main
+                        ${nav(controller, {
+                            group: true,
+                        })}
+                    >
+                        <div class="row">
+                            <button
+                                ${nav(controller, {
+                                    x: 0,
+                                    y: 0,
+                                    width: 3,
+                                })}
+                            ></button>
+                            <button
+                                ${nav(controller, {
+                                    x: 3,
+                                    y: 0,
+                                })}
+                            ></button>
+                        </div>
+                    </main>
+                `;
+            },
             expect: [
                 [
                     {

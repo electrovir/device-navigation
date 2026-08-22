@@ -89,14 +89,14 @@ function expandChildren(elementTreeNode: ElementTree): IntermediateNavTreeNode[]
              * repeated references to avoid pushing (and re-expanding) the same entry many times.
              */
             const pushed = new Set<IntermediateNavTreeNode>();
-            node.children.forEach((row) =>
-                row.forEach((child) => {
+            node.children.forEach((row) => {
+                return row.forEach((child) => {
                     if (!pushed.has(child)) {
                         pushed.add(child);
                         pushNode(child);
                     }
-                }),
-            );
+                });
+            });
             return;
         }
 
