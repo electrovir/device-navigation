@@ -34,6 +34,46 @@ const NavControllerTestElement = defineElement<{
 });
 
 describe(NavController.name, () => {
+    it('blocks perpendicular navigation only when requested', async () => {
+        const {fixture, navController} = await createMockNavController((navController) => {
+            return html`
+                <button class="one" ${nav(navController)}>1</button>
+                <button class="two" ${nav(navController)}>2</button>
+            `;
+        });
+        const oneButton = assertWrap.instanceOf(fixture.querySelector('.one'), HTMLButtonElement);
+        const twoButton = assertWrap.instanceOf(fixture.querySelector('.two'), HTMLButtonElement);
+
+        oneButton.focus();
+        await waitUntilFocused(oneButton);
+
+        assert.isTrue(
+            navController.navigate({
+                allowWrapping: false,
+                direction: NavDirection.Down,
+            }).success,
+        );
+        await waitUntilFocused(twoButton);
+
+        twoButton.focus();
+        await waitUntilFocused(twoButton);
+
+        assert.deepEquals(
+            navController.navigate({
+                allowWrapping: false,
+                blockPerpendicularNavigation: true,
+                direction: NavDirection.Down,
+            }),
+            {
+                success: false,
+                direction: NavDirection.Down,
+                navAction: NavAction.Navigate,
+                reason: 'failed to find node to focus',
+            },
+        );
+        await waitUntilFocused(twoButton);
+    });
+
     it('moves vertically to a matching explicit x slot', async () => {
         const {fixture, navController} = await createMockNavController((navController) => {
             return html`

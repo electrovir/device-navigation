@@ -163,20 +163,25 @@ export function findDefaultChild(children: ReadonlyArray<ReadonlyArray<NavTreeNo
  *
  * @category Internal
  */
-// eslint-disable-next-line @virmator/prefer-params-object
-export function navigate(
-    navTree: NavTree,
-    currentlyFocused: CurrentNavEntry | undefined,
-    /**
-     * The direction to navigate within the tree. Note that 1 dimensional navigation treads up and
-     * left as the same, down and right as the same.
-     */
-    direction: NavDirection,
+export function navigate({
+    navTree,
+    currentlyFocused,
+    direction,
+    allowWrapping,
+    shouldSkipHoles,
+    blockPerpendicularNavigation,
+}: Readonly<{
+    navTree: NavTree;
+    currentlyFocused: CurrentNavEntry | undefined;
+    /** The direction to navigate within the tree. */
+    direction: NavDirection;
     /** Set to true to allow navigation to wrap. */
-    allowWrapping: boolean,
+    allowWrapping: boolean;
     /** Set to true to skip vertical rows when the target x slot is empty. */
-    shouldSkipHoles: boolean,
-): NavigationResult<NavAction.Navigate> {
+    shouldSkipHoles: boolean;
+    /** Set to true to block perpendicular navigation in one-dimensional nav trees. */
+    blockPerpendicularNavigation: boolean;
+}>): NavigationResult<NavAction.Navigate> {
     /** If there is no currently focused nav node, try to focus the first node in the tree. */
     if (!currentlyFocused) {
         const defaulted = findDefaultChild(navTree.children);
@@ -202,11 +207,12 @@ export function navigate(
         }
     }
 
-    const {nextNode, requiresWrapping, coords} = calculateNextNode(
-        currentlyFocused.position,
+    const {nextNode, requiresWrapping, coords} = calculateNextNode({
+        treePosition: currentlyFocused.position,
         direction,
         shouldSkipHoles,
-    );
+        blockPerpendicularNavigation,
+    });
 
     const isWrappingValid = allowWrapping ? true : !requiresWrapping;
 
@@ -256,11 +262,17 @@ type CalculateNextNodeOutput = {
     coords: Coords;
 };
 
-function calculateNextNode(
-    treePosition: WalkResult,
-    direction: NavDirection,
-    shouldSkipHoles: boolean,
-): CalculateNextNodeOutput {
+function calculateNextNode({
+    treePosition,
+    direction,
+    shouldSkipHoles,
+    blockPerpendicularNavigation,
+}: Readonly<{
+    treePosition: WalkResult;
+    direction: NavDirection;
+    shouldSkipHoles: boolean;
+    blockPerpendicularNavigation: boolean;
+}>): CalculateNextNodeOutput {
     const parentNode = treePosition.ancestorChain[treePosition.ancestorChain.length - 1]?.node;
     /**
      * The entry being navigated away from. A multi-slot (wide) entry occupies several x slots, so
@@ -286,6 +298,7 @@ function calculateNextNode(
             direction,
             step,
             shouldSkipHoles,
+            blockPerpendicularNavigation,
         });
         isValidTarget =
             !!output.nextNode &&
@@ -308,19 +321,21 @@ function innerCalculateNextNode({
     direction,
     step,
     shouldSkipHoles,
+    blockPerpendicularNavigation,
 }: Readonly<{
     treePosition: WalkResult;
     direction: NavDirection;
     step: number;
     shouldSkipHoles: boolean;
+    blockPerpendicularNavigation: boolean;
 }>): CalculateNextNodeOutput {
     const parentNode = treePosition.ancestorChain[treePosition.ancestorChain.length - 1]?.node;
     assert.isDefined(parentNode, 'missing parent');
     const currentRow = assertWrap.isDefined(parentNode.children[treePosition.nodeCoords.y]);
 
+    const isVerticalDirection = direction === NavDirection.Down || direction === NavDirection.Up;
     const isVertical =
-        parentNode.children.length > 1 &&
-        (direction === NavDirection.Down || direction === NavDirection.Up);
+        isVerticalDirection && (blockPerpendicularNavigation || parentNode.children.length > 1);
 
     const increment: number =
         direction === NavDirection.Down || direction === NavDirection.Right ? step : -1 * step;
@@ -434,13 +449,19 @@ function findNodeInRow({
  *
  * @category Internal
  */
-// eslint-disable-next-line @virmator/prefer-params-object
-export function navigatePibling(
-    currentlyFocused: Readonly<CurrentNavEntry>,
-    direction: NavDirection,
-    allowWrapping: boolean,
-    shouldSkipHoles: boolean,
-): NavigationResult<NavAction.Pibling> {
+export function navigatePibling({
+    currentlyFocused,
+    direction,
+    allowWrapping,
+    shouldSkipHoles,
+    blockPerpendicularNavigation,
+}: Readonly<{
+    currentlyFocused: Readonly<CurrentNavEntry>;
+    direction: NavDirection;
+    allowWrapping: boolean;
+    shouldSkipHoles: boolean;
+    blockPerpendicularNavigation: boolean;
+}>): NavigationResult<NavAction.Pibling> {
     const parent =
         currentlyFocused.position.ancestorChain[currentlyFocused.position.ancestorChain.length - 1];
 
@@ -453,11 +474,12 @@ export function navigatePibling(
         };
     }
 
-    const {nextNode, requiresWrapping, coords} = calculateNextNode(
-        parent,
+    const {nextNode, requiresWrapping, coords} = calculateNextNode({
+        treePosition: parent,
         direction,
         shouldSkipHoles,
-    );
+        blockPerpendicularNavigation,
+    });
 
     const nodeToFocus = nextNode?.navEntry.navParams.group
         ? findDefaultChild(nextNode.children)

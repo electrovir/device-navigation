@@ -275,6 +275,7 @@ export class NavController extends ListenTarget<AllNavControllerEvents> {
     public navigate({
         direction,
         allowWrapping,
+        blockPerpendicularNavigation,
         shouldSkipHoles,
     }: Readonly<NavigationInputs>): NavigationResult<NavAction.Navigate> {
         if (this.locked) {
@@ -285,13 +286,14 @@ export class NavController extends ListenTarget<AllNavControllerEvents> {
                 reason: 'NavController is locked.',
             };
         }
-        const result = navigate(
-            this.getNavTree(),
-            this.currentNavEntry,
+        const result = navigate({
+            navTree: this.getNavTree(),
+            currentlyFocused: this.currentNavEntry,
             direction,
             allowWrapping,
-            !!shouldSkipHoles,
-        );
+            shouldSkipHoles: !!shouldSkipHoles,
+            blockPerpendicularNavigation: !!blockPerpendicularNavigation,
+        });
         this.dispatch(
             new NavigateEvent({
                 detail: result,
@@ -434,6 +436,7 @@ export class NavController extends ListenTarget<AllNavControllerEvents> {
     public navigatePibling({
         allowWrapping,
         direction,
+        blockPerpendicularNavigation,
         shouldSkipHoles,
     }: Readonly<NavigationInputs>): NavigationResult<NavAction.Pibling> {
         if (this.locked) {
@@ -447,8 +450,21 @@ export class NavController extends ListenTarget<AllNavControllerEvents> {
         const navTree = this.getNavTree();
 
         const rawResult = this.currentNavEntry
-            ? navigatePibling(this.currentNavEntry, direction, allowWrapping, !!shouldSkipHoles)
-            : navigate(navTree, undefined, direction, allowWrapping, !!shouldSkipHoles);
+            ? navigatePibling({
+                  currentlyFocused: this.currentNavEntry,
+                  direction,
+                  allowWrapping,
+                  shouldSkipHoles: !!shouldSkipHoles,
+                  blockPerpendicularNavigation: !!blockPerpendicularNavigation,
+              })
+            : navigate({
+                  navTree,
+                  currentlyFocused: undefined,
+                  direction,
+                  allowWrapping,
+                  shouldSkipHoles: !!shouldSkipHoles,
+                  blockPerpendicularNavigation: !!blockPerpendicularNavigation,
+              });
 
         const result: NavigationResult<NavAction.Pibling> = {
             ...rawResult,
