@@ -1,9 +1,9 @@
-import {type PartialWithUndefined} from '@augment-vir/common';
+import {createArray, type PartialWithUndefined} from '@augment-vir/common';
 import {getNestedChildrenTree, listenToElementDisconnect} from '@augment-vir/web';
 import {ListenTarget} from 'typed-event-target';
 import {type CurrentNavEntry, type NavEntry} from '../directives/nav-entry.js';
 import {mapTree, type NavTree} from '../nav-tree/nav-tree.js';
-import {findNavTreeNodeByNavEntry} from '../nav-tree/walk-nav-tree.js';
+import {findNavTreeNodeByNavEntry, type WalkResult} from '../nav-tree/walk-nav-tree.js';
 import {enterInto} from './enter-into.js';
 import {exitOutOf} from './exit-out-of.js';
 import {
@@ -21,6 +21,7 @@ import {
     navigate,
     navigatePibling,
     type NavigationInputs,
+    type NavigationPositionHistory,
     type NavigationResult,
 } from './navigate.js';
 
@@ -84,6 +85,25 @@ export class NavController extends ListenTarget<AllNavControllerEvents> {
     public currentNavEntry: Readonly<CurrentNavEntry> | undefined;
 
     protected cachedNavTree: Readonly<NavTree> | undefined;
+    protected readonly navigationPositionHistory: NavigationPositionHistory = {
+        lastXByRow: new Map(),
+        lastYByColumn: new Map(),
+    };
+
+    /**
+     * Invalidates remembered hole-navigation positions for the row and columns that the given
+     * position occupies.
+     */
+    protected recordNavigationPosition(position: Readonly<WalkResult>) {
+        const navEntry = position.node.root ? undefined : position.node.navEntry;
+        const entryX = navEntry?.navParams.x ?? position.nodeCoords.x;
+        const entryWidth = navEntry?.navParams.width || 1;
+
+        this.navigationPositionHistory.lastXByRow.delete(position.nodeCoords.y);
+        createArray(entryWidth, (offset) => entryX + offset).forEach((entryColumn) => {
+            this.navigationPositionHistory.lastYByColumn.delete(entryColumn);
+        });
+    }
 
     /** Gets or builds the current nav tree. */
     protected getNavTree(): Readonly<NavTree> {
@@ -122,6 +142,12 @@ export class NavController extends ListenTarget<AllNavControllerEvents> {
                     ...currentNavEntry,
                     position,
                 };
+                if (
+                    currentNavEntry.position.nodeCoords.x !== position.nodeCoords.x ||
+                    currentNavEntry.position.nodeCoords.y !== position.nodeCoords.y
+                ) {
+                    this.recordNavigationPosition(position);
+                }
             }
         } catch {
             this.clearCurrentNavEntry(currentNavEntry);
@@ -233,6 +259,7 @@ export class NavController extends ListenTarget<AllNavControllerEvents> {
                     }
                 }),
             };
+            this.recordNavigationPosition(position);
         } else if (
             this.currentNavEntry?.entry === navEntry &&
             this.currentNavEntry.navAction === navAction &&
@@ -293,6 +320,7 @@ export class NavController extends ListenTarget<AllNavControllerEvents> {
             allowWrapping,
             shouldSkipHoles: !!shouldSkipHoles,
             blockPerpendicularNavigation: !!blockPerpendicularNavigation,
+            navigationPositionHistory: this.navigationPositionHistory,
         });
         this.dispatch(
             new NavigateEvent({
@@ -464,6 +492,7 @@ export class NavController extends ListenTarget<AllNavControllerEvents> {
                   allowWrapping,
                   shouldSkipHoles: !!shouldSkipHoles,
                   blockPerpendicularNavigation: !!blockPerpendicularNavigation,
+                  navigationPositionHistory: this.navigationPositionHistory,
               });
 
         const result: NavigationResult<NavAction.Pibling> = {

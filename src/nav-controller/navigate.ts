@@ -1,6 +1,6 @@
 import {assert, assertWrap} from '@augment-vir/assert';
 import {type Coords, wrapNumber} from '@augment-vir/common';
-import {type CurrentNavEntry} from '../directives/nav-entry.js';
+import {type CurrentNavEntry, type NavEntry} from '../directives/nav-entry.js';
 import {type NavTree, type NavTreeNode} from '../nav-tree/nav-tree.js';
 import {type WalkResult} from '../nav-tree/walk-nav-tree.js';
 import {greaterThan, lessThan} from '../util/comparisons.js';
@@ -24,14 +24,28 @@ export type NavigationInputs = {
      */
     blockPerpendicularNavigation?: boolean | undefined;
     /**
-     * Skip vertical target rows when the current x slot is empty.
+     * Skip target rows or columns when the current position is empty.
      *
-     * When this is false, vertical navigation stays on the adjacent target row by selecting the
-     * nearest lower x slot, then the nearest higher x slot if no lower slot exists.
+     * When this is false, navigation selects the nearest enabled item in the target row or column.
      *
      * @default false
      */
     shouldSkipHoles?: boolean | undefined;
+};
+
+/** @category Internal */
+export type NavigationPositionHistory = {
+    lastXByRow: Map<number, NavigationHistoryPosition>;
+    lastYByColumn: Map<number, NavigationHistoryPosition>;
+};
+
+/** @category Internal */
+export type NavigationHistoryPosition = {
+    entry: Readonly<NavEntry>;
+    /** The coordinate, along the navigation axis, that this position was navigated away from. */
+    origin: number;
+    /** The perpendicular coordinate to return to when navigating back to the origin. */
+    cursor: number;
 };
 
 /**
@@ -170,6 +184,7 @@ export function navigate({
     allowWrapping,
     shouldSkipHoles,
     blockPerpendicularNavigation,
+    navigationPositionHistory,
 }: Readonly<{
     navTree: NavTree;
     currentlyFocused: CurrentNavEntry | undefined;
@@ -177,10 +192,11 @@ export function navigate({
     direction: NavDirection;
     /** Set to true to allow navigation to wrap. */
     allowWrapping: boolean;
-    /** Set to true to skip vertical rows when the target x slot is empty. */
+    /** Set to true to skip target rows or columns when the current position is empty. */
     shouldSkipHoles: boolean;
     /** Set to true to block perpendicular navigation in one-dimensional nav trees. */
     blockPerpendicularNavigation: boolean;
+    navigationPositionHistory: Readonly<NavigationPositionHistory>;
 }>): NavigationResult<NavAction.Navigate> {
     /** If there is no currently focused nav node, try to focus the first node in the tree. */
     if (!currentlyFocused) {
@@ -207,17 +223,26 @@ export function navigate({
         }
     }
 
-    const {nextNode, requiresWrapping, coords} = calculateNextNode({
+    const {nextNode, requiresWrapping, coords, cursorCoords, isVertical} = calculateNextNode({
         treePosition: currentlyFocused.position,
         direction,
         shouldSkipHoles,
         blockPerpendicularNavigation,
+        navigationPositionHistory,
     });
 
     const isWrappingValid = allowWrapping ? true : !requiresWrapping;
 
     if (nextNode && isWrappingValid) {
         focusElement(nextNode.element);
+        recordHoleNavigation({
+            navigationPositionHistory,
+            coords,
+            cursorCoords,
+            isVertical,
+            sourcePosition: currentlyFocused.position,
+            targetNode: nextNode,
+        });
         return {
             success: true,
             defaulted: false,
@@ -260,6 +285,8 @@ type CalculateNextNodeOutput = {
     nextNode: NavTreeNode | undefined;
     requiresWrapping: boolean;
     coords: Coords;
+    cursorCoords: Coords;
+    isVertical: boolean;
 };
 
 function calculateNextNode({
@@ -267,11 +294,13 @@ function calculateNextNode({
     direction,
     shouldSkipHoles,
     blockPerpendicularNavigation,
+    navigationPositionHistory,
 }: Readonly<{
     treePosition: WalkResult;
     direction: NavDirection;
     shouldSkipHoles: boolean;
     blockPerpendicularNavigation: boolean;
+    navigationPositionHistory?: Readonly<NavigationPositionHistory> | undefined;
 }>): CalculateNextNodeOutput {
     const parentNode = treePosition.ancestorChain[treePosition.ancestorChain.length - 1]?.node;
     /**
@@ -286,7 +315,7 @@ function calculateNextNode({
     const maxSteps =
         Math.max(
             parentNode?.children.length ?? 0,
-            parentNode?.children[treePosition.nodeCoords.y]?.length ?? 0,
+            getMaximumRowLength(parentNode?.children ?? []),
         ) + 1;
 
     let isValidTarget = false;
@@ -299,6 +328,7 @@ function calculateNextNode({
             step,
             shouldSkipHoles,
             blockPerpendicularNavigation,
+            navigationPositionHistory,
         });
         isValidTarget =
             !!output.nextNode &&
@@ -310,6 +340,8 @@ function calculateNextNode({
                 nextNode: undefined,
                 requiresWrapping: output.requiresWrapping,
                 coords: output.coords,
+                cursorCoords: output.cursorCoords,
+                isVertical: output.isVertical,
             };
         }
     }
@@ -322,16 +354,17 @@ function innerCalculateNextNode({
     step,
     shouldSkipHoles,
     blockPerpendicularNavigation,
+    navigationPositionHistory,
 }: Readonly<{
     treePosition: WalkResult;
     direction: NavDirection;
     step: number;
     shouldSkipHoles: boolean;
     blockPerpendicularNavigation: boolean;
+    navigationPositionHistory?: Readonly<NavigationPositionHistory> | undefined;
 }>): CalculateNextNodeOutput {
     const parentNode = treePosition.ancestorChain[treePosition.ancestorChain.length - 1]?.node;
     assert.isDefined(parentNode, 'missing parent');
-    const currentRow = assertWrap.isDefined(parentNode.children[treePosition.nodeCoords.y]);
 
     const isVerticalDirection = direction === NavDirection.Down || direction === NavDirection.Up;
     const isVertical =
@@ -341,50 +374,126 @@ function innerCalculateNextNode({
         direction === NavDirection.Down || direction === NavDirection.Right ? step : -1 * step;
     const wrapComparison = increment < 0 ? greaterThan : lessThan;
 
-    const nextY = isVertical
-        ? wrapNumber(treePosition.nodeCoords.y + increment, {
-              min: 0,
-              max: parentNode.children.length - 1,
-              takeOverflow: true,
-          })
-        : treePosition.nodeCoords.y;
+    const verticalTargetY = wrapNumber(treePosition.nodeCoords.y + increment, {
+        min: 0,
+        max: parentNode.children.length - 1,
+        takeOverflow: true,
+    });
+    const horizontalTargetX = wrapNumber(treePosition.nodeCoords.x + increment, {
+        min: 0,
+        max: getMaximumRowLength(parentNode.children) - 1,
+        takeOverflow: true,
+    });
+    const sourceEntry = treePosition.node.root ? undefined : treePosition.node.navEntry;
+    const verticalSourceX =
+        getRememberedCursor({
+            history: navigationPositionHistory?.lastXByRow,
+            key: treePosition.nodeCoords.y,
+            origin: verticalTargetY,
+            sourceEntry,
+        }) ?? getVerticalSourceX(treePosition);
+    const horizontalSourceY =
+        getRememberedCursor({
+            history: navigationPositionHistory?.lastYByColumn,
+            key: treePosition.nodeCoords.x,
+            origin: horizontalTargetX,
+            sourceEntry,
+        }) ?? treePosition.nodeCoords.y;
 
-    const nextRow = assertWrap.isDefined(parentNode.children[nextY]);
-
-    const verticalSourceX = getVerticalSourceX(treePosition);
-
-    const closestVerticalNode = isVertical
-        ? findNodeInRow({
-              row: nextRow,
+    const targetY = isVertical ? verticalTargetY : horizontalSourceY;
+    const targetX = isVertical ? verticalSourceX : horizontalTargetX;
+    const target = isVertical
+        ? findNearestNode({
+              nodes: assertWrap.isDefined(parentNode.children[targetY]),
               shouldSkipHoles,
-              x: verticalSourceX,
+              index: targetX,
           })
-        : undefined;
-
-    const nextX = isVertical
-        ? (closestVerticalNode?.x ?? verticalSourceX)
-        : wrapNumber(treePosition.nodeCoords.x + increment, {
-              min: 0,
-              max: currentRow.length - 1,
-              takeOverflow: true,
+        : findNearestNode({
+              nodes: parentNode.children.map((row) => row[targetX]),
+              shouldSkipHoles,
+              index: targetY,
           });
 
-    const nextNode: NavTreeNode | undefined = isVertical
-        ? closestVerticalNode?.node
-        : parentNode.children[nextY]?.[nextX];
+    const nextX = isVertical ? (target?.index ?? targetX) : targetX;
+    const nextY = isVertical ? targetY : (target?.index ?? targetY);
 
     const requiresWrapping = isVertical
-        ? wrapComparison(nextY, treePosition.nodeCoords.y)
-        : wrapComparison(nextX, treePosition.nodeCoords.x);
+        ? wrapComparison(targetY, treePosition.nodeCoords.y)
+        : wrapComparison(targetX, treePosition.nodeCoords.x);
 
     return {
-        nextNode,
+        nextNode: target?.node,
         requiresWrapping,
         coords: {
             x: nextX,
             y: nextY,
         },
+        cursorCoords: {
+            x: isVertical ? verticalSourceX : targetX,
+            y: isVertical ? targetY : horizontalSourceY,
+        },
+        isVertical,
     };
+}
+
+function getMaximumRowLength(rows: ReadonlyArray<ReadonlyArray<unknown>>): number {
+    return rows.reduce((maximumLength, row) => {
+        return Math.max(maximumLength, row.length);
+    }, 0);
+}
+
+/**
+ * The perpendicular coordinate that a previous hole navigation left behind, so that navigating back
+ * to where it came from returns to the same slot instead of the hole's nearest neighbor.
+ */
+function getRememberedCursor({
+    history,
+    key,
+    origin,
+    sourceEntry,
+}: Readonly<{
+    history: ReadonlyMap<number, NavigationHistoryPosition> | undefined;
+    key: number;
+    origin: number;
+    sourceEntry: Readonly<NavEntry> | undefined;
+}>): number | undefined {
+    const position = history?.get(key);
+
+    if (position && position.entry === sourceEntry && position.origin === origin) {
+        return position.cursor;
+    }
+
+    return undefined;
+}
+
+function recordHoleNavigation({
+    navigationPositionHistory,
+    coords,
+    cursorCoords,
+    isVertical,
+    sourcePosition,
+    targetNode,
+}: Readonly<{
+    navigationPositionHistory: Readonly<NavigationPositionHistory>;
+    coords: Coords;
+    cursorCoords: Coords;
+    isVertical: boolean;
+    sourcePosition: WalkResult;
+    targetNode: NavTreeNode;
+}>) {
+    if (isVertical && coords.x !== cursorCoords.x) {
+        navigationPositionHistory.lastXByRow.set(coords.y, {
+            entry: targetNode.navEntry,
+            origin: sourcePosition.nodeCoords.y,
+            cursor: cursorCoords.x,
+        });
+    } else if (!isVertical && coords.y !== cursorCoords.y) {
+        navigationPositionHistory.lastYByColumn.set(coords.x, {
+            entry: targetNode.navEntry,
+            origin: sourcePosition.nodeCoords.x,
+            cursor: cursorCoords.y,
+        });
+    }
 }
 
 /**
@@ -401,47 +510,44 @@ function getVerticalSourceX(treePosition: WalkResult): number {
     return node.navEntry.navParams.x + Math.floor(((node.navEntry.navParams.width || 1) - 1) / 2);
 }
 
-function findNodeInRow({
-    row,
+/**
+ * Finds the node at the given index within a single row or column. When that slot is a hole and
+ * holes are not skipped, the nearest enabled node is used instead, preferring the lower index.
+ */
+function findNearestNode({
+    nodes,
     shouldSkipHoles,
-    x,
+    index,
 }: Readonly<{
-    row: ReadonlyArray<NavTreeNode | undefined>;
+    nodes: ReadonlyArray<NavTreeNode | undefined>;
     shouldSkipHoles: boolean;
-    x: number;
-}>): {node: NavTreeNode; x: number} | undefined {
-    const exactNode = row[x];
+    index: number;
+}>): {node: NavTreeNode; index: number} | undefined {
+    const exactNode = nodes[index];
     if (exactNode && (shouldSkipHoles || !exactNode.navEntry.navParams.disabled)) {
         return {
             node: exactNode,
-            x,
+            index,
         };
     } else if (shouldSkipHoles) {
         return undefined;
     }
 
-    let lower: {node: NavTreeNode; x: number} | undefined;
-    let higher: {node: NavTreeNode; x: number} | undefined;
-
-    row.forEach((node, index) => {
-        if (!node || node.navEntry.navParams.disabled) {
-            return;
-        }
-
-        if (index < x && (!lower || index > lower.x)) {
-            lower = {
-                node,
-                x: index,
-            };
-        } else if (index > x && (!higher || index < higher.x)) {
-            higher = {
-                node,
-                x: index,
-            };
-        }
+    const enabledNodes = nodes.flatMap((node, nodeIndex) => {
+        return node && !node.navEntry.navParams.disabled
+            ? [
+                  {
+                      node,
+                      index: nodeIndex,
+                  },
+              ]
+            : [];
     });
 
-    return lower || higher;
+    return (
+        enabledNodes.findLast((entry) => entry.index < index) ??
+        enabledNodes.find((entry) => entry.index > index)
+    );
 }
 
 /**

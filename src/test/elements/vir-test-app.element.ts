@@ -37,7 +37,15 @@ export const VirTestApp = defineElement()({
             flex-grow: 1;
         }
 
-        .lock-button {
+        .sparse-row {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 8px;
+        }
+
+        .nav-buttons {
+            display: flex;
+            gap: 8px;
             align-self: flex-start;
         }
 
@@ -46,16 +54,23 @@ export const VirTestApp = defineElement()({
             gap: 8px;
             flex-direction: column;
             flex-grow: 1;
-            padding: 16px 0;
-        }
+            padding: 16px;
 
-        section:first-of-type {
-            padding-right: 16px;
-        }
+            & > p {
+                margin: 0;
+            }
 
-        section + section {
-            padding-left: 16px;
-            border-left: 1px solid #aaa;
+            &:first-of-type {
+                padding-left: 0;
+            }
+
+            &:last-of-type {
+                padding-right: 0;
+            }
+
+            & + & {
+                border-left: 1px solid #aaa;
+            }
         }
 
         .cell {
@@ -111,6 +126,10 @@ export const VirTestApp = defineElement()({
     state({host}) {
         const navController = new NavController(host);
 
+        function isWrappingAllowed() {
+            return host.hasAttribute('data-allow-wrapping');
+        }
+
         function windowListener(event: KeyboardEvent) {
             const keyCode = event.code;
             if (keyCode === 'ArrowDown') {
@@ -118,8 +137,7 @@ export const VirTestApp = defineElement()({
                 console.info(
                     navController.navigate({
                         direction: NavDirection.Down,
-                        allowWrapping: false,
-                        shouldSkipHoles: true,
+                        allowWrapping: isWrappingAllowed(),
                     }),
                 );
             } else if (keyCode === 'ArrowUp') {
@@ -127,8 +145,7 @@ export const VirTestApp = defineElement()({
                 console.info(
                     navController.navigate({
                         direction: NavDirection.Up,
-                        allowWrapping: false,
-                        shouldSkipHoles: true,
+                        allowWrapping: isWrappingAllowed(),
                     }),
                 );
             } else if (keyCode === 'ArrowLeft') {
@@ -136,8 +153,7 @@ export const VirTestApp = defineElement()({
                 console.info(
                     navController.navigate({
                         direction: NavDirection.Left,
-                        allowWrapping: false,
-                        shouldSkipHoles: true,
+                        allowWrapping: isWrappingAllowed(),
                     }),
                 );
             } else if (keyCode === 'ArrowRight') {
@@ -145,24 +161,21 @@ export const VirTestApp = defineElement()({
                 console.info(
                     navController.navigate({
                         direction: NavDirection.Right,
-                        allowWrapping: false,
-                        shouldSkipHoles: true,
+                        allowWrapping: isWrappingAllowed(),
                     }),
                 );
             } else if (keyCode === 'BracketRight') {
                 console.info(
                     navController.navigatePibling({
                         direction: NavDirection.Right,
-                        allowWrapping: true,
-                        shouldSkipHoles: true,
+                        allowWrapping: isWrappingAllowed(),
                     }),
                 );
             } else if (keyCode === 'BracketLeft') {
                 console.info(
                     navController.navigatePibling({
                         direction: NavDirection.Left,
-                        allowWrapping: true,
-                        shouldSkipHoles: true,
+                        allowWrapping: isWrappingAllowed(),
                     }),
                 );
             } else if (keyCode === 'Enter' || keyCode === 'Return') {
@@ -186,7 +199,7 @@ export const VirTestApp = defineElement()({
             lockCounter: undefined as undefined | number,
         };
     },
-    render({state, updateState}) {
+    render({host, state, updateState}) {
         updateState({
             renderCounter: state.renderCounter + 1,
         });
@@ -224,6 +237,8 @@ export const VirTestApp = defineElement()({
                         group: true,
                     })}
                 >
+                    <h3>One-dimensional navigation</h3>
+                    <p>Use up and down to move through a list, including a nested group.</p>
                     <div class="cell" ${nav(state.navController)}>Cell</div>
                     <div
                         class="cell"
@@ -238,7 +253,7 @@ export const VirTestApp = defineElement()({
                             },
                         })}
                     >
-                        CELL
+                        Cell
                     </div>
                     <div class="cell" ${nav(state.navController)}>Cell</div>
                     <div class="double" ${nav(state.navController)}>
@@ -251,6 +266,8 @@ export const VirTestApp = defineElement()({
                         group: true,
                     })}
                 >
+                    <h3>Two-dimensional navigation</h3>
+                    <p>Use the arrow keys to move through the grid. The faded Cell is disabled.</p>
                     <div class="row">
                         <div
                             class="cell"
@@ -360,6 +377,59 @@ export const VirTestApp = defineElement()({
                         </div>
                     </div>
                 </section>
+                <section
+                    ${nav(state.navController, {
+                        group: true,
+                    })}
+                >
+                    <h3>Horizontal hole navigation</h3>
+                    <p>
+                        Focus a lower Cell, then use right and left to navigate through the hole and
+                        back.
+                    </p>
+                    <div class="sparse-row">
+                        <div
+                            class="cell"
+                            ${nav(state.navController, {
+                                x: 0,
+                                y: 0,
+                            })}
+                        >
+                            Cell
+                        </div>
+                        <div
+                            class="cell"
+                            ${nav(state.navController, {
+                                x: 1,
+                                y: 0,
+                            })}
+                        >
+                            Cell
+                        </div>
+                    </div>
+                    <div class="sparse-row">
+                        <div
+                            class="cell"
+                            ${nav(state.navController, {
+                                x: 0,
+                                y: 1,
+                            })}
+                        >
+                            Cell
+                        </div>
+                    </div>
+                    <div class="sparse-row">
+                        <div
+                            class="cell"
+                            ${nav(state.navController, {
+                                x: 0,
+                                y: 2,
+                            })}
+                        >
+                            Cell
+                        </div>
+                    </div>
+                </section>
             </main>
             <h3>How it works</h3>
             <ol>
@@ -404,37 +474,45 @@ export const VirTestApp = defineElement()({
                     <a href="https://www.npmjs.com/package/device-navigation">npm</a>
                 </li>
             </ul>
-            <button
-                class="lock-button"
-                ${listen('click', () => {
-                    if (state.lockCounter != undefined) {
-                        return;
-                    }
-
-                    updateState({
-                        lockCounter: 0,
-                    });
-                    setInterval(() => {
-                        if (state.lockCounter == undefined || state.navController.locked) {
+            <div class="nav-buttons">
+                <button
+                    ${listen('click', () => {
+                        if (state.lockCounter != undefined) {
                             return;
                         }
 
-                        if (state.lockCounter >= 3) {
-                            state.navController.locked = true;
-                        }
-
                         updateState({
-                            lockCounter: state.lockCounter + 1,
+                            lockCounter: 0,
                         });
-                    }, 1000);
-                })}
-            >
-                ${state.lockCounter == undefined
-                    ? 'Allow Locking'
-                    : state.lockCounter > 3
-                      ? 'Locked'
-                      : `${3 - state.lockCounter}...`}
-            </button>
+                        setInterval(() => {
+                            if (state.lockCounter == undefined || state.navController.locked) {
+                                return;
+                            }
+
+                            if (state.lockCounter >= 3) {
+                                state.navController.locked = true;
+                            }
+
+                            updateState({
+                                lockCounter: state.lockCounter + 1,
+                            });
+                        }, 1000);
+                    })}
+                >
+                    ${state.lockCounter == undefined
+                        ? 'Lock Nav'
+                        : state.lockCounter > 3
+                          ? 'Locked'
+                          : `${3 - state.lockCounter}...`}
+                </button>
+                <button
+                    ${listen('click', () => {
+                        host.setAttribute('data-allow-wrapping', '');
+                    })}
+                >
+                    Allow Wrapping
+                </button>
+            </div>
         `;
     },
 });
