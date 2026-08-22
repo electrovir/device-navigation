@@ -1454,6 +1454,29 @@ describe(NavController.name, () => {
         );
     });
 
+    it('fails safely when triggering an entry removed from the DOM', async () => {
+        const {fixture, navController} = await createMockNavController((navController) => {
+            return html`
+                <button class="target" ${nav(navController)}>Target</button>
+            `;
+        });
+        const targetButton = assertWrap.instanceOf(
+            fixture.querySelector('.target'),
+            HTMLButtonElement,
+        );
+        const targetNavEntry = assertWrap.isDefined(extractNavEntry(targetButton));
+
+        targetButton.remove();
+        navController.needsUpdate = true;
+
+        assert.deepEquals(navController.triggerNavEntry(targetNavEntry, true, NavAction.Focus), {
+            success: false,
+            direction: undefined,
+            navAction: NavAction.Focus,
+            reason: 'Nav entry is not in the current nav tree.',
+        });
+    });
+
     it('preserves focus when the current entry is reused across renders', async () => {
         const host = assertWrap.instanceOf(
             await testWeb.render(html`

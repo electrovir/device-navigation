@@ -3,7 +3,11 @@ import {getNestedChildrenTree, listenToElementDisconnect} from '@augment-vir/web
 import {ListenTarget} from 'typed-event-target';
 import {type CurrentNavEntry, type NavEntry} from '../directives/nav-entry.js';
 import {mapTree, type NavTree} from '../nav-tree/nav-tree.js';
-import {findNavTreeNodeByNavEntry, type WalkResult} from '../nav-tree/walk-nav-tree.js';
+import {
+    findNavTreeNodeByNavEntry,
+    walkNavTree,
+    type WalkResult,
+} from '../nav-tree/walk-nav-tree.js';
 import {enterInto} from './enter-into.js';
 import {exitOutOf} from './exit-out-of.js';
 import {
@@ -251,7 +255,18 @@ export class NavController extends ListenTarget<AllNavControllerEvents> {
             };
         }
 
-        const position = findNavTreeNodeByNavEntry(this.getNavTree(), navEntry);
+        const position = walkNavTree(this.getNavTree(), ({node}) => {
+            return !node.root && node.navEntry === navEntry;
+        });
+
+        if (!position) {
+            return {
+                success: false,
+                direction: undefined,
+                navAction,
+                reason: 'Nav entry is not in the current nav tree.',
+            };
+        }
 
         if (enabled) {
             this.navEntries.forEach((nestedNavEntry) => {
