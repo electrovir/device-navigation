@@ -74,6 +74,12 @@ function mapTreeRecursively(elementTree: ElementTree): IntermediateNavTreeNode |
 }
 
 function expandChildren(elementTreeNode: ElementTree): IntermediateNavTreeNode[][] {
+    const rawNodes: {
+        height: number;
+        node: IntermediateNavTreeNode;
+        x: number | undefined;
+        y: number;
+    }[] = [];
     const rawChildren: {
         withX: {x: number; node: IntermediateNavTreeNode}[];
         noX: IntermediateNavTreeNode[];
@@ -100,24 +106,12 @@ function expandChildren(elementTreeNode: ElementTree): IntermediateNavTreeNode[]
             return;
         }
 
-        const x = node.navEntry.navParams.x;
-        const y = node.navEntry.navParams.y || 0;
-        const row = getOrSet(rawChildren, y, () => {
-            return {
-                noX: [],
-                withX: [],
-                y,
-            };
+        rawNodes.push({
+            height: node.navEntry.navParams.height || 1,
+            node,
+            x: node.navEntry.navParams.x,
+            y: node.navEntry.navParams.y || 0,
         });
-
-        if (x == undefined) {
-            row.noX.push(node);
-        } else {
-            row.withX.push({
-                x,
-                node,
-            });
-        }
     }
 
     elementTreeNode.children.forEach((child) => {
@@ -126,6 +120,45 @@ function expandChildren(elementTreeNode: ElementTree): IntermediateNavTreeNode[]
             pushNode(newNode);
         }
     });
+
+    const maximumFiniteY = rawNodes.reduce((maximumY, rawNode) => {
+        return Math.max(
+            maximumY,
+            rawNode.y + (rawNode.height === Infinity ? 0 : rawNode.height - 1),
+        );
+    }, 0);
+
+    rawNodes.forEach((rawNode) => {
+        const rowCount =
+            rawNode.height === Infinity ? maximumFiniteY - rawNode.y + 1 : rawNode.height;
+
+        createArray(rowCount, (offset) => rawNode.y + offset).forEach((y) => {
+            const row = getOrSet(rawChildren, y, () => {
+                return {
+                    noX: [],
+                    withX: [],
+                    y,
+                };
+            });
+
+            if (rawNode.x == undefined) {
+                row.noX.push(rawNode.node);
+            } else {
+                row.withX.push({
+                    x: rawNode.x,
+                    node: rawNode.node,
+                });
+            }
+        });
+    });
+
+    const maximumFiniteX = rawChildren
+        .flatMap((row) => row.withX)
+        .reduce((maximumX, entry) => {
+            const entryWidth = entry.node.navEntry?.navParams.width || 1;
+
+            return Math.max(maximumX, entry.x + (entryWidth === Infinity ? 0 : entryWidth - 1));
+        }, 0);
 
     // eslint-disable-next-line sonarjs/no-misleading-array-reverse
     return rawChildren
@@ -139,9 +172,10 @@ function expandChildren(elementTreeNode: ElementTree): IntermediateNavTreeNode[]
 
             row.withX.forEach(({x, node}) => {
                 const width = node.navEntry?.navParams.width || 1;
+                const slotCount = width === Infinity ? maximumFiniteX - x + 1 : width;
 
                 /** Fill every x slot the entry spans so vertical nav into it works at any column. */
-                createArray(width, (offset) => x + offset).forEach((slot) => {
+                createArray(slotCount, (offset) => x + offset).forEach((slot) => {
                     if (row.noX[slot]) {
                         row.noX.splice(slot, 0, node);
                     } else {

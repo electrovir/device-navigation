@@ -98,11 +98,24 @@ export class NavController extends ListenTarget<AllNavControllerEvents> {
         const navEntry = position.node.root ? undefined : position.node.navEntry;
         const entryX = navEntry?.navParams.x ?? position.nodeCoords.x;
         const entryWidth = navEntry?.navParams.width || 1;
+        const entryY = navEntry?.navParams.y ?? position.nodeCoords.y;
+        const entryHeight = navEntry?.navParams.height || 1;
 
-        this.navigationPositionHistory.lastXByRow.delete(position.nodeCoords.y);
-        createArray(entryWidth, (offset) => entryX + offset).forEach((entryColumn) => {
-            this.navigationPositionHistory.lastYByColumn.delete(entryColumn);
-        });
+        if (entryHeight === Infinity) {
+            this.navigationPositionHistory.lastXByRow.clear();
+        } else {
+            createArray(entryHeight, (offset) => entryY + offset).forEach((entryRow) => {
+                this.navigationPositionHistory.lastXByRow.delete(entryRow);
+            });
+        }
+
+        if (entryWidth === Infinity) {
+            this.navigationPositionHistory.lastYByColumn.clear();
+        } else {
+            createArray(entryWidth, (offset) => entryX + offset).forEach((entryColumn) => {
+                this.navigationPositionHistory.lastYByColumn.delete(entryColumn);
+            });
+        }
     }
 
     /** Gets or builds the current nav tree. */

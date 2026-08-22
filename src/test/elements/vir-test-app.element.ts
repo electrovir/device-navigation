@@ -124,11 +124,16 @@ export const VirTestApp = defineElement()({
         }
     `,
     state({host}) {
-        const navController = new NavController(host);
-
-        function isWrappingAllowed() {
-            return host.hasAttribute('data-allow-wrapping');
-        }
+        return {
+            navController: new NavController(host),
+            /** For tracking if directives unnecessarily re-render. */
+            renderCounter: 0,
+            lockCounter: undefined as undefined | number,
+            allowWrapping: false,
+        };
+    },
+    init({state}) {
+        const navController = state.navController;
 
         function windowListener(event: KeyboardEvent) {
             const keyCode = event.code;
@@ -137,7 +142,7 @@ export const VirTestApp = defineElement()({
                 console.info(
                     navController.navigate({
                         direction: NavDirection.Down,
-                        allowWrapping: isWrappingAllowed(),
+                        allowWrapping: state.allowWrapping,
                     }),
                 );
             } else if (keyCode === 'ArrowUp') {
@@ -145,7 +150,7 @@ export const VirTestApp = defineElement()({
                 console.info(
                     navController.navigate({
                         direction: NavDirection.Up,
-                        allowWrapping: isWrappingAllowed(),
+                        allowWrapping: state.allowWrapping,
                     }),
                 );
             } else if (keyCode === 'ArrowLeft') {
@@ -153,7 +158,7 @@ export const VirTestApp = defineElement()({
                 console.info(
                     navController.navigate({
                         direction: NavDirection.Left,
-                        allowWrapping: isWrappingAllowed(),
+                        allowWrapping: state.allowWrapping,
                     }),
                 );
             } else if (keyCode === 'ArrowRight') {
@@ -161,21 +166,21 @@ export const VirTestApp = defineElement()({
                 console.info(
                     navController.navigate({
                         direction: NavDirection.Right,
-                        allowWrapping: isWrappingAllowed(),
+                        allowWrapping: state.allowWrapping,
                     }),
                 );
             } else if (keyCode === 'BracketRight') {
                 console.info(
                     navController.navigatePibling({
                         direction: NavDirection.Right,
-                        allowWrapping: isWrappingAllowed(),
+                        allowWrapping: state.allowWrapping,
                     }),
                 );
             } else if (keyCode === 'BracketLeft') {
                 console.info(
                     navController.navigatePibling({
                         direction: NavDirection.Left,
-                        allowWrapping: isWrappingAllowed(),
+                        allowWrapping: state.allowWrapping,
                     }),
                 );
             } else if (keyCode === 'Enter' || keyCode === 'Return') {
@@ -191,15 +196,8 @@ export const VirTestApp = defineElement()({
             }
         }
         window.addEventListener('keydown', windowListener);
-
-        return {
-            navController,
-            /** For tracking if directives unnecessarily re-render. */
-            renderCounter: 0,
-            lockCounter: undefined as undefined | number,
-        };
     },
-    render({host, state, updateState}) {
+    render({state, updateState}) {
         updateState({
             renderCounter: state.renderCounter + 1,
         });
@@ -417,6 +415,16 @@ export const VirTestApp = defineElement()({
                         >
                             Cell
                         </div>
+                        <div
+                            class="cell"
+                            ${nav(state.navController, {
+                                height: Infinity,
+                                x: 1,
+                                y: 1,
+                            })}
+                        >
+                            Cell
+                        </div>
                     </div>
                     <div class="sparse-row">
                         <div
@@ -507,10 +515,12 @@ export const VirTestApp = defineElement()({
                 </button>
                 <button
                     ${listen('click', () => {
-                        host.setAttribute('data-allow-wrapping', '');
+                        updateState({
+                            allowWrapping: !state.allowWrapping,
+                        });
                     })}
                 >
-                    Allow Wrapping
+                    ${state.allowWrapping ? 'Disable Wrapping' : 'Allow Wrapping'}
                 </button>
             </div>
         `;

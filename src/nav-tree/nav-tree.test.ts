@@ -292,6 +292,179 @@ describe('buildNavTree', () => {
             ],
         },
         {
+            it: 'fills every y slot a tall entry spans',
+            input: (controller) => {
+                return html`
+                    <main
+                        ${nav(controller, {
+                            group: true,
+                        })}
+                    >
+                        <button
+                            ${nav(controller, {
+                                height: 3,
+                                x: 0,
+                                y: 0,
+                            })}
+                        ></button>
+                        <button
+                            ${nav(controller, {
+                                x: 1,
+                                y: 2,
+                            })}
+                        ></button>
+                    </main>
+                `;
+            },
+            expect: [
+                [
+                    {
+                        element: 'main',
+                        children: [
+                            [
+                                {
+                                    element: 'button',
+                                    children: [],
+                                },
+                            ],
+                            [
+                                {
+                                    element: 'button',
+                                    children: [],
+                                },
+                            ],
+                            [
+                                {
+                                    element: 'button',
+                                    children: [],
+                                },
+                                {
+                                    element: 'button',
+                                    children: [],
+                                },
+                            ],
+                        ],
+                    },
+                ],
+            ],
+        },
+        {
+            it: 'caps an infinitely tall entry at the final finite row',
+            input: (controller) => {
+                return html`
+                    <main
+                        ${nav(controller, {
+                            group: true,
+                        })}
+                    >
+                        <button
+                            ${nav(controller, {
+                                height: Infinity,
+                                x: 1,
+                                y: 0,
+                            })}
+                        ></button>
+                        <button
+                            ${nav(controller, {
+                                x: 0,
+                                y: 2,
+                            })}
+                        ></button>
+                    </main>
+                `;
+            },
+            expect: [
+                [
+                    {
+                        element: 'main',
+                        children: [
+                            [
+                                undefined,
+                                {
+                                    element: 'button',
+                                    children: [],
+                                },
+                            ],
+                            [
+                                undefined,
+                                {
+                                    element: 'button',
+                                    children: [],
+                                },
+                            ],
+                            [
+                                {
+                                    element: 'button',
+                                    children: [],
+                                },
+                                {
+                                    element: 'button',
+                                    children: [],
+                                },
+                            ],
+                        ],
+                    },
+                ],
+            ],
+        },
+        {
+            it: 'caps an infinitely wide entry at the final finite column',
+            input: (controller) => {
+                return html`
+                    <main
+                        ${nav(controller, {
+                            group: true,
+                        })}
+                    >
+                        <button
+                            ${nav(controller, {
+                                width: Infinity,
+                                x: 0,
+                                y: 0,
+                            })}
+                        ></button>
+                        <button
+                            ${nav(controller, {
+                                x: 2,
+                                y: 1,
+                            })}
+                        ></button>
+                    </main>
+                `;
+            },
+            expect: [
+                [
+                    {
+                        element: 'main',
+                        children: [
+                            [
+                                {
+                                    element: 'button',
+                                    children: [],
+                                },
+                                {
+                                    element: 'button',
+                                    children: [],
+                                },
+                                {
+                                    element: 'button',
+                                    children: [],
+                                },
+                            ],
+                            [
+                                undefined,
+                                undefined,
+                                {
+                                    element: 'button',
+                                    children: [],
+                                },
+                            ],
+                        ],
+                    },
+                ],
+            ],
+        },
+        {
             it: 'does not duplicate a wide entry nested under a plain wrapper',
             input: (controller) => {
                 return html`

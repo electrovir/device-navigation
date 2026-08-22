@@ -154,9 +154,22 @@ export type NavParams = PartialWithUndefined<{
      * - Vertical navigation _out_ of the entry originates from its center slot
      * - Horizontal navigation steps over the entry as a single unit.
      *
+     * Set this to `Infinity` to occupy every remaining slot through the final finite column in the
+     * current nav tree.
+     *
      * @default 1
      */
     width: number;
+    /**
+     * The number of vertical y slots this entry occupies, starting at `y`. Set this for tall
+     * entries so that horizontal navigation can land on the entry from any covered row.
+     *
+     * Set this to `Infinity` to occupy every remaining row through the final finite row in the
+     * current nav tree.
+     *
+     * @default 1
+     */
+    height: number;
 
     /** Disable this element's navigation. */
     disabled: boolean;

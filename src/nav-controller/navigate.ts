@@ -369,6 +369,7 @@ function innerCalculateNextNode({
     const isVerticalDirection = direction === NavDirection.Down || direction === NavDirection.Up;
     const isVertical =
         isVerticalDirection && (blockPerpendicularNavigation || parentNode.children.length > 1);
+    const sourceEntry = treePosition.node.root ? undefined : treePosition.node.navEntry;
 
     const increment: number =
         direction === NavDirection.Down || direction === NavDirection.Right ? step : -1 * step;
@@ -384,7 +385,6 @@ function innerCalculateNextNode({
         max: getMaximumRowLength(parentNode.children) - 1,
         takeOverflow: true,
     });
-    const sourceEntry = treePosition.node.root ? undefined : treePosition.node.navEntry;
     const verticalSourceX =
         getRememberedCursor({
             history: navigationPositionHistory?.lastXByRow,
@@ -466,6 +466,11 @@ function getRememberedCursor({
     return undefined;
 }
 
+/**
+ * Remembers the slot that this navigation aimed at whenever the entry it landed on does not sit
+ * there. That happens both when the aimed-at slot was a hole and when it was covered by a
+ * multi-slot (wide or tall) entry, which always reports the coordinates of its leading slot.
+ */
 function recordHoleNavigation({
     navigationPositionHistory,
     coords,
@@ -481,14 +486,20 @@ function recordHoleNavigation({
     sourcePosition: WalkResult;
     targetNode: NavTreeNode;
 }>) {
-    if (isVertical && coords.x !== cursorCoords.x) {
-        navigationPositionHistory.lastXByRow.set(coords.y, {
+    /** The coordinates that the next navigation will start from. */
+    const entryCoords = {
+        x: targetNode.navEntry.navParams.x ?? coords.x,
+        y: targetNode.navEntry.navParams.y ?? coords.y,
+    };
+
+    if (isVertical && entryCoords.x !== cursorCoords.x) {
+        navigationPositionHistory.lastXByRow.set(entryCoords.y, {
             entry: targetNode.navEntry,
             origin: sourcePosition.nodeCoords.y,
             cursor: cursorCoords.x,
         });
-    } else if (!isVertical && coords.y !== cursorCoords.y) {
-        navigationPositionHistory.lastYByColumn.set(coords.x, {
+    } else if (!isVertical && entryCoords.y !== cursorCoords.y) {
+        navigationPositionHistory.lastYByColumn.set(entryCoords.x, {
             entry: targetNode.navEntry,
             origin: sourcePosition.nodeCoords.x,
             cursor: cursorCoords.y,

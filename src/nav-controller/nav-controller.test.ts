@@ -251,6 +251,248 @@ describe(NavController.name, () => {
         await waitUntilFocused(bottomRuleButton);
     });
 
+    it('returns to the remembered row after entering a tall entry below its top', async () => {
+        const {fixture, navController} = await createMockNavController((navController) => {
+            return html`
+                <button
+                    class="top-rule"
+                    ${nav(navController, {
+                        x: 0,
+                        y: 0,
+                    })}
+                >
+                    Top Rule
+                </button>
+                <button
+                    class="upper-cell"
+                    ${nav(navController, {
+                        x: 1,
+                        y: 0,
+                    })}
+                >
+                    Upper Cell
+                </button>
+                <button
+                    class="middle-rule"
+                    ${nav(navController, {
+                        x: 0,
+                        y: 1,
+                    })}
+                >
+                    Middle Rule
+                </button>
+                <button
+                    class="play"
+                    ${nav(navController, {
+                        height: Infinity,
+                        x: 1,
+                        y: 1,
+                    })}
+                >
+                    Play
+                </button>
+                <button
+                    class="bottom-rule"
+                    ${nav(navController, {
+                        x: 0,
+                        y: 2,
+                    })}
+                >
+                    Bottom Rule
+                </button>
+            `;
+        });
+        const bottomRuleButton = assertWrap.instanceOf(
+            fixture.querySelector('.bottom-rule'),
+            HTMLButtonElement,
+        );
+        const playButton = assertWrap.instanceOf(fixture.querySelector('.play'), HTMLButtonElement);
+
+        bottomRuleButton.focus();
+        await waitUntilFocused(bottomRuleButton);
+
+        navController.navigate({
+            allowWrapping: false,
+            direction: NavDirection.Right,
+        });
+
+        await waitUntilFocused(playButton);
+
+        navController.navigate({
+            allowWrapping: false,
+            direction: NavDirection.Left,
+        });
+
+        await waitUntilFocused(bottomRuleButton);
+    });
+
+    it('navigates backward from an infinitely tall entry and wraps forward', async () => {
+        const {fixture, navController} = await createMockNavController((navController) => {
+            return html`
+                <button
+                    class="upper-cell"
+                    ${nav(navController, {
+                        x: 1,
+                        y: 0,
+                    })}
+                >
+                    Upper Cell
+                </button>
+                <button
+                    class="play"
+                    ${nav(navController, {
+                        height: Infinity,
+                        x: 1,
+                        y: 1,
+                    })}
+                >
+                    Play
+                </button>
+                <button
+                    class="bottom-rule"
+                    ${nav(navController, {
+                        x: 0,
+                        y: 1,
+                    })}
+                >
+                    Bottom Rule
+                </button>
+                <button
+                    class="lower-rule"
+                    ${nav(navController, {
+                        x: 0,
+                        y: 2,
+                    })}
+                >
+                    Lower Rule
+                </button>
+            `;
+        });
+        const upperCell = assertWrap.instanceOf(
+            fixture.querySelector('.upper-cell'),
+            HTMLButtonElement,
+        );
+        const playButton = assertWrap.instanceOf(fixture.querySelector('.play'), HTMLButtonElement);
+        const bottomRuleButton = assertWrap.instanceOf(
+            fixture.querySelector('.bottom-rule'),
+            HTMLButtonElement,
+        );
+
+        bottomRuleButton.focus();
+        await waitUntilFocused(bottomRuleButton);
+
+        navController.navigate({
+            allowWrapping: false,
+            direction: NavDirection.Right,
+        });
+
+        await waitUntilFocused(playButton);
+
+        navController.navigate({
+            allowWrapping: false,
+            direction: NavDirection.Up,
+        });
+
+        await waitUntilFocused(upperCell);
+
+        navController.navigate({
+            allowWrapping: false,
+            direction: NavDirection.Down,
+        });
+
+        await waitUntilFocused(playButton);
+
+        assert.isFalse(
+            navController.navigate({
+                allowWrapping: false,
+                direction: NavDirection.Down,
+            }).success,
+        );
+        await waitUntilFocused(playButton);
+
+        assert.isTrue(
+            navController.navigate({
+                allowWrapping: true,
+                direction: NavDirection.Down,
+            }).success,
+        );
+        await waitUntilFocused(upperCell);
+    });
+
+    it('navigates backward from an infinitely wide entry and wraps forward', async () => {
+        const {fixture, navController} = await createMockNavController((navController) => {
+            return html`
+                <button
+                    class="left-cell"
+                    ${nav(navController, {
+                        x: 0,
+                        y: 0,
+                    })}
+                >
+                    Left Cell
+                </button>
+                <button
+                    class="wide-cell"
+                    ${nav(navController, {
+                        width: Infinity,
+                        x: 1,
+                        y: 0,
+                    })}
+                >
+                    Wide Cell
+                </button>
+            `;
+        });
+        const leftCell = assertWrap.instanceOf(
+            fixture.querySelector('.left-cell'),
+            HTMLButtonElement,
+        );
+        const wideCell = assertWrap.instanceOf(
+            fixture.querySelector('.wide-cell'),
+            HTMLButtonElement,
+        );
+
+        leftCell.focus();
+        await waitUntilFocused(leftCell);
+
+        navController.navigate({
+            allowWrapping: false,
+            direction: NavDirection.Right,
+        });
+
+        await waitUntilFocused(wideCell);
+
+        navController.navigate({
+            allowWrapping: false,
+            direction: NavDirection.Left,
+        });
+
+        await waitUntilFocused(leftCell);
+
+        navController.navigate({
+            allowWrapping: false,
+            direction: NavDirection.Right,
+        });
+
+        await waitUntilFocused(wideCell);
+
+        assert.isFalse(
+            navController.navigate({
+                allowWrapping: false,
+                direction: NavDirection.Right,
+            }).success,
+        );
+        await waitUntilFocused(wideCell);
+
+        assert.isTrue(
+            navController.navigate({
+                allowWrapping: true,
+                direction: NavDirection.Right,
+            }).success,
+        );
+        await waitUntilFocused(leftCell);
+    });
+
     it('moves vertically in the current column after visiting another column', async () => {
         const {fixture, navController} = await createMockNavController((navController) => {
             return html`
