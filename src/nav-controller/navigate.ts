@@ -12,13 +12,17 @@ import {focusElement} from '../util/focus.js';
  * @category Internal
  */
 export type NavigationInputs = {
-    /**
-     * The direction to navigate within the tree. Note that 1 dimensional navigation treads up and
-     * left as the same, down and right as the same.
-     */
+    /** The direction to navigate within the tree. */
     direction: NavDirection;
     /** Set to true to allow navigation to wrap. */
     allowWrapping: boolean;
+    /**
+     * Prevent a one-dimensional nav tree from using its available axis for perpendicular
+     * navigation.
+     *
+     * @default false
+     */
+    blockPerpendicularNavigation?: boolean | undefined;
     /**
      * Skip vertical target rows when the current x slot is empty.
      *
