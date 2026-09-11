@@ -1,6 +1,6 @@
 {
     "name": "device-navigation",
-    "version": "4.9.1",
+    "version": "5.0.0-beta.0",
     "description": "Navigate HTML elements in two dimensions with non-pointer devices.",
     "keywords": [
         "keyboard",
@@ -53,13 +53,13 @@
         "esbuild": "^0.28.2"
     },
     "dependencies": {
-        "@augment-vir/assert": "^32.2.4",
-        "@augment-vir/common": "^32.2.4",
-        "@augment-vir/web": "^32.2.4",
+        "@augment-vir/assert": "^32.3.0-beta.0",
+        "@augment-vir/common": "^32.3.0-beta.0",
+        "@augment-vir/web": "^32.3.0-beta.0",
         "typed-event-target": "^4.3.3"
     },
     "devDependencies": {
-        "@augment-vir/test": "^32.2.4",
+        "@augment-vir/test": "^32.3.0-beta.0",
         "@eslint/eslintrc": "^3.3.6",
         "@eslint/js": "^10.0.1",
         "@stylistic/eslint-plugin": "^5.10.0",
@@ -72,7 +72,7 @@
         "@web/test-runner-visual-regression": "^1.0.1",
         "cspell": "^10.2.0",
         "dependency-cruiser": "^18.2.0",
-        "element-vir": "^26.17.3",
+        "element-vir": "27.0.0-beta.3",
         "esbuild": "^0.28.2",
         "eslint": "^10.9.1",
         "eslint-config-prettier": "^10.1.8",
@@ -103,7 +103,7 @@
         "vite-tsconfig-paths": "^6.1.1"
     },
     "peerDependencies": {
-        "element-vir": "^26"
+        "element-vir": "^27.0.0-beta.3"
     },
     "engines": {
         "node": ">=22"
