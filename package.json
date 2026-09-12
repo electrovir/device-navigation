@@ -1,6 +1,6 @@
 {
     "name": "device-navigation",
-    "version": "5.0.0-beta.0",
+    "version": "5.0.0",
     "description": "Navigate HTML elements in two dimensions with non-pointer devices.",
     "keywords": [
         "keyboard",
@@ -53,30 +53,30 @@
         "esbuild": "^0.28.2"
     },
     "dependencies": {
-        "@augment-vir/assert": "^32.3.0-beta.0",
-        "@augment-vir/common": "^32.3.0-beta.0",
-        "@augment-vir/web": "^32.3.0-beta.0",
+        "@augment-vir/assert": "^32.3.0",
+        "@augment-vir/common": "^32.3.0",
+        "@augment-vir/web": "^32.3.0",
         "typed-event-target": "^4.3.3"
     },
     "devDependencies": {
-        "@augment-vir/test": "^32.3.0-beta.0",
-        "@eslint/eslintrc": "^3.3.6",
+        "@augment-vir/test": "^32.3.0",
+        "@eslint/eslintrc": "^3.3.7",
         "@eslint/js": "^10.0.1",
         "@stylistic/eslint-plugin": "^5.10.0",
         "@stylistic/eslint-plugin-ts": "^4.4.1",
-        "@typescript-eslint/eslint-plugin": "^8.69.0",
+        "@typescript-eslint/eslint-plugin": "^8.70.0",
         "@web/dev-server-esbuild": "^2.0.0",
         "@web/test-runner": "^1.0.0",
         "@web/test-runner-commands": "^1.0.1",
         "@web/test-runner-playwright": "^1.0.0",
         "@web/test-runner-visual-regression": "^1.0.1",
-        "cspell": "^10.2.0",
+        "cspell": "^10.2.2",
         "dependency-cruiser": "^18.2.0",
-        "element-vir": "27.0.0-beta.3",
+        "element-vir": "27.0.0",
         "esbuild": "^0.28.2",
-        "eslint": "^10.9.1",
+        "eslint": "^10.10.0",
         "eslint-config-prettier": "^10.1.8",
-        "eslint-plugin-jsdoc": "^64.3.3",
+        "eslint-plugin-jsdoc": "^64.3.6",
         "eslint-plugin-monorepo-cop": "^1.0.2",
         "eslint-plugin-playwright": "^2.11.0",
         "eslint-plugin-prettier": "^5.5.6",
@@ -94,16 +94,16 @@
         "prettier-plugin-packagejson": "^3.0.2",
         "prettier-plugin-sort-json": "^4.2.0",
         "prettier-plugin-toml": "^2.0.6",
-        "runstorm": "^1.0.6",
+        "runstorm": "^1.1.0",
         "typedoc": "^0.28.20",
         "typescript": "^6.0.3",
-        "typescript-eslint": "^8.69.0",
-        "virmator": "^14.34.0",
+        "typescript-eslint": "^8.70.0",
+        "virmator": "^14.36.2",
         "vite": "^8.2.2",
         "vite-tsconfig-paths": "^6.1.1"
     },
     "peerDependencies": {
-        "element-vir": "^27.0.0-beta.3"
+        "element-vir": "^27.0.0"
     },
     "engines": {
         "node": ">=22"

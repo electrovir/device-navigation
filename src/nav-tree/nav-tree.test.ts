@@ -40,7 +40,7 @@ describe('buildNavTree', () => {
     itCases(testTree, [
         {
             it: 'allows nested groups',
-            input: (controller) => {
+            input(controller) {
                 return html`
                     <section>
                         <main
@@ -101,7 +101,7 @@ describe('buildNavTree', () => {
         },
         {
             it: 'allows out of order 1D navigation',
-            input: (controller) => {
+            input(controller) {
                 return html`
                     <section>
                         <main
@@ -168,7 +168,7 @@ describe('buildNavTree', () => {
         },
         {
             it: 'allows 2D navigation',
-            input: (controller) => {
+            input(controller) {
                 return html`
                     <section>
                         <main
@@ -240,7 +240,7 @@ describe('buildNavTree', () => {
         },
         {
             it: 'fills every x slot a wide entry spans',
-            input: (controller) => {
+            input(controller) {
                 return html`
                     <main
                         ${nav(controller, {
@@ -293,7 +293,7 @@ describe('buildNavTree', () => {
         },
         {
             it: 'fills every y slot a tall entry spans',
-            input: (controller) => {
+            input(controller) {
                 return html`
                     <main
                         ${nav(controller, {
@@ -350,7 +350,7 @@ describe('buildNavTree', () => {
         },
         {
             it: 'caps an infinitely tall entry at the final finite row',
-            input: (controller) => {
+            input(controller) {
                 return html`
                     <main
                         ${nav(controller, {
@@ -409,7 +409,7 @@ describe('buildNavTree', () => {
         },
         {
             it: 'caps an infinitely wide entry at the final finite column',
-            input: (controller) => {
+            input(controller) {
                 return html`
                     <main
                         ${nav(controller, {
@@ -466,7 +466,7 @@ describe('buildNavTree', () => {
         },
         {
             it: 'does not duplicate a wide entry nested under a plain wrapper',
-            input: (controller) => {
+            input(controller) {
                 return html`
                     <main
                         ${nav(controller, {
