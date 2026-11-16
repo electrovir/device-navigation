@@ -231,7 +231,7 @@ export function navigate({
         navigationPositionHistory,
     });
 
-    const isWrappingValid = allowWrapping ? true : !requiresWrapping;
+    const isWrappingValid = allowWrapping || !requiresWrapping;
 
     if (nextNode && isWrappingValid) {
         focusElement(nextNode.element);
@@ -605,7 +605,7 @@ export function navigatePibling({
               coords,
           };
 
-    const isWrappingValid = allowWrapping ? true : !requiresWrapping;
+    const isWrappingValid = allowWrapping || !requiresWrapping;
 
     if (!nodeToFocus || !nodeToFocus.node) {
         return {

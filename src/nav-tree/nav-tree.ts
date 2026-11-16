@@ -59,7 +59,7 @@ function mapTreeRecursively(elementTree: ElementTree): IntermediateNavTreeNode |
     const navEntry = extractNavEntry(element);
     const children = expandChildren(elementTree);
 
-    const isValidGroup: boolean = navEntry?.navParams.group ? !!children.length : false;
+    const isValidGroup = !!navEntry?.navParams.group && !!children.length;
 
     if (isValidGroup || !!children.length || !!navEntry) {
         return {
