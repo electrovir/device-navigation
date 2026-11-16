@@ -2,15 +2,15 @@ import {waitUntil} from '@augment-vir/assert';
 import {isElementFocused} from '@augment-vir/web';
 
 /**
- * Focuses an element.
+ * Focuses an element, scrolling it into view only if it is not already fully visible.
  *
  * @category Util
  */
 export function focusElement(element: HTMLElement) {
     element.scrollIntoView({
         behavior: 'smooth',
-        inline: 'center',
-        block: 'center',
+        inline: 'nearest',
+        block: 'nearest',
     });
     element.focus();
 }
